@@ -1,0 +1,63 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="halo" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="58%" stop-color="#F4EEFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#F4EEFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="purple" x1="166" y1="166" x2="346" y2="346" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9E67FF"/>
+      <stop offset="1" stop-color="#6F45E8"/>
+    </linearGradient>
+    <filter id="shadow" x="78" y="88" width="356" height="356" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#7E4DF5" flood-opacity="0.25"/>
+    </filter>
+    <style>
+      @keyframes ringPulse { 0% { transform: scale(.82); opacity: .42;} 70% {opacity: .18;} 100% { transform: scale(1.25); opacity: 0;} }
+      @keyframes checkDraw { 0%,15% { stroke-dashoffset: 170;} 60%,100% { stroke-dashoffset: 0;} }
+      @keyframes pop { 0%,35% { transform: scale(.72); opacity: 0;} 55% { transform: scale(1.12); opacity: 1;} 75%,100% { transform: scale(1); opacity: 1;} }
+      @keyframes sparkle { 0%,45% { transform: scale(.4) rotate(0deg); opacity: 0;} 65% { opacity: 1;} 100% { transform: scale(1.1) rotate(24deg); opacity: .28;} }
+      @keyframes float { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-8px);} }
+      @keyframes dotPulse { 0%,100% { transform: scale(.92); opacity: .72;} 50% { transform: scale(1.1); opacity: 1;} }
+      .center { transform-box: fill-box; transform-origin: center; }
+      .ring { animation: ringPulse 1.9s ease-out forwards; transform-origin: 256px 256px; }
+      .ring.r2 { animation-delay: .55s; }
+      .check { stroke-dasharray: 170; stroke-dashoffset: 170; animation: checkDraw 1.7s cubic-bezier(.22,.8,.22,1) forwards; }
+      .main { animation: pop 1.7s cubic-bezier(.22,.8,.22,1) forwards; transform-origin: 256px 256px; }
+      .spark { animation: sparkle 1.7s ease-out forwards; transform-box: fill-box; transform-origin:center; }
+      .dot { animation: dotPulse 1.7s ease-in-out forwards; transform-box: fill-box; transform-origin:center; }
+      .float { animation: float 2.2s ease-in-out forwards; }
+    </style>
+  </defs>
+
+  <circle cx="256" cy="256" r="218" fill="url(#halo)"/>
+  <circle class="ring" cx="256" cy="256" r="142" stroke="#7E4DF5" stroke-width="6"/>
+  <circle class="ring r2" cx="256" cy="256" r="160" stroke="#B495FF" stroke-width="5"/>
+
+  <g class="main">
+    <rect x="126" y="126" width="260" height="260" rx="76" fill="white" opacity=".92" filter="url(#shadow)"/>
+    <circle cx="256" cy="256" r="101" fill="url(#purple)"/>
+    <ellipse cx="214" cy="193" rx="55" ry="36" fill="white" opacity=".16"/>
+    <path class="check" d="M195 260L235 302L322 214" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g class="float">
+    <g class="dot" style="animation-delay:.05s">
+      <circle cx="404" cy="186" r="18" fill="white" opacity=".92" stroke="#E3D6FF" stroke-width="2"/>
+      <path d="M396 186L402 192L414 178" stroke="#7E4DF5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g class="dot" style="animation-delay:.25s">
+      <circle cx="138" cy="332" r="16" fill="white" opacity=".92" stroke="#E3D6FF" stroke-width="2"/>
+      <path d="M132 332L137 337L146 327" stroke="#7E4DF5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g class="dot" style="animation-delay:.42s">
+      <circle cx="134" cy="160" r="15" fill="white" opacity=".9" stroke="#E3D6FF" stroke-width="2"/>
+      <path d="M128 160L133 165L143 154" stroke="#7E4DF5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <path class="spark" d="M112 106L119 126L139 133L119 140L112 160L105 140L85 133L105 126L112 106Z" fill="#9E67FF"/>
+  <path class="spark" style="animation-delay:.1s" d="M404 105L410 123L428 129L410 135L404 153L398 135L380 129L398 123L404 105Z" fill="#B495FF"/>
+  <path class="spark" style="animation-delay:.2s" d="M388 378L393 392L407 397L393 402L388 416L383 402L369 397L383 392L388 378Z" fill="#9E67FF"/>
+  <path class="spark" style="animation-delay:.3s" d="M124 382L128 394L140 398L128 402L124 414L120 402L108 398L120 394L124 382Z" fill="#B495FF"/>
+</svg>
