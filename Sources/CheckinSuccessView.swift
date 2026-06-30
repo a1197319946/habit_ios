@@ -9,15 +9,12 @@ struct CheckinSuccessView: View {
     let checkins: [Checkin]
     let onRecordMood: () -> Void
     
-    @State private var showPoster = false
     @State private var isGenerating = false
+    @State private var appeared = false
     
     private var isAmount: Bool { habit.goalType == "amount" }
-    
     private var unit: String { isAmount ? habit.amountUnit : "次" }
-    
     private var label: String { habit.frequencyType == "weekly" ? "本周" : "本月" }
-    
     private var targetLabel: String { habit.frequencyType == "weekly" ? "周目标" : "月目标" }
     
     private var target: Double {
@@ -27,122 +24,150 @@ struct CheckinSuccessView: View {
     
     private var currentTotal: Double {
         let periodCheckins = checkins.filter { $0.habit?.id == habit.id }
-        if isAmount {
-            return periodCheckins.reduce(0) { $0 + $1.amount }
-        } else {
-            return Double(periodCheckins.count)
-        }
+        return isAmount ? periodCheckins.reduce(0) { $0 + $1.amount } : Double(periodCheckins.count)
     }
     
     private var todayAmount: Double {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         let dateString = formatter.string(from: date)
-        
         let todayCheckins = checkins.filter { $0.habit?.id == habit.id && $0.dateString == dateString }
-        if isAmount {
-            return todayCheckins.reduce(0) { $0 + $1.amount }
-        } else {
-            return todayCheckins.isEmpty ? 0 : 1
-        }
+        return isAmount ? todayCheckins.reduce(0) { $0 + $1.amount } : (todayCheckins.isEmpty ? 0 : 1)
     }
     
     var body: some View {
         VStack(spacing: 0) {
+            // Top drag handle area
+            RoundedRectangle(cornerRadius: 2)
+                .fill(DS.borderStrong)
+                .frame(width: 40, height: 4)
+                .padding(.top, DS.spacingL)
+                .padding(.bottom, DS.spacingM)
+            
+            // Close button row
             HStack {
-                Text("打卡成功").font(.system(size: 18, weight: .bold))
                 Spacer()
                 Button(action: { dismiss() }) {
                     Image(systemName: "xmark")
-                        .foregroundColor(Color(hex: "#9CA3AF"))
-                        .font(.system(size: 20))
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(DS.textSecondary)
+                        .frame(width: 32, height: 32)
+                        .background(DS.bgSubtle)
+                        .clipShape(Circle())
                 }
             }
-            .padding(24)
+            .padding(.horizontal, DS.spacingL)
+            .padding(.bottom, DS.spacingM)
             
-            VStack(spacing: 12) {
-                HStack {
-                    Text("目标进展").font(.system(size: 14, weight: .semibold))
-                    Spacer()
+            // Icon + name
+            VStack(spacing: DS.spacingM) {
+                ZStack {
+                    Circle()
+                        .fill(DS.successMuted)
+                        .frame(width: 72, height: 72)
+                    
+                    Image(systemName: habit.icon)
+                        .font(.system(size: 30, weight: .semibold))
+                        .foregroundColor(DS.success)
                 }
+                .scaleEffect(appeared ? 1.0 : 0.6)
+                .animation(.spring(response: 0.4, dampingFraction: 0.65), value: appeared)
                 
-                HStack {
-                    Text("本次完成").font(.system(size: 14)).foregroundColor(.secondary)
-                    Spacer()
-                    Text("\(formatNumber(todayAmount)) \(unit)")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(Color(hex: "#8B5CF6"))
+                VStack(spacing: 4) {
+                    Text("打卡成功")
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundColor(DS.textPrimary)
+                    
+                    Text(habit.name)
+                        .font(.system(size: 15))
+                        .foregroundColor(DS.textSecondary)
                 }
+                .opacity(appeared ? 1 : 0)
+                .animation(.easeOut(duration: 0.3).delay(0.1), value: appeared)
+            }
+            .padding(.bottom, DS.spacingL)
+            
+            // Stats
+            HStack(spacing: 0) {
+                StatCell(label: "本次完成", value: formatNumber(todayAmount), unit: unit, accent: true)
                 
-                HStack {
-                    Text("\(label)累计").font(.system(size: 14)).foregroundColor(.secondary)
-                    Spacer()
-                    Text("\(formatNumber(currentTotal)) \(unit)")
-                        .font(.system(size: 15, weight: .semibold))
-                }
+                Rectangle()
+                    .fill(DS.border)
+                    .frame(width: 1, height: 48)
                 
-                HStack {
-                    Text(targetLabel).font(.system(size: 14)).foregroundColor(.secondary)
-                    Spacer()
-                    Text("\(formatNumber(target)) \(unit)")
-                        .font(.system(size: 15, weight: .semibold))
-                }
+                StatCell(label: "\(label)累计", value: formatNumber(currentTotal), unit: unit, accent: false)
                 
-                if currentTotal >= target {
-                    Divider().padding(.vertical, 8)
-                    Text("🎉 \(targetLabel)已达成！")
+                Rectangle()
+                    .fill(DS.border)
+                    .frame(width: 1, height: 48)
+                
+                StatCell(label: targetLabel, value: formatNumber(target), unit: unit, accent: false)
+            }
+            .padding(DS.spacingL)
+            .card()
+            .padding(.horizontal, DS.spacingL)
+            
+            // Goal achieved badge
+            if currentTotal >= target && target > 0 {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundColor(DS.success)
+                    Text("\(targetLabel)已达成！")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(Color(hex: "#10B981"))
+                        .foregroundColor(DS.success)
                 }
+                .padding(.vertical, 10)
+                .padding(.horizontal, DS.spacingL)
+                .background(DS.successMuted)
+                .cornerRadius(DS.cornerPill)
+                .padding(.top, DS.spacingM)
             }
-            .padding(20)
-            .background(Color(hex: "#F9FAFB"))
-            .cornerRadius(16)
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: "#F3F4F6"), lineWidth: 1))
-            .padding(.horizontal, 24)
             
-            VStack(spacing: 12) {
+            Spacer()
+            
+            // Action buttons
+            VStack(spacing: DS.spacingS) {
                 Button(action: {
                     dismiss()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        onRecordMood()
-                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { onRecordMood() }
                 }) {
-                    Text("记心情")
+                    Text("记录心情")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(Color(hex: "#8B5CF6"))
-                        .cornerRadius(26)
-                        .shadow(color: Color(hex: "#8B5CF6").opacity(0.3), radius: 8, y: 4)
+                        .background(DS.accent)
+                        .cornerRadius(DS.cornerPill)
                 }
                 
                 Button(action: generatePoster) {
                     HStack {
                         if isGenerating {
-                            ProgressView().progressViewStyle(CircularProgressViewStyle())
+                            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: DS.textSecondary))
                         }
-                        Text(isGenerating ? "生成中..." : "生成分享海报")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
+                        Text(isGenerating ? "生成中..." : "生成分享图")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(DS.textSecondary)
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(Color.white)
-                    .cornerRadius(26)
-                    .overlay(RoundedRectangle(cornerRadius: 26).stroke(Color(hex: "#E5E7EB"), lineWidth: 1))
+                    .background(DS.bgSubtle)
+                    .cornerRadius(DS.cornerPill)
                 }
                 .disabled(isGenerating)
             }
-            .padding(24)
-            .padding(.bottom, 10)
+            .padding(.horizontal, DS.spacingL)
+            .padding(.bottom, DS.spacingXL)
         }
-        .background(Color.white)
+        .background(DS.bgPrimary)
+        .onAppear {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            appeared = true
+        }
     }
     
     private func formatNumber(_ val: Double) -> String {
-        return val.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", val) : String(format: "%.1f", val)
+        val.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", val) : String(format: "%.1f", val)
     }
     
     @MainActor
@@ -170,77 +195,137 @@ struct CheckinSuccessView: View {
     }
 }
 
+// MARK: - Stat Cell
+
+struct StatCell: View {
+    let label: String
+    let value: String
+    let unit: String
+    let accent: Bool
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(label)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(DS.textSecondary)
+            
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text(value)
+                    .font(.system(size: 22, weight: .bold, design: .monospaced))
+                    .foregroundColor(accent ? DS.accent : DS.textPrimary)
+                Text(unit)
+                    .font(.system(size: 12))
+                    .foregroundColor(DS.textSecondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Poster View (Clean Japandi poster)
+
 struct PosterView: View {
     let habit: Habit
     let date: Date
     let checkins: [Checkin]
     
+    private var totalCheckins: Int {
+        checkins.filter { $0.habit?.id == habit.id }.count
+    }
+    
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            Image("poster_bg")
-                .resizable()
-                .scaledToFill()
-                .frame(width: 470.5, height: 836)
-                .clipped()
+        ZStack {
+            Color(hex: "#F7F4EF") // Warm off-white
             
-            let monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-            Text(monthNames[Calendar.current.component(.month, from: date) - 1])
-                .font(.system(size: 18))
-                .foregroundColor(.white)
-                .position(x: 356 + 18, y: 66.5 + 9)
-            
-            Text("\(Calendar.current.component(.day, from: date))")
-                .font(.system(size: 36, weight: .bold))
-                .foregroundColor(Color(hex: "#7E22CE"))
-                .position(x: 351.5 + 20, y: 103.5 + 18)
-            
-            VStack(alignment: .leading, spacing: 10) {
-                Text("人生没有白走的路，")
-                Text("每一步都算数。")
-            }
-            .font(.system(size: 24, weight: .bold))
-            .foregroundColor(Color(hex: "#111827"))
-            .position(x: 53.5 + 80, y: 219.5 + 30)
-            
-            HStack(alignment: .bottom, spacing: 15) {
-                Text(habit.name)
-                    .font(.system(size: 40, weight: .bold))
-                    .foregroundColor(Color(hex: "#7E22CE"))
+            VStack(alignment: .leading, spacing: 0) {
+                // Top accent bar
+                Rectangle()
+                    .fill(Color(hex: habit.color))
+                    .frame(height: 6)
                 
-                Image(systemName: habit.icon)
-                    .font(.system(size: 24))
-                    .foregroundColor(.white)
-                    .frame(width: 30, height: 30)
-                    .background(Color(hex: habit.color))
-                    .cornerRadius(8)
-                    .padding(.bottom, 6)
-            }
-            .position(x: 150, y: 405 + 20)
-            
-            HStack(spacing: 80) {
-                VStack(spacing: 4) {
-                    Text("1")
-                        .font(.system(size: 44, weight: .bold))
-                        .foregroundColor(Color(hex: "#7E22CE"))
-                    Text("次")
-                        .font(.system(size: 20))
+                VStack(alignment: .leading, spacing: 32) {
+                    // Date
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(monthName())
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(Color(hex: "#9B9088"))
+                        Text("\(Calendar.current.component(.day, from: date))")
+                            .font(.system(size: 72, weight: .heavy, design: .rounded))
+                            .foregroundColor(Color(hex: "#2D2D2D"))
+                    }
+                    .padding(.top, 40)
+                    
+                    // Habit
+                    HStack(spacing: 16) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(hex: habit.color).opacity(0.15))
+                                .frame(width: 56, height: 56)
+                            Image(systemName: habit.icon)
+                                .font(.system(size: 26))
+                                .foregroundColor(Color(hex: habit.color))
+                        }
+                        Text(habit.name)
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundColor(Color(hex: "#2D2D2D"))
+                    }
+                    
+                    // Divider
+                    Rectangle()
+                        .fill(Color(hex: "#EAE6E0"))
+                        .frame(height: 1)
+                    
+                    // Quote
+                    Text("人生没有白走的路，\n每一步都算数。")
+                        .font(.system(size: 22, weight: .semibold, design: .rounded))
+                        .foregroundColor(Color(hex: "#2D2D2D"))
+                        .lineSpacing(6)
+                    
+                    // Stats
+                    HStack(spacing: 40) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("今日")
+                                .font(.system(size: 13))
+                                .foregroundColor(Color(hex: "#9B9088"))
+                            Text("1 次")
+                                .font(.system(size: 28, weight: .heavy, design: .monospaced))
+                                .foregroundColor(Color(hex: habit.color))
+                        }
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("累计")
+                                .font(.system(size: 13))
+                                .foregroundColor(Color(hex: "#9B9088"))
+                            Text("\(totalCheckins) 次")
+                                .font(.system(size: 28, weight: .heavy, design: .monospaced))
+                                .foregroundColor(Color(hex: "#2D2D2D"))
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    // Bottom branding
+                    HStack {
+                        Text("小习惯")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundColor(Color(hex: "#9B9088"))
+                        Spacer()
+                        Image("app_logo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 32, height: 32)
+                            .clipShape(Circle())
+                    }
+                    .padding(.bottom, 32)
                 }
-                
-                VStack(spacing: 4) {
-                    Text("\(checkins.filter { $0.habit?.id == habit.id }.count)")
-                        .font(.system(size: 44, weight: .bold))
-                        .foregroundColor(Color(hex: "#7E22CE"))
-                    Text("次")
-                        .font(.system(size: 20))
-                }
+                .padding(.horizontal, 32)
             }
-            .position(x: 235.25, y: 588.5 + 30)
-            
-            Image("scancode")
-                .resizable()
-                .frame(width: 72, height: 72)
-                .position(x: 59 + 36, y: 699.5 + 36)
         }
-        .frame(width: 470.5, height: 836)
+        .frame(width: 390, height: 690)
+    }
+    
+    private func monthName() -> String {
+        let months = ["January", "February", "March", "April", "May", "June",
+                      "July", "August", "September", "October", "November", "December"]
+        return months[Calendar.current.component(.month, from: date) - 1].uppercased()
     }
 }

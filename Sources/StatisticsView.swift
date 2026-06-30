@@ -17,27 +17,26 @@ struct StatisticsView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color(hex: "#F5F5F7").edgesIgnoringSafeArea(.all)
+                DS.bgPrimary.edgesIgnoringSafeArea(.all)
                 
                 ScrollView {
-                    VStack(spacing: 12) {
+                    VStack(spacing: DS.spacingM) {
                         
                         // Top Filter Section
                         HStack {
                             Button(action: { showingHabitSelector = true }) {
-                                HStack(spacing: 4) {
-                                    Text(selectedHabitIds.isEmpty ? "全部习惯" : "选择习惯 (\(selectedHabitIds.count))")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.primary)
+                                HStack(spacing: 6) {
+                                    Text(selectedHabitIds.isEmpty ? "全部习惯" : "\(selectedHabitIds.count) 个习惯")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(DS.textPrimary)
                                     Image(systemName: "chevron.down")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.secondary)
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundColor(DS.textSecondary)
                                 }
-                                .padding(.horizontal, 16)
+                                .padding(.horizontal, DS.spacingM)
                                 .padding(.vertical, 8)
-                                .background(Color(UIColor.systemBackground))
-                                .cornerRadius(20)
-                                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+                                .background(DS.bgSubtle)
+                                .cornerRadius(DS.cornerPill)
                             }
                             
                             Spacer()
@@ -50,7 +49,8 @@ struct StatisticsView: View {
                             .pickerStyle(SegmentedPickerStyle())
                             .frame(width: 160)
                         }
-                        .padding(.horizontal)
+                        .padding(.horizontal, DS.spacingL)
+                        .padding(.top, DS.spacingS)
                         
                         // Selected Habit Tags
                         if !selectedHabitIds.isEmpty {
@@ -59,79 +59,77 @@ struct StatisticsView: View {
                                     ForEach(Array(selectedHabitIds), id: \.self) { hid in
                                         if let h = habits.first(where: { $0.id == hid }) {
                                             HStack(spacing: 6) {
-                                                Circle().fill(Color(hex: h.color)).frame(width: 8, height: 8)
-                                                Text(h.name).font(.system(size: 13)).foregroundColor(.primary)
-                                                Button(action: {
-                                                    selectedHabitIds.remove(hid)
-                                                }) {
+                                                Circle()
+                                                    .fill(Color(hex: h.color))
+                                                    .frame(width: 7, height: 7)
+                                                Text(h.name)
+                                                    .font(.system(size: 13, weight: .medium))
+                                                    .foregroundColor(DS.textPrimary)
+                                                Button(action: { selectedHabitIds.remove(hid) }) {
                                                     Image(systemName: "xmark")
                                                         .font(.system(size: 10, weight: .bold))
-                                                        .foregroundColor(.secondary)
+                                                        .foregroundColor(DS.textSecondary)
                                                 }
                                             }
-                                            .padding(.horizontal, 10)
+                                            .padding(.horizontal, DS.spacingS + 4)
                                             .padding(.vertical, 6)
-                                            .background(Color.white)
-                                            .cornerRadius(6)
-                                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+                                            .background(DS.bgSubtle)
+                                            .cornerRadius(DS.cornerPill)
                                         }
                                     }
                                 }
-                                .padding(.horizontal)
+                                .padding(.horizontal, DS.spacingL)
                             }
                         }
                         
                         // Overview Card
-                        VStack(spacing: 16) {
+                        VStack(spacing: DS.spacingM) {
                             HStack {
                                 Text(overviewTitle)
-                                    .font(.system(size: 16, weight: .semibold))
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    .foregroundColor(DS.textSecondary)
                                 Spacer()
                             }
                             
-                            HStack(alignment: .top, spacing: 24) {
-                                VStack {
-                                    HStack(alignment: .lastTextBaseline, spacing: 2) {
+                            HStack(alignment: .top, spacing: DS.spacingL) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(alignment: .lastTextBaseline, spacing: 3) {
                                         Text("\(uniqueCheckinDays)")
-                                            .font(.system(size: 36, weight: .heavy))
-                                            .foregroundColor(Color(hex: "#8B5CF6"))
+                                            .font(.system(size: 44, weight: .heavy, design: .rounded))
+                                            .foregroundColor(DS.accent)
                                         Text("天")
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundColor(DS.textSecondary)
                                     }
                                     Text("打卡天数")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
+                                        .font(.system(size: 13))
+                                        .foregroundColor(DS.textSecondary)
                                 }
-                                .frame(width: 100)
+                                .frame(width: 110, alignment: .leading)
                                 
-                                // Breakdown list
-                                ScrollView {
-                                    VStack(alignment: .leading, spacing: 12) {
-                                        ForEach(breakdownData) { item in
-                                            HStack {
-                                                Circle()
-                                                    .fill(Color(hex: item.colorHex))
-                                                    .frame(width: 12, height: 12)
-                                                Text(item.name)
-                                                    .font(.subheadline)
-                                                    .foregroundColor(.secondary)
-                                                Spacer()
-                                                Text(item.amountText)
-                                                    .font(.subheadline)
-                                                    .fontWeight(.semibold)
-                                            }
+                                VStack(alignment: .leading, spacing: DS.spacingS) {
+                                    ForEach(breakdownData) { item in
+                                        HStack {
+                                            Circle()
+                                                .fill(Color(hex: item.colorHex))
+                                                .frame(width: 8, height: 8)
+                                            Text(item.name)
+                                                .font(.system(size: 14, weight: .medium))
+                                                .foregroundColor(DS.textPrimary)
+                                            Spacer()
+                                            Text(item.amountText)
+                                                .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                                                .foregroundColor(DS.textPrimary)
                                         }
                                     }
                                 }
-                                .frame(height: 92)
+                                .frame(maxHeight: 96)
+                                .clipped()
                             }
                         }
-                        .padding()
-                        .background(Color.white.opacity(0.8))
-                        .cornerRadius(16)
-                        .shadow(color: Color.black.opacity(0.03), radius: 5, y: 2)
-                        .padding(.horizontal)
+                        .padding(DS.spacingL)
+                        .card()
+                        .padding(.horizontal, DS.spacingL)
                         
                         // Charts Area
                         VStack {
@@ -143,19 +141,18 @@ struct StatisticsView: View {
                                 AllChartView(chartData: allChartData, availableYears: availableYears, onJump: jumpToYear)
                             }
                         }
-                        .padding()
-                        .background(Color.white.opacity(0.8))
-                        .cornerRadius(16)
-                        .shadow(color: Color.black.opacity(0.03), radius: 5, y: 2)
-                        .padding(.horizontal)
-                        .padding(.bottom, 20)
+                        .padding(DS.spacingL)
+                        .card()
+                        .padding(.horizontal, DS.spacingL)
+                        .padding(.bottom, DS.spacingXL)
                         
                     }
-                    .padding(.top, 16)
+                    .padding(.top, DS.spacingS)
                 }
             }
             .navigationTitle("打卡统计")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
+            .toolbarBackground(DS.bgPrimary, for: .navigationBar)
             .onChange(of: filterMode) { _, newMode in
                 let d = Date()
                 if newMode == "month" {

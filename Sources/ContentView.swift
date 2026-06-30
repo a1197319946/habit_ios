@@ -29,7 +29,7 @@ struct ContentView: View {
                 }
                 .tag(3)
         }
-        .tint(Color(hex: "8B5CF6"))
+        .tint(DS.accent)
     }
 }
 

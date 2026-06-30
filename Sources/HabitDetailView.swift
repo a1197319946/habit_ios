@@ -11,268 +11,285 @@ struct HabitDetailView: View {
     @State private var colorHex: String = Constants.allColors[0]
     @State private var icon: String = Constants.allIcons[0]
     
-    @State private var goalType: String = "frequency" // frequency, amount
-    @State private var frequencyType: String = "weekly" // weekly, monthly
-    
+    @State private var goalType: String = "frequency"
+    @State private var frequencyType: String = "weekly"
     @State private var weeklyTarget: Int = 3
     @State private var monthlyTarget: Int = 10
-    
     @State private var amountValue: Double = 0
-    @State private var amountUnit: String = "km"
-    
+    @State private var amountUnit: String = "次"
     @State private var isSubmitting = false
     
     let unitOptions = ["km", "公里", "米", "分钟", "小时", "组", "次", "页"]
     
-    // Pagination data
-    var colorPages: [[String]] {
-        Array(Constants.allColors.chunked(into: 18))
-    }
-    var iconPages: [[String]] {
-        Array(Constants.allIcons.chunked(into: 18))
-    }
+    var colorPages: [[String]] { Array(Constants.allColors.chunked(into: 18)) }
+    var iconPages: [[String]] { Array(Constants.allIcons.chunked(into: 18)) }
     
     var body: some View {
         ZStack {
-            // Background
-            Color(hex: "#F5F5F7").edgesIgnoringSafeArea(.all)
+            DS.bgPrimary.edgesIgnoringSafeArea(.all)
             
             ScrollView {
-                VStack(spacing: 20) {
-                    // Habit Name
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("习惯名称").font(.subheadline).fontWeight(.semibold)
-                            Text("*").foregroundColor(.red).font(.subheadline)
-                        }
-                        TextField("例如：早起喝水", text: $name)
-                            .padding()
-                            .background(Color(UIColor.systemBackground))
-                            .cornerRadius(12)
-                    }
-                    .padding(.horizontal)
+                VStack(spacing: DS.spacingM) {
                     
-                    // Colors
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("选择颜色").font(.subheadline).fontWeight(.semibold).padding(.horizontal)
+                    // ── Live Preview Card ──
+                    VStack(spacing: DS.spacingM) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(hex: colorHex).opacity(0.15))
+                                .frame(width: 80, height: 80)
+                            
+                            Image(systemName: icon)
+                                .font(.system(size: 34, weight: .semibold))
+                                .foregroundColor(Color(hex: colorHex))
+                        }
+                        
+                        TextField("给习惯起个好名字", text: $name)
+                            .font(.system(size: 26, weight: .bold, design: .rounded))
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(DS.textPrimary)
+                            .padding(.horizontal)
+                    }
+                    .padding(.vertical, DS.spacingXL)
+                    .frame(maxWidth: .infinity)
+                    .card()
+                    .padding(.horizontal, DS.spacingL)
+                    
+                    // ── Color Selection ──
+                    VStack(alignment: .leading, spacing: DS.spacingM) {
+                        Label("颜色", systemImage: "paintpalette")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(DS.textSecondary)
+                            .padding(.horizontal, 4)
                         
                         TabView {
                             ForEach(0..<colorPages.count, id: \.self) { pageIndex in
-                                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 12) {
+                                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: DS.spacingM) {
                                     ForEach(colorPages[pageIndex], id: \.self) { hex in
-                                        Circle()
-                                            .fill(Color(hex: hex))
-                                            .frame(width: 30, height: 30)
-                                            .overlay(
+                                        Button(action: {
+                                            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                                                colorHex = hex
+                                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                            }
+                                        }) {
+                                            ZStack {
                                                 Circle()
-                                                    .stroke(Color.primary, lineWidth: colorHex == hex ? 2 : 0)
-                                                    .scaleEffect(colorHex == hex ? 1.2 : 1.0)
-                                            )
-                                            .onTapGesture {
-                                                withAnimation(.spring()) {
-                                                    colorHex = hex
+                                                    .fill(Color(hex: hex))
+                                                    .frame(width: 36, height: 36)
+                                                
+                                                if colorHex == hex {
+                                                    Circle()
+                                                        .stroke(Color.white, lineWidth: 3)
+                                                        .frame(width: 36, height: 36)
+                                                    Circle()
+                                                        .stroke(Color(hex: hex), lineWidth: 2)
+                                                        .frame(width: 42, height: 42)
                                                 }
                                             }
+                                        }
                                     }
                                 }
-                                .padding(.horizontal)
-                                .padding(.bottom, 20)
+                                .padding(.horizontal, DS.spacingS)
+                                .padding(.bottom, 28)
                             }
                         }
                         .frame(height: 140)
                         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
                     }
+                    .padding(DS.spacingL)
+                    .card()
+                    .padding(.horizontal, DS.spacingL)
                     
-                    // Icons
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("选择图标").font(.subheadline).fontWeight(.semibold).padding(.horizontal)
+                    // ── Icon Selection ──
+                    VStack(alignment: .leading, spacing: DS.spacingM) {
+                        Label("图标", systemImage: "square.grid.2x2")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(DS.textSecondary)
+                            .padding(.horizontal, 4)
                         
                         TabView {
                             ForEach(0..<iconPages.count, id: \.self) { pageIndex in
-                                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 12) {
+                                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: DS.spacingM) {
                                     ForEach(iconPages[pageIndex], id: \.self) { iconName in
-                                        ZStack {
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .fill(icon == iconName ? Color(hex: colorHex) : Color(UIColor.systemBackground))
-                                                .frame(width: 40, height: 40)
-                                                .shadow(color: Color.black.opacity(icon == iconName ? 0.2 : 0), radius: 4, y: 2)
-                                            
-                                            Image(systemName: iconName)
-                                                .foregroundColor(icon == iconName ? .white : .primary)
-                                                .font(.system(size: 20))
-                                        }
-                                        .onTapGesture {
-                                            withAnimation(.spring()) {
+                                        Button(action: {
+                                            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
                                                 icon = iconName
+                                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                            }
+                                        }) {
+                                            ZStack {
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .fill(icon == iconName ? Color(hex: colorHex) : DS.bgSubtle)
+                                                    .frame(width: 44, height: 44)
+                                                
+                                                Image(systemName: iconName)
+                                                    .foregroundColor(icon == iconName ? .white : DS.textSecondary)
+                                                    .font(.system(size: 18, weight: .medium))
                                             }
                                         }
                                     }
                                 }
-                                .padding(.horizontal)
-                                .padding(.bottom, 20)
+                                .padding(.horizontal, DS.spacingS)
+                                .padding(.bottom, 28)
                             }
                         }
                         .frame(height: 180)
                         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
                     }
+                    .padding(DS.spacingL)
+                    .card()
+                    .padding(.horizontal, DS.spacingL)
                     
-                    // Goal Settings
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("打卡目标").font(.subheadline).fontWeight(.semibold)
-                            Text("*").foregroundColor(.red).font(.subheadline)
-                        }
+                    // ── Goal Settings ──
+                    VStack(alignment: .leading, spacing: DS.spacingM) {
+                        Label("打卡目标", systemImage: "target")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(DS.textSecondary)
+                            .padding(.horizontal, 4)
                         
-                        // Goal Type Segment
                         Picker("目标类型", selection: $goalType) {
-                            Text("次数目标").tag("frequency")
-                            Text("总量目标").tag("amount")
+                            Text("次数").tag("frequency")
+                            Text("数值").tag("amount")
                         }
                         .pickerStyle(SegmentedPickerStyle())
                         
-                        // Frequency Type Segment
                         Picker("周期", selection: $frequencyType) {
                             Text("按周").tag("weekly")
                             Text("按月").tag("monthly")
                         }
                         .pickerStyle(SegmentedPickerStyle())
                         
-                        // Settings Content
-                        VStack(spacing: 16) {
-                            if goalType == "frequency" {
-                                if frequencyType == "weekly" {
-                                    HStack {
-                                        Text("每周目标次数").font(.subheadline)
-                                        Spacer()
-                                        Stepper("\(weeklyTarget)", value: $weeklyTarget, in: 1...7)
-                                            .labelsHidden()
-                                        Text("\(weeklyTarget)").frame(width: 30).font(.headline).multilineTextAlignment(.center)
+                        JDivider()
+                        
+                        if goalType == "frequency" {
+                            HStack {
+                                Text(frequencyType == "weekly" ? "每周目标次数" : "每月目标次数")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(DS.textPrimary)
+                                Spacer()
+                                HStack(spacing: DS.spacingM) {
+                                    Button(action: {
+                                        if frequencyType == "weekly" && weeklyTarget > 1 { weeklyTarget -= 1 }
+                                        else if frequencyType == "monthly" && monthlyTarget > 1 { monthlyTarget -= 1 }
+                                    }) {
+                                        Image(systemName: "minus")
+                                            .frame(width: 32, height: 32)
+                                            .background(DS.bgSubtle)
+                                            .cornerRadius(8)
+                                            .foregroundColor(DS.textPrimary)
                                     }
-                                } else {
-                                    HStack {
-                                        Text("每月目标次数").font(.subheadline)
-                                        Spacer()
-                                        Stepper("\(monthlyTarget)", value: $monthlyTarget, in: 1...31)
-                                            .labelsHidden()
-                                        Text("\(monthlyTarget)").frame(width: 30).font(.headline).multilineTextAlignment(.center)
-                                    }
-                                }
-                            } else {
-                                HStack {
-                                    Text("\(frequencyType == "weekly" ? "每周" : "每月")目标总量").font(.subheadline)
-                                    Spacer()
-                                    TextField("0", value: $amountValue, format: .number)
-                                        .keyboardType(.decimalPad)
-                                        .multilineTextAlignment(.center)
-                                        .frame(width: 80, height: 36)
-                                        .background(Color(UIColor.systemBackground))
-                                        .cornerRadius(8)
-                                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.3), lineWidth: 1))
                                     
-                                    Picker("Unit", selection: $amountUnit) {
-                                        ForEach(unitOptions, id: \.self) { unit in
-                                            Text(unit).tag(unit)
-                                        }
+                                    Text("\(frequencyType == "weekly" ? weeklyTarget : monthlyTarget)")
+                                        .font(.system(size: 20, weight: .bold, design: .monospaced))
+                                        .foregroundColor(DS.accent)
+                                        .frame(minWidth: 32, alignment: .center)
+                                    
+                                    Button(action: {
+                                        if frequencyType == "weekly" && weeklyTarget < 7 { weeklyTarget += 1 }
+                                        else if frequencyType == "monthly" && monthlyTarget < 31 { monthlyTarget += 1 }
+                                    }) {
+                                        Image(systemName: "plus")
+                                            .frame(width: 32, height: 32)
+                                            .background(DS.bgSubtle)
+                                            .cornerRadius(8)
+                                            .foregroundColor(DS.textPrimary)
                                     }
-                                    .pickerStyle(MenuPickerStyle())
-                                    .frame(width: 80, height: 36)
-                                    .background(Color(UIColor.systemBackground))
-                                    .cornerRadius(8)
-                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.3), lineWidth: 1))
                                 }
                             }
+                            .padding(.top, DS.spacingS)
+                        } else {
+                            HStack {
+                                Text("\(frequencyType == "weekly" ? "每周" : "每月")目标总量")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(DS.textPrimary)
+                                Spacer()
+                                TextField("0", value: $amountValue, format: .number)
+                                    .keyboardType(.decimalPad)
+                                    .multilineTextAlignment(.center)
+                                    .font(.system(size: 18, weight: .bold, design: .monospaced))
+                                    .foregroundColor(DS.accent)
+                                    .frame(width: 70)
+                                    .padding(.vertical, 8)
+                                    .background(DS.bgSubtle)
+                                    .cornerRadius(8)
+                                
+                                Picker("", selection: $amountUnit) {
+                                    ForEach(unitOptions, id: \.self) { Text($0).tag($0) }
+                                }
+                                .pickerStyle(MenuPickerStyle())
+                                .padding(.vertical, 8)
+                                .background(DS.bgSubtle)
+                                .cornerRadius(8)
+                            }
+                            .padding(.top, DS.spacingS)
                         }
-                        .padding()
-                        .background(Color(UIColor.systemBackground))
-                        .cornerRadius(12)
                     }
-                    .padding(.horizontal)
+                    .padding(DS.spacingL)
+                    .card()
+                    .padding(.horizontal, DS.spacingL)
                     
-                    Spacer().frame(height: 100) // Padding for bottom button
+                    Spacer().frame(height: 110)
                 }
-                .padding(.top, 16)
+                .padding(.top, DS.spacingM)
             }
             
-            // Bottom Button
+            // ── Floating Submit Button ──
             VStack {
                 Spacer()
-                ZStack {
-                    // Blur background
-                    Rectangle()
-                        .fill(Color(UIColor.systemBackground).opacity(0.8))
-                        .frame(height: 100)
-                        .blur(radius: 20)
-                        .edgesIgnoringSafeArea(.bottom)
-                    
-                    Button(action: submit) {
-                        HStack {
-                            if isSubmitting {
-                                ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            }
-                            Text(isSubmitting ? "创建中..." : (habit == nil ? "完成创建" : "保存修改"))
+                Button(action: submit) {
+                    HStack {
+                        if isSubmitting {
+                            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
                         }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 52)
-                        .background(Color(hex: "#8B5CF6"))
-                        .foregroundColor(.white)
-                        .font(.headline)
-                        .cornerRadius(26)
-                        .padding(.horizontal, 20)
+                        Text(isSubmitting ? "保存中..." : (habit == nil ? "创建习惯" : "保存修改"))
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundColor(.white)
                     }
-                    .disabled(name.isEmpty)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(name.isEmpty ? DS.textTertiary : DS.accent)
+                    .cornerRadius(DS.cornerPill)
+                    .padding(.horizontal, DS.spacingXL)
                 }
+                .disabled(name.isEmpty)
+                .padding(.bottom, 36)
+                .background(
+                    LinearGradient(
+                        colors: [DS.bgPrimary.opacity(0), DS.bgPrimary],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                    .frame(height: 120)
+                    .allowsHitTesting(false)
+                )
             }
             .edgesIgnoringSafeArea(.bottom)
         }
         .navigationTitle(habit == nil ? "新建习惯" : "编辑习惯")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarItems(leading: Button(action: {
-            dismiss()
-        }) {
-            Image(systemName: "xmark")
-                .foregroundColor(Color(hex: "#9CA3AF"))
-                .font(.system(size: 20, weight: .bold))
-        })
+        .toolbarBackground(DS.bgPrimary, for: .navigationBar)
         .onAppear {
-            if let habit = habit {
-                name = habit.name
-                colorHex = habit.color
-                icon = habit.icon
-                goalType = habit.goalType
-                frequencyType = habit.frequencyType
-                weeklyTarget = habit.weeklyTarget
-                monthlyTarget = habit.monthlyTarget
-                amountValue = habit.amountValue
-                amountUnit = habit.amountUnit
+            if let h = habit {
+                name = h.name; colorHex = h.color; icon = h.icon
+                goalType = h.goalType; frequencyType = h.frequencyType
+                weeklyTarget = h.weeklyTarget; monthlyTarget = h.monthlyTarget
+                amountValue = h.amountValue; amountUnit = h.amountUnit
             }
         }
     }
     
     private func submit() {
         isSubmitting = true
-        
-        // Simulating delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            if let habit = habit {
-                habit.name = name
-                habit.color = colorHex
-                habit.icon = icon
-                habit.goalType = goalType
-                habit.frequencyType = frequencyType
-                habit.weeklyTarget = weeklyTarget
-                habit.monthlyTarget = monthlyTarget
-                habit.amountValue = amountValue
-                habit.amountUnit = amountUnit
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            if let h = habit {
+                h.name = name; h.color = colorHex; h.icon = icon
+                h.goalType = goalType; h.frequencyType = frequencyType
+                h.weeklyTarget = weeklyTarget; h.monthlyTarget = monthlyTarget
+                h.amountValue = amountValue; h.amountUnit = amountUnit
             } else {
                 let newHabit = Habit(name: name, color: colorHex, icon: icon)
-                newHabit.goalType = goalType
-                newHabit.frequencyType = frequencyType
-                newHabit.weeklyTarget = weeklyTarget
-                newHabit.monthlyTarget = monthlyTarget
-                newHabit.amountValue = amountValue
-                newHabit.amountUnit = amountUnit
-                // Put at end of list
-                // Order logic will be handled if needed, for now just 0
+                newHabit.goalType = goalType; newHabit.frequencyType = frequencyType
+                newHabit.weeklyTarget = weeklyTarget; newHabit.monthlyTarget = monthlyTarget
+                newHabit.amountValue = amountValue; newHabit.amountUnit = amountUnit
                 modelContext.insert(newHabit)
             }
             isSubmitting = false
@@ -283,7 +300,7 @@ struct HabitDetailView: View {
 
 extension Array {
     func chunked(into size: Int) -> [[Element]] {
-        return stride(from: 0, to: count, by: size).map {
+        stride(from: 0, to: count, by: size).map {
             Array(self[$0 ..< Swift.min($0 + size, count)])
         }
     }

@@ -9,7 +9,6 @@ struct HomeView: View {
     @State private var selectedDate: Date = Date()
     @State private var icloudEnabled: Bool = true
     
-    // UI State
     @State private var showingAmountSheet = false
     @State private var showingMoodSheet = false
     @State private var showingSuccessModal = false
@@ -18,201 +17,125 @@ struct HomeView: View {
     
     @State private var selectedHabit: Habit?
     @State private var initialAmountForSheet: Double?
-    
-    // Confetti
     @State private var showConfetti = false
+    
+    // Computed
+    private var todayDateString: String { formatDate(Date()) }
+    private var selectedDateString: String { formatDate(selectedDate) }
+    
+    private var completedToday: Int {
+        habits.filter { habit in
+            checkins.contains { $0.habit?.id == habit.id && $0.dateString == selectedDateString }
+        }.count
+    }
+    
+    private var progressFraction: CGFloat {
+        guard !habits.isEmpty else { return 0 }
+        return CGFloat(completedToday) / CGFloat(habits.count)
+    }
     
     var body: some View {
         NavigationView {
             ZStack {
-                Color(hex: "#F5F5F7").edgesIgnoringSafeArea(.all)
+                DS.bgPrimary.edgesIgnoringSafeArea(.all)
                 
                 ScrollView {
                     VStack(spacing: 0) {
                         
-                        // Header Section with Image
-                        ZStack(alignment: .bottom) {
-                            ZStack(alignment: .topLeading) {
-                                Image("header_bg")
+                        // ── Top Bar ──
+                        HStack(alignment: .center) {
+                            HStack(spacing: 10) {
+                                Image("app_logo")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(maxWidth: .infinity)
-                                    .edgesIgnoringSafeArea(.top)
-                                // Logo
-                                HStack(spacing: 8) {
-                                    Image("app_logo")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 24, height: 24)
-                                        .clipShape(Circle())
-                                    
-                                    Text("小习惯")
-                                        .font(.system(size: 18, weight: .bold))
-                                        .foregroundColor(Color(hex: "#1F2937"))
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(.ultraThinMaterial)
-                                .clipShape(Capsule())
-                                .shadow(color: Color.black.opacity(0.08), radius: 8, y: 4)
-                                .padding(.leading, 20)
-                                .padding(.top, 56) // Account for safe area
+                                    .frame(width: 28, height: 28)
+                                    .clipShape(Circle())
+                                Text("小习惯")
+                                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                                    .foregroundColor(DS.textPrimary)
                             }
                             
-                            HStack {
-                                Spacer()
-                                // Hero Illustration Badge
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .fill(Color.white)
-                                        .frame(width: 72, height: 72)
-                                        .shadow(color: Color(hex: "#6366F1").opacity(0.1), radius: 12, y: 5)
-                                    
-                                    VStack(spacing: 0) {
-                                        Rectangle()
-                                            .fill(Color(hex: "#EF4444"))
-                                            .frame(height: 20)
-                                            .clipShape(CustomTopCorners(radius: 20))
-                                        Spacer()
-                                    }
-                                    .frame(width: 72, height: 72)
-                                    
-                                    VStack(spacing: 2) {
-                                        Spacer().frame(height: 16)
-                                        Text("\(Calendar.current.component(.month, from: Date()))")
-                                            .font(.system(size: 32, weight: .heavy))
-                                            .foregroundColor(Color(UIColor.darkText))
-                                        Text("月")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.secondary)
-                                        Spacer()
-                                    }
-                                    .frame(width: 72, height: 72)
-                                    
-                                    // Check badge
-                                    Circle()
-                                        .fill(Color(hex: "#10B981"))
-                                        .frame(width: 28, height: 28)
-                                        .overlay(
-                                            Image(systemName: "checkmark")
-                                                .font(.system(size: 14, weight: .bold))
-                                                .foregroundColor(.white)
-                                        )
-                                        .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                                        .offset(x: 28, y: 28)
-                                }
-                                .rotationEffect(Angle(degrees: 4))
-                                .padding(.trailing, 28)
-                                .offset(y: -40)
-                            }
-                        }
-                        
-                        // iCloud Banner
-                        if !icloudEnabled {
-                            HStack {
-                                Image(systemName: "info.circle.fill").foregroundColor(Color(hex: "#EF4444"))
-                                Text("未开启 iCloud，数据将无法跨设备同步")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(Color(hex: "#B91C1C"))
-                                Spacer()
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(Color(hex: "#FEF2F2"))
-                            .cornerRadius(8)
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: "#FCA5A5"), lineWidth: 1))
-                            .padding(.horizontal, 16)
-                            .padding(.top, 12)
-                            .zIndex(10)
-                        }
-                        
-                        // Calendar
-                        WeeklyCalendarView(selectedDate: $selectedDate, checkins: checkins)
-                            .frame(height: 100)
-                            .padding(.top, 8)
-                        
-                        // Habits Header
-                        HStack {
                             Spacer()
+                            
                             NavigationLink(destination: HabitListView()) {
-                                HStack(spacing: 4) {
-                                    Text("管理习惯")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                    Image(systemName: "chevron.right")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
+                                Text("管理")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(DS.textSecondary)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 7)
+                                    .background(DS.bgSubtle)
+                                    .cornerRadius(DS.cornerPill)
                             }
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.top, 16)
+                        .padding(.horizontal, DS.spacingL)
+                        .padding(.top, 60)
+                        .padding(.bottom, DS.spacingM)
                         
-                        // Habits Grid
-                        if habits.isEmpty {
-                            VStack(spacing: 16) {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 24)
-                                        .fill(Color.white.opacity(0.8))
-                                        .frame(width: 80, height: 80)
-                                    Image(systemName: "flag.fill")
-                                        .font(.system(size: 32))
-                                        .foregroundColor(Color(hex: "#8B5CF6"))
-                                }
-                                Text("这里空空如也")
-                                    .foregroundColor(.secondary)
-                                
-                                NavigationLink(destination: HabitDetailView(habit: nil)) {
-                                    Text("创建第一个习惯")
-                                        .font(.subheadline)
-                                        .foregroundColor(Color(hex: "#8B5CF6"))
-                                        .padding(.horizontal, 20)
-                                        .padding(.vertical, 10)
-                                        .background(Color(hex: "#8B5CF6").opacity(0.1))
-                                        .cornerRadius(20)
-                                }
+                        // ── iCloud Banner ──
+                        if !icloudEnabled {
+                            HStack(spacing: 8) {
+                                Image(systemName: "exclamationmark.circle")
+                                    .foregroundColor(DS.accent)
+                                    .font(.system(size: 14))
+                                Text("未开启 iCloud，数据将无法跨设备同步")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(DS.textSecondary)
                             }
-                            .padding(.top, 40)
+                            .padding(.horizontal, DS.spacingM)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(DS.accentMuted)
+                            .cornerRadius(DS.cornerSmall)
+                            .padding(.horizontal, DS.spacingL)
+                            .padding(.bottom, DS.spacingM)
+                        }
+                        
+                        // ── Week Calendar ──
+                        WeeklyCalendarView(selectedDate: $selectedDate, checkins: checkins)
+                            .padding(.horizontal, DS.spacingL)
+                            .padding(.bottom, DS.spacingL)
+                        
+                        // ── Hero Stats ──
+                        if !habits.isEmpty {
+                            HeroStatsView(
+                                completed: completedToday,
+                                total: habits.count,
+                                progress: progressFraction,
+                                date: selectedDate
+                            )
+                            .padding(.horizontal, DS.spacingL)
+                            .padding(.bottom, DS.spacingL)
+                        }
+                        
+                        // ── Habits List ──
+                        if habits.isEmpty {
+                            EmptyHabitsView()
+                                .padding(.top, DS.spacingXL)
                         } else {
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
-                                ForEach(habits) { habit in
-                                    HabitCard(habit: habit, selectedDate: selectedDate, checkins: checkins) {
-                                        handleCheckinTap(habit: habit)
+                            VStack(spacing: 0) {
+                                ForEach(Array(habits.enumerated()), id: \.element.id) { index, habit in
+                                    HabitRow(
+                                        habit: habit,
+                                        selectedDate: selectedDate,
+                                        checkins: checkins,
+                                        onCheckin: { handleCheckinTap(habit: habit) }
+                                    )
+                                    
+                                    if index < habits.count - 1 {
+                                        JDivider()
+                                            .padding(.horizontal, DS.spacingL)
                                     }
                                 }
                             }
-                            .padding(.horizontal)
-                            .padding(.top, 16)
+                            .card(cornerRadius: DS.cornerCard)
+                            .padding(.horizontal, DS.spacingL)
                         }
                         
-                        // Bottom quote banner
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(LinearGradient(colors: [Color(hex: "#8B5CF6").opacity(0.8), Color(hex: "#C4B5FD")], startPoint: .leading, endPoint: .trailing))
-                            
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("每天坚持一点点")
-                                        .font(.system(size: 15, weight: .bold))
-                                        .foregroundColor(.white)
-                                    Text("今天也要加油哦！💪")
-                                        .font(.subheadline)
-                                        .foregroundColor(.white.opacity(0.9))
-                                }
-                                Spacer()
-                                Text("⭐").font(.title)
-                            }
-                            .padding()
-                        }
-                        .frame(height: 70)
-                        .padding(.horizontal)
-                        .padding(.top, 30)
-                        .padding(.bottom, 40)
-                        
+                        Spacer().frame(height: 100)
                     }
                 }
                 
-                // Confetti overlay
+                // Confetti
                 if showConfetti {
                     ConfettiView()
                 }
@@ -224,9 +147,7 @@ struct HomeView: View {
                         habit: selectedHabit,
                         date: selectedDate,
                         checkins: checkins,
-                        onRecordMood: {
-                            showingMoodSheet = true
-                        }
+                        onRecordMood: { showingMoodSheet = true }
                     )
                     .presentationDetents([.fraction(0.65)])
                     .presentationDragIndicator(.visible)
@@ -235,29 +156,23 @@ struct HomeView: View {
             .alert("提示", isPresented: $showingMakeupAlert) {
                 Button("取消", role: .cancel) { }
                 Button("确认") {
-                    if let h = selectedHabit {
-                        executeCheckin(habit: h)
-                    }
+                    if let h = selectedHabit { executeCheckin(habit: h) }
                 }
             } message: {
                 Text("对 \(formatDate(selectedDate)) 补卡？")
             }
             .confirmationDialog("管理打卡", isPresented: $showHabitActionSheet, titleVisibility: .hidden) {
                 if let habit = selectedHabit {
-                    if let existing = checkins.first(where: { $0.habit?.id == habit.id && $0.dateString == formatDate(selectedDate) }) {
+                    if let existing = checkins.first(where: { $0.habit?.id == habit.id && $0.dateString == selectedDateString }) {
                         if habit.goalType == "amount" {
                             Button("修改数据") {
                                 initialAmountForSheet = existing.amount
                                 showingAmountSheet = true
                             }
                         }
-                        Button("撤销打卡", role: .destructive) {
-                            modelContext.delete(existing)
-                        }
+                        Button("撤销打卡", role: .destructive) { modelContext.delete(existing) }
                     } else {
-                        Button("打卡") {
-                            processCheckin()
-                        }
+                        Button("打卡") { processCheckin() }
                     }
                 }
             }
@@ -265,9 +180,7 @@ struct HomeView: View {
                 if let habit = selectedHabit {
                     AmountCheckinSheet(habit: habit, selectedDate: selectedDate, initialAmount: initialAmountForSheet) {
                         showingAmountSheet = false
-                        if initialAmountForSheet == nil {
-                            triggerSuccessSequence()
-                        }
+                        if initialAmountForSheet == nil { triggerSuccessSequence() }
                     }
                     .presentationDetents([.fraction(0.6)])
                 }
@@ -284,20 +197,11 @@ struct HomeView: View {
     private func handleCheckinTap(habit: Habit) {
         let dateString = formatDate(selectedDate)
         let todayString = formatDate(Date())
-        
-        // Prevent future
-        if selectedDate > Date() && dateString != todayString {
-            // Future checkin blocked
-            return
-        }
-        
+        if selectedDate > Date() && dateString != todayString { return }
         selectedHabit = habit
-        
         if checkins.contains(where: { $0.habit?.id == habit.id && $0.dateString == dateString }) {
-            // Already checked in, show action sheet
             showHabitActionSheet = true
         } else {
-            // Not checked in, check for makeup logic directly without action sheet
             processCheckin()
         }
     }
@@ -306,7 +210,6 @@ struct HomeView: View {
         let dateString = formatDate(selectedDate)
         let todayString = formatDate(Date())
         guard let habit = selectedHabit else { return }
-        
         if dateString != todayString && selectedDate < Date() {
             showingMakeupAlert = true
         } else {
@@ -328,7 +231,7 @@ struct HomeView: View {
     
     private func triggerSuccessSequence() {
         showConfetti = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             showConfetti = false
             showingSuccessModal = true
         }
@@ -341,7 +244,197 @@ struct HomeView: View {
     }
 }
 
-// Additional Components (DayCell, WeeklyCalendarView, HabitCard, AmountCheckinSheet, ConfettiView)
+// MARK: - Hero Stats
+
+struct HeroStatsView: View {
+    let completed: Int
+    let total: Int
+    let progress: CGFloat
+    let date: Date
+    
+    private var isToday: Bool { Calendar.current.isDateInToday(date) }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.spacingM) {
+            // Date label
+            Text(isToday ? "今天" : shortDateLabel(date))
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(DS.textSecondary)
+            
+            // Big number
+            HStack(alignment: .lastTextBaseline, spacing: 4) {
+                Text("\(completed)")
+                    .font(.system(size: 56, weight: .heavy, design: .rounded))
+                    .foregroundColor(DS.accent)
+                Text("/ \(total)")
+                    .font(.system(size: 22, weight: .semibold, design: .rounded))
+                    .foregroundColor(DS.textSecondary)
+                Spacer()
+                
+                if completed == total && total > 0 {
+                    Text("全部完成 🎉")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(DS.success)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(DS.successMuted)
+                        .cornerRadius(DS.cornerPill)
+                }
+            }
+            
+            // Progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(DS.border)
+                        .frame(height: 4)
+                    
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(completed == total && total > 0 ? DS.success : DS.accent)
+                        .frame(width: geo.size.width * progress, height: 4)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)
+                }
+            }
+            .frame(height: 4)
+        }
+        .padding(DS.spacingL)
+        .card()
+    }
+    
+    private func shortDateLabel(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "M月d日"
+        return f.string(from: date)
+    }
+}
+
+// MARK: - Empty State
+
+struct EmptyHabitsView: View {
+    var body: some View {
+        VStack(spacing: DS.spacingL) {
+            Text("还没有习惯")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundColor(DS.textPrimary)
+            
+            Text("点击下方按钮，开始你的第一个习惯吧")
+                .font(.system(size: 15))
+                .foregroundColor(DS.textSecondary)
+                .multilineTextAlignment(.center)
+            
+            NavigationLink(destination: HabitDetailView(habit: nil)) {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 15, weight: .bold))
+                    Text("创建习惯")
+                        .font(.system(size: 16, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, DS.spacingXL)
+                .padding(.vertical, DS.spacingM)
+                .background(DS.accent)
+                .cornerRadius(DS.cornerPill)
+            }
+        }
+        .padding(.horizontal, DS.spacingXL)
+    }
+}
+
+// MARK: - Habit Row (Single column list)
+
+struct HabitRow: View {
+    let habit: Habit
+    let selectedDate: Date
+    let checkins: [Checkin]
+    let onCheckin: () -> Void
+    
+    @State private var isPressed = false
+    
+    var isChecked: Bool {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dateString = formatter.string(from: selectedDate)
+        return checkins.contains(where: { $0.habit?.id == habit.id && $0.dateString == dateString })
+    }
+    
+    var progressText: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dateString = formatter.string(from: selectedDate)
+        let hCheckins = checkins.filter { $0.habit?.id == habit.id }
+        let freqLabel = habit.frequencyType == "weekly" ? "周" : "月"
+        if habit.goalType == "amount" {
+            let target = habit.amountValue
+            let sum = hCheckins.filter { $0.dateString == dateString }.reduce(0) { $0 + $1.amount }
+            return "\(freqLabel) · \(Int(sum))/\(Int(target)) \(habit.amountUnit)"
+        } else {
+            let target = habit.frequencyType == "weekly" ? habit.weeklyTarget : habit.monthlyTarget
+            let count = hCheckins.filter { $0.dateString == dateString }.count
+            return "\(freqLabel) · \(count)/\(target) 次"
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: DS.spacingM) {
+            // Color dot + icon
+            ZStack {
+                Circle()
+                    .fill(isChecked ? DS.successMuted : Color(hex: habit.color).opacity(0.12))
+                    .frame(width: 44, height: 44)
+                
+                Image(systemName: isChecked ? "checkmark" : habit.icon)
+                    .font(.system(size: isChecked ? 16 : 18, weight: .semibold))
+                    .foregroundColor(isChecked ? DS.success : Color(hex: habit.color))
+            }
+            
+            // Text
+            VStack(alignment: .leading, spacing: 3) {
+                Text(habit.name)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(isChecked ? DS.textSecondary : DS.textPrimary)
+                    .strikethrough(isChecked, color: DS.textSecondary)
+                
+                Text(progressText)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(DS.textTertiary)
+            }
+            
+            Spacer()
+            
+            // Check button
+            Button(action: {
+                let impact = UIImpactFeedbackGenerator(style: .medium)
+                impact.impactOccurred()
+                onCheckin()
+            }) {
+                if isChecked {
+                    Text("已打卡")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(DS.success)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background(DS.successMuted)
+                        .cornerRadius(DS.cornerPill)
+                } else {
+                    Text("打卡")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background(DS.accent)
+                        .cornerRadius(DS.cornerPill)
+                }
+            }
+        }
+        .padding(.horizontal, DS.spacingL)
+        .padding(.vertical, DS.spacingM)
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.8), value: isPressed)
+        .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Weekly Calendar
 
 struct WeeklyCalendarView: View {
     @Binding var selectedDate: Date
@@ -356,22 +449,25 @@ struct WeeklyCalendarView: View {
     }
     
     var body: some View {
-        TabView(selection: $currentWeekIndex) {
-            ForEach(0..<weeks.count, id: \.self) { index in
-                HStack(spacing: 0) {
-                    ForEach(weeks[index], id: \.self) { date in
-                        DayCell(date: date, selectedDate: selectedDate, checkins: checkins)
-                            .onTapGesture {
-                                withAnimation {
-                                    selectedDate = date
+        VStack(spacing: DS.spacingM) {
+            TabView(selection: $currentWeekIndex) {
+                ForEach(0..<weeks.count, id: \.self) { index in
+                    HStack(spacing: 0) {
+                        ForEach(weeks[index], id: \.self) { date in
+                            DayCell(date: date, selectedDate: selectedDate, checkins: checkins)
+                                .onTapGesture {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                        selectedDate = date
+                                    }
                                 }
-                            }
+                        }
                     }
+                    .tag(index)
                 }
-                .tag(index)
             }
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            .frame(height: 72)
         }
-        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
         .onAppear { setupWeeks() }
         .onChange(of: currentWeekIndex) { _, newIndex in
             if newIndex == 0 { shiftWeeks(by: -1) }
@@ -407,6 +503,8 @@ struct WeeklyCalendarView: View {
     }
 }
 
+// MARK: - Day Cell
+
 struct DayCell: View {
     let date: Date
     let selectedDate: Date
@@ -425,61 +523,51 @@ struct DayCell: View {
     }
     
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             Text(weekdays[Calendar.current.component(.weekday, from: date) - 1])
-                .font(.system(size: 12))
-                .foregroundColor(.secondary)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(isSelected ? DS.accent : DS.textTertiary)
             
-            // Pill
-            VStack(spacing: 4) {
-                Text("\(Calendar.current.component(.day, from: date))")
-                    .font(.system(size: 16, weight: isSelected ? .bold : .semibold))
-                    .foregroundColor(isSelected ? .white : (isFuture ? Color.gray.opacity(0.5) : .primary))
+            ZStack {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(DS.accent)
+                        .frame(width: 36, height: 36)
+                } else if isToday {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(DS.accentMuted)
+                        .frame(width: 36, height: 36)
+                }
                 
-                ZStack {
+                VStack(spacing: 2) {
+                    Text("\(Calendar.current.component(.day, from: date))")
+                        .font(.system(size: 16, weight: isSelected ? .bold : .medium))
+                        .foregroundColor(
+                            isSelected ? .white :
+                            (isFuture ? DS.textTertiary :
+                            (isToday ? DS.accent : DS.textPrimary))
+                        )
+                    
                     if hasCheckin {
                         Circle()
-                            .fill(isSelected ? .white : Color(hex: "#10B981"))
-                            .frame(width: 14, height: 14)
-                            .overlay(
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 8, weight: .bold))
-                                    .foregroundColor(isSelected ? Color(hex: "#8B5CF6") : .white)
-                            )
+                            .fill(isSelected ? .white : DS.success)
+                            .frame(width: 4, height: 4)
                     } else {
                         Circle()
-                            .stroke(isSelected ? Color.white.opacity(0.4) : Color.gray.opacity(0.3), lineWidth: 1)
-                            .frame(width: 14, height: 14)
+                            .fill(Color.clear)
+                            .frame(width: 4, height: 4)
                     }
                 }
             }
-            .frame(width: 40, height: 48)
-            .padding(.top, 8)
-            .padding(.bottom, 6)
-            .background(
-                ZStack {
-                    if isSelected {
-                        RoundedRectangle(cornerRadius: 24)
-                            .fill(Color(hex: "#8B5CF6"))
-                            .shadow(color: Color(hex: "#8B5CF6").opacity(0.3), radius: 6, y: 3)
-                    }
-                    if isToday {
-                        VStack {
-                            Spacer()
-                            Rectangle()
-                                .fill(isSelected ? .white : Color(hex: "#8B5CF6"))
-                                .frame(width: 16, height: 3)
-                                .cornerRadius(1.5)
-                                .padding(.bottom, 4)
-                        }
-                    }
-                }
-            )
+            .frame(width: 36, height: 36)
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
     }
 }
+
+// MARK: - Custom Top Corners
+
 struct CustomTopCorners: Shape {
     var radius: CGFloat
     func path(in rect: CGRect) -> Path {
@@ -495,93 +583,7 @@ struct CustomTopCorners: Shape {
     }
 }
 
-struct HabitCard: View {
-    let habit: Habit
-    let selectedDate: Date
-    let checkins: [Checkin]
-    let onCheckin: () -> Void
-    
-    @State private var scale: CGFloat = 1.0
-    
-    var isChecked: Bool {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dateString = formatter.string(from: selectedDate)
-        return checkins.contains(where: { $0.habit?.id == habit.id && $0.dateString == dateString })
-    }
-    
-    var progressText: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        
-        // Quick weekly approximation for UI display
-        let hCheckins = checkins.filter { $0.habit?.id == habit.id }
-        
-        let freqLabel = habit.frequencyType == "weekly" ? "周" : "月"
-        if habit.goalType == "amount" {
-            let target = habit.amountValue
-            // sum of today for simplicity in UI, fully calculating period requires complex date logic here
-            let sum = hCheckins.filter { $0.dateString == formatter.string(from: selectedDate) }.reduce(0) { $0 + $1.amount }
-            return "\(freqLabel): \(sum)/\(target)\(habit.amountUnit)"
-        } else {
-            let target = habit.frequencyType == "weekly" ? habit.weeklyTarget : habit.monthlyTarget
-            // sum of today for simplicity
-            let count = hCheckins.filter { $0.dateString == formatter.string(from: selectedDate) }.count
-            return "\(freqLabel): \(count)/\(target)次"
-        }
-    }
-    
-    var body: some View {
-        VStack {
-            ZStack {
-                Circle()
-                    .fill(isChecked ? Color(hex: "#10B981") : Color(hex: habit.color))
-                    .frame(width: 50, height: 50)
-                    .shadow(color: isChecked ? Color(hex: "#10B981").opacity(0.4) : Color(hex: habit.color).opacity(0.4), radius: 6, y: 3)
-                
-                if isChecked {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(.white)
-                        .font(.title2)
-                } else {
-                    Image(systemName: habit.icon)
-                        .foregroundColor(.white)
-                        .font(.title2)
-                }
-            }
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isChecked)
-            
-            Text(habit.name)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(isChecked ? Color(hex: "#10B981") : .primary)
-                .lineLimit(1)
-                .padding(.top, 4)
-            
-            Text(progressText)
-                .font(.system(size: 10))
-                .foregroundColor(isChecked ? Color(hex: "#10B981").opacity(0.8) : .secondary)
-        }
-        .padding(.vertical, 16)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(isChecked ? Color(hex: "#10B981").opacity(0.08) : Color.white.opacity(0.8))
-                .shadow(color: Color.black.opacity(0.03), radius: 5, y: 2)
-        )
-        .scaleEffect(scale)
-        .onTapGesture {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
-                scale = 0.9
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
-                    scale = 1.0
-                }
-                onCheckin()
-            }
-        }
-    }
-}
+// MARK: - Amount Checkin Sheet
 
 struct AmountCheckinSheet: View {
     @Environment(\.modelContext) private var modelContext
@@ -600,35 +602,40 @@ struct AmountCheckinSheet: View {
     ]
     
     var body: some View {
-        VStack(spacing: 20) {
-            Text(initialAmount != nil ? "修改\(habit.name)" : "记录\(habit.name)")
-                .font(.headline)
-                .padding(.top, 20)
+        VStack(spacing: DS.spacingL) {
+            Text(initialAmount != nil ? "修改 \(habit.name)" : "记录 \(habit.name)")
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundColor(DS.textPrimary)
+                .padding(.top, DS.spacingL)
             
-            HStack(alignment: .lastTextBaseline, spacing: 4) {
+            HStack(alignment: .lastTextBaseline, spacing: 6) {
                 Text(amountString)
-                    .font(.system(size: 48, weight: .bold))
+                    .font(.system(size: 56, weight: .heavy, design: .rounded))
                     .foregroundColor(Color(hex: habit.color))
                 Text(habit.amountUnit)
-                    .font(.title3)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundColor(DS.textSecondary)
             }
-            .frame(height: 60)
+            .frame(height: 70)
             
-            VStack(spacing: 12) {
+            VStack(spacing: DS.spacingS) {
                 ForEach(pad, id: \.self) { row in
-                    HStack(spacing: 12) {
+                    HStack(spacing: DS.spacingS) {
                         ForEach(row, id: \.self) { key in
                             Button(action: { handleKey(key) }) {
                                 ZStack {
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color(UIColor.systemGray6))
-                                        .frame(height: 56)
+                                    RoundedRectangle(cornerRadius: DS.cornerSmall)
+                                        .fill(DS.bgSubtle)
+                                        .frame(height: 54)
                                     
                                     if key == "DEL" {
-                                        Image(systemName: "delete.left.fill").foregroundColor(.gray).font(.title2)
+                                        Image(systemName: "delete.left")
+                                            .foregroundColor(DS.textSecondary)
+                                            .font(.system(size: 18, weight: .medium))
                                     } else {
-                                        Text(key).font(.title2).fontWeight(.semibold).foregroundColor(.primary)
+                                        Text(key)
+                                            .font(.system(size: 22, weight: .semibold))
+                                            .foregroundColor(DS.textPrimary)
                                     }
                                 }
                             }
@@ -636,30 +643,26 @@ struct AmountCheckinSheet: View {
                     }
                 }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, DS.spacingL)
             
             Button(action: submit) {
                 Text(initialAmount != nil ? "保存修改" : "完成打卡")
-                    .font(.headline)
+                    .font(.system(size: 17, weight: .bold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(Color(hex: habit.color))
-                    .cornerRadius(26)
+                    .frame(height: 54)
+                    .background(DS.accent)
+                    .cornerRadius(DS.cornerPill)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 10)
+            .padding(.horizontal, DS.spacingL)
+            .disabled(Double(amountString) == nil || Double(amountString) == 0)
             
             Spacer()
         }
+        .background(DS.bgPrimary)
         .onAppear {
             if let initial = initialAmount {
-                // If it's a whole number, remove .0
-                if floor(initial) == initial {
-                    amountString = String(Int(initial))
-                } else {
-                    amountString = String(initial)
-                }
+                amountString = floor(initial) == initial ? String(Int(initial)) : String(initial)
             }
         }
     }
@@ -670,7 +673,8 @@ struct AmountCheckinSheet: View {
         } else if key == "." {
             if !amountString.contains(".") { amountString += "." }
         } else {
-            if amountString == "0" { amountString = key } else if amountString.count < 6 { amountString += key }
+            if amountString == "0" { amountString = key }
+            else if amountString.count < 6 { amountString += key }
         }
     }
     
@@ -682,9 +686,6 @@ struct AmountCheckinSheet: View {
             let dateString = formatter.string(from: selectedDate)
             
             if initialAmount != nil {
-                // We shouldn't fetch here directly from checkins array since it's not passed,
-                // but we can query it or simply insert a new one if we delete the old one.
-                // In SwiftUI, we just create a new Checkin and replace or simply update.
                 let targetId = habit.id
                 let descriptor = FetchDescriptor<Checkin>(predicate: #Predicate { $0.dateString == dateString && $0.habit?.id == targetId })
                 if let existing = try? modelContext.fetch(descriptor).first {
@@ -700,16 +701,16 @@ struct AmountCheckinSheet: View {
     }
 }
 
-// Confetti View
+// MARK: - Confetti
+
 struct ConfettiView: View {
     @State private var animate = false
-    
-    let colors: [Color] = [.red, .blue, .green, .yellow, .pink, .purple, .orange]
+    let colors: [Color] = [DS.accent, DS.success, Color(hex: "#F7C59F"), Color(hex: "#5B8A6E"), Color(hex: "#E8845C")]
     
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                ForEach(0..<50, id: \.self) { i in
+                ForEach(0..<40, id: \.self) { i in
                     ConfettiParticle(
                         color: colors.randomElement()!,
                         animate: $animate,
@@ -719,9 +720,7 @@ struct ConfettiView: View {
             }
         }
         .allowsHitTesting(false)
-        .onAppear {
-            animate = true
-        }
+        .onAppear { animate = true }
     }
 }
 
@@ -734,20 +733,20 @@ struct ConfettiParticle: View {
     @State private var yOffset: CGFloat = 0
     @State private var rotation: Double = 0
     
-    let startX = CGFloat.random(in: 0.3...0.7)
+    let startX = CGFloat.random(in: 0.2...0.8)
     
     var body: some View {
-        Rectangle()
+        RoundedRectangle(cornerRadius: 2)
             .fill(color)
-            .frame(width: CGFloat.random(in: 6...12), height: CGFloat.random(in: 6...12))
+            .frame(width: CGFloat.random(in: 6...10), height: CGFloat.random(in: 6...10))
             .position(x: screenSize.width * startX, y: screenSize.height * 0.4)
             .offset(x: xOffset, y: yOffset)
             .rotationEffect(.degrees(rotation))
             .opacity(animate ? 0 : 1)
             .onAppear {
-                withAnimation(.easeOut(duration: Double.random(in: 1.5...2.5))) {
-                    xOffset = CGFloat.random(in: -200...200)
-                    yOffset = CGFloat.random(in: -300...300)
+                withAnimation(.easeOut(duration: Double.random(in: 1.2...2.0))) {
+                    xOffset = CGFloat.random(in: -180...180)
+                    yOffset = CGFloat.random(in: -280...280)
                     rotation = Double.random(in: 360...1080)
                 }
             }
