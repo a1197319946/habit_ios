@@ -1,0 +1,6 @@
+{
+  "images" : [
+    { "idiom" : "universal", "filename" : "scancode.jpg" }
+  ],
+  "info" : { "author" : "xcode", "version" : 1 }
+}
