@@ -800,6 +800,7 @@ struct HabitCountItem: Identifiable {
     let id = UUID()
     let habit: Habit
     let value: Double
+    let checkinCount: Int
     var displayString: String {
         if habit.goalType == "amount" {
             let formatted = value.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", value) : String(format: "%.1f", value)
@@ -818,14 +819,15 @@ struct DonutChartCard: View {
     private var chartData: [HabitCountItem] {
         habits.compactMap { habit in
             let checks = periodCheckins.filter { $0.habit?.id == habit.id }
+            let count = checks.count
+            guard count > 0 else { return nil }
             if habit.goalType == "amount" {
                 let sum = checks.reduce(0.0) { $0 + $1.amount }
-                return sum > 0 ? HabitCountItem(habit: habit, value: sum) : nil
+                return HabitCountItem(habit: habit, value: sum, checkinCount: count)
             } else {
-                let count = checks.count
-                return count > 0 ? HabitCountItem(habit: habit, value: Double(count)) : nil
+                return HabitCountItem(habit: habit, value: Double(count), checkinCount: count)
             }
-        }.sorted { $0.value > $1.value }
+        }.sorted { $0.checkinCount > $1.checkinCount }
     }
     
     private var totalEvents: Int {
@@ -855,7 +857,7 @@ struct DonutChartCard: View {
                     ZStack {
                         Chart(chartData) { item in
                             SectorMark(
-                                angle: .value("Count", item.value),
+                                angle: .value("Count", item.checkinCount),
                                 innerRadius: .ratio(0.75),
                                 angularInset: 2.0
                             )
