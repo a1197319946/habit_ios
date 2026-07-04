@@ -18,6 +18,7 @@ final class Habit {
     var amountUnit: String = ""
     
     var order: Int = 0
+    var isArchived: Bool = false
     
     var createdAt: Date = Date()
     
@@ -61,5 +62,156 @@ final class MoodRecord {
     init(type: String, text: String = "") {
         self.type = type
         self.text = text
+    }
+}
+import Foundation
+import SwiftData
+
+extension Habit {
+    var checkinDates: Set<String> {
+        Set((checkins ?? []).map { $0.dateString })
+    }
+    
+    var totalCheckins: Int {
+        checkins?.count ?? 0
+    }
+    
+    var checkinCountLast30Days: Int {
+        let calendar = Calendar.current
+        let today = Date()
+        var count = 0
+        let dates = checkinDates
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        for i in 0..<30 {
+            if let date = calendar.date(byAdding: .day, value: -i, to: today) {
+                let dateStr = formatter.string(from: date)
+                if dates.contains(dateStr) {
+                    count += 1
+                }
+            }
+        }
+        return count
+    }
+    
+    var currentStreak: Int {
+        let calendar = Calendar.current
+        let today = Date()
+        let dates = checkinDates
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        var streak = 0
+        var i = 0
+        
+        // Check today
+        let todayStr = formatter.string(from: today)
+        let hasToday = dates.contains(todayStr)
+        
+        // Check yesterday
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        let yesterdayStr = formatter.string(from: yesterday)
+        let hasYesterday = dates.contains(yesterdayStr)
+        
+        if !hasToday && !hasYesterday {
+            return 0
+        }
+        
+        if hasToday {
+            streak += 1
+            i = 1
+        } else if hasYesterday {
+            // start counting from yesterday
+            i = 1
+        }
+        
+        while true {
+            if let date = calendar.date(byAdding: .day, value: -i, to: today) {
+                let dateStr = formatter.string(from: date)
+                if dates.contains(dateStr) {
+                    streak += 1
+                    i += 1
+                } else {
+                    break
+                }
+            } else {
+                break
+            }
+        }
+        
+        return streak
+    }
+    
+    var longestStreak: Int {
+        let dates = checkinDates
+        if dates.isEmpty { return 0 }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        let sortedDates = dates.compactMap { formatter.date(from: $0) }.sorted()
+        
+        var maxStreak = 1
+        var currentStreak = 1
+        
+        let calendar = Calendar.current
+        for i in 1..<sortedDates.count {
+            let diff = calendar.dateComponents([.day], from: calendar.startOfDay(for: sortedDates[i-1]), to: calendar.startOfDay(for: sortedDates[i])).day ?? 0
+            
+            if diff == 1 {
+                currentStreak += 1
+                maxStreak = max(maxStreak, currentStreak)
+            } else if diff > 1 {
+                currentStreak = 1
+            }
+        }
+        
+        return maxStreak
+    }
+    
+    // Returns array of booleans for the last 154 days (22 weeks).
+    // Index 0 is 153 days ago, Index 153 is today.
+    var last154DaysCheckins: [Bool] {
+        let calendar = Calendar.current
+        let today = Date()
+        let dates = checkinDates
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        var result = [Bool](repeating: false, count: 154)
+        for i in 0..<154 {
+            // we want result[153] to be today, result[0] to be 153 days ago
+            let daysAgo = 153 - i
+            if let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) {
+                let dateStr = formatter.string(from: date)
+                result[i] = dates.contains(dateStr)
+            }
+        }
+        return result
+    }
+    
+    // Returns array of booleans for the last 182 days (26 weeks).
+    // Index 0 is 181 days ago, Index 181 is today.
+    var last182DaysCheckins: [Bool] {
+        let calendar = Calendar.current
+        let today = Date()
+        let dates = checkinDates
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        var result = [Bool](repeating: false, count: 182)
+        for i in 0..<182 {
+            let daysAgo = 181 - i
+            if let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) {
+                let dateStr = formatter.string(from: date)
+                result[i] = dates.contains(dateStr)
+            }
+        }
+        return result
     }
 }

@@ -2,7 +2,7 @@ name: LittleHabitTracker
 options:
   bundleIdPrefix: com.xiaodao
   deploymentTarget:
-    iOS: 17.0
+    iOS: 26.0
 targets:
   LittleHabitTracker:
     type: application
@@ -15,11 +15,3 @@ targets:
         UILaunchScreen: {}
         UIBackgroundModes:
           - remote-notification
-    entitlements:
-      path: Sources/LittleHabitTracker.entitlements
-      properties:
-        com.apple.developer.icloud-container-identifiers:
-          - iCloud.com.xiaodao.LittleHabitTracker
-        com.apple.developer.icloud-services:
-          - CloudKit
-        com.apple.developer.ubiquity-kvstore-identifier: $(TeamIdentifierPrefix)$(CFBundleIdentifier)

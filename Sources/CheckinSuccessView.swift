@@ -3,6 +3,7 @@ import SwiftData
 
 struct CheckinSuccessView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var appSettings: AppSettings
     
     let habit: Habit
     let date: Date
@@ -36,29 +37,9 @@ struct CheckinSuccessView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Top drag handle area
-            RoundedRectangle(cornerRadius: 2)
-                .fill(DS.borderStrong)
-                .frame(width: 40, height: 4)
-                .padding(.top, DS.spacingL)
-                .padding(.bottom, DS.spacingM)
-            
-            // Close button row
-            HStack {
-                Spacer()
-                Button(action: { dismiss() }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(DS.textSecondary)
-                        .frame(width: 32, height: 32)
-                        .background(DS.bgSubtle)
-                        .clipShape(Circle())
-                }
-            }
-            .padding(.horizontal, DS.spacingL)
-            .padding(.bottom, DS.spacingM)
-            
+        NavigationView {
+            VStack(spacing: 0) {
+            Spacer().frame(height: 32)
             // Icon + name
             VStack(spacing: DS.spacingM) {
                 ZStack {
@@ -160,9 +141,11 @@ struct CheckinSuccessView: View {
             .padding(.bottom, DS.spacingXL)
         }
         .background(DS.bgPrimary)
-        .onAppear {
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            appeared = true
+            .onAppear {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                appeared = true
+            }
+            .navigationBarHidden(true)
         }
     }
     

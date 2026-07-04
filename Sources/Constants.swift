@@ -25,67 +25,38 @@ struct Constants {
     ]
     
     static let allIcons: [String] = [
-        "star.fill", "heart.fill", "flame.fill", "book.fill", "figure.run", "drop.fill",
-        "moon.fill", "sun.max.fill", "figure.walk", "bicycle", "cup.and.saucer.fill", "fork.knife",
-        "leaf.fill", "cart.fill", "bag.fill", "creditcard.fill", "banknote.fill", "gift.fill",
+        // Fitness & Sports
+        "figure.run", "figure.walk", "figure.pool.swim", "figure.dance", "figure.gymnastics", "figure.martial.arts",
+        "figure.badminton", "figure.tennis", "figure.basketball", "figure.volleyball", "figure.soccer", "figure.hiking",
+        "figure.climbing", "dumbbell.fill", "sportscourt.fill", "trophy.fill", "medal.fill", "bicycle",
+
+        // Health, Mind & Body
+        "heart.fill", "cross.case.fill", "pills.fill", "bandage.fill", "brain.head.profile", "lungs.fill",
+        "eye.fill", "figure.yoga", "figure.mind.and.body", "waterbottle.fill", "drop.fill", "flame.fill",
+        "bed.double.fill", "moon.fill", "zzz", "sun.max.fill", "leaf.fill", "carrot.fill",
+
+        // Productivity & Learning
+        "book.fill", "book.closed.fill", "books.vertical.fill", "graduationcap.fill", "macwindow", "laptopcomputer",
+        "pencil", "highlighter", "scissors", "paintbrush.fill", "paintpalette.fill", "hammer.fill",
+        "wrench.and.screwdriver.fill", "clock.fill", "alarm.fill", "timer", "stopwatch.fill", "bell.fill",
+
+        // Food & Drink
+        "cup.and.saucer.fill", "fork.knife", "takeoutbag.and.cup.and.straw.fill", "wineglass.fill", "birthday.cake.fill", "applelogo",
+
+        // Lifestyle & Hobbies
+        "gamecontroller.fill", "tv.fill", "headphones", "music.note", "music.mic", "guitars.fill",
+        "pianokeys", "camera.fill", "photo.fill", "video.fill", "mic.fill", "sparkles",
         
-        "house.fill", "bed.double.fill", "sofa.fill", "chair.lounge.fill", "tv.fill", "gamecontroller.fill",
-        "headphones", "music.note", "mic.fill", "video.fill", "camera.fill", "photo.fill",
-        "paintbrush.fill", "pencil", "highlighter", "scissors", "hammer.fill", "wrench.and.screwdriver.fill",
-        
-        "pills.fill", "cross.case.fill", "heart.text.square.fill", "bandage.fill", "brain.head.profile", "eye.fill",
-        "lungs.fill", "figure.yoga", "figure.mind.and.body", "dumbell.fill", "sportscourt.fill", "soccerball",
-        "basketball.fill", "tennis.racket", "volleyball.fill", "baseball.fill", "trophy.fill", "medal.fill",
-        
-        "car.fill", "bus.fill", "tram.fill", "airplane", "ferry.fill", "suitcase.fill",
-        "map.fill", "globe.americas.fill", "tent.fill", "tree.fill", "mountain.2.fill", "pawprint.fill",
-        "bird.fill", "fish.fill", "tortoise.fill", "ladybug.fill", "ant.fill", "leaf.arrow.triangle.circlepath"
+        // Finance & Shopping
+        "cart.fill", "bag.fill", "creditcard.fill", "banknote.fill", "dollarsign.circle.fill", "gift.fill",
+
+        // Travel & Transport
+        "airplane", "car.fill", "bus.fill", "tram.fill", "ferry.fill", "scooter",
+        "suitcase.fill", "map.fill", "globe.americas.fill", "tent.fill", "mountain.2.fill", "pawprint.fill",
+
+        // Nature & Misc
+        "tree.fill", "bird.fill", "fish.fill", "tortoise.fill", "ladybug.fill", "ant.fill",
+        "house.fill", "building.2.fill", "lock.fill", "key.fill", "star.fill", "party.popper.fill"
     ]
 }
 
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3: // RGB (12-bit)
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (1, 1, 1, 0)
-        }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue:  Double(b) / 255,
-            opacity: Double(a) / 255
-        )
-    }
-    
-    func toHex() -> String? {
-        let uic = UIColor(self)
-        guard let components = uic.cgColor.components, components.count >= 3 else {
-            return nil
-        }
-        let r = Float(components[0])
-        let g = Float(components[1])
-        let b = Float(components[2])
-        var a = Float(1.0)
-        
-        if components.count >= 4 {
-            a = Float(components[3])
-        }
-        
-        if a != Float(1.0) {
-            return String(format: "%02lX%02lX%02lX%02lX", lroundf(r * 255), lroundf(g * 255), lroundf(b * 255), lroundf(a * 255))
-        } else {
-            return String(format: "#%02lX%02lX%02lX", lroundf(r * 255), lroundf(g * 255), lroundf(b * 255))
-        }
-    }
-}

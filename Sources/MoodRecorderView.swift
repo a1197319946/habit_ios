@@ -5,154 +5,236 @@ import PhotosUI
 struct MoodRecorderView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var appSettings: AppSettings
     
-    let habit: Habit
+    var habit: Habit?
     
-    @State private var selectedMood: String = "normal"
-    @State private var thoughtsText: String = ""
-    @State private var selectedItem: PhotosPickerItem?
-    @State private var imageData: Data?
+    @State private var selectedMood: String = "happy"
+    @State private var noteText: String = ""
+    @State private var selectedItem: PhotosPickerItem? = nil
+    @State private var selectedImageData: Data? = nil
     
     let moods = [
-        ("excited", "🤩", "激动"),
-        ("happy", "😊", "开心"),
+        ("excited", "😆", "激动"),
+        ("happy", "🙂", "开心"),
         ("normal", "😐", "一般"),
-        ("down", "😔", "失落"),
+        ("down", "😞", "失落"),
         ("angry", "😡", "愤怒")
     ]
     
+    init(habit: Habit? = nil) {
+        self.habit = habit
+    }
+    
+    private var subtitle: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-M-d"
+        let dateStr = formatter.string(from: Date())
+        if let h = habit {
+            return "\(dateStr) · \(h.name)"
+        }
+        return dateStr
+    }
+    
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(Color(UIColor.systemGray4))
-                }
-                Spacer()
-                Text("记录心情")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                Spacer()
-                Button(action: saveMood) {
-                    Text("完成")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 6)
-                        .background(Color(hex: "#8B5CF6"))
-                        .cornerRadius(16)
-                }
-            }
-            .padding()
+        ZStack {
+            Color.white.ignoresSafeArea()
             
-            ScrollView {
-                VStack(spacing: 24) {
-                    Text("刚刚完成了「\(habit.name)」，现在感觉怎么样？")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .padding(.top, 8)
-                    
-                    // Moods Grid
-                    HStack(spacing: 16) {
-                        ForEach(moods, id: \.0) { mood in
-                            VStack(spacing: 8) {
-                                Text(mood.1)
-                                    .font(.system(size: 40))
-                                    .opacity(selectedMood == mood.0 ? 1.0 : 0.4)
-                                    .scaleEffect(selectedMood == mood.0 ? 1.2 : 1.0)
-                                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: selectedMood)
-                                
-                                Text(mood.2)
-                                    .font(.caption)
-                                    .foregroundColor(selectedMood == mood.0 ? .primary : .secondary)
-                                    .fontWeight(selectedMood == mood.0 ? .semibold : .regular)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .onTapGesture {
-                                selectedMood = mood.0
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    // Text Editor
+            VStack(spacing: 0) {
+                // Header & Close Button
+                HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("碎碎念 (选填)").font(.subheadline).foregroundColor(.secondary)
-                        
-                        TextEditor(text: $thoughtsText)
-                            .frame(height: 100)
+                        Text("记录心情")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(DS.onSurface)
+                        Text(subtitle)
+                            .font(.system(size: 14))
+                            .foregroundColor(DS.onSurfaceVariant)
+                    }
+                    Spacer()
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark")
+                            .foregroundColor(DS.onSurfaceVariant)
+                            .font(.system(size: 20))
                             .padding(8)
-                            .background(Color(UIColor.systemGray6))
-                            .cornerRadius(12)
                     }
-                    .padding(.horizontal)
-                    
-                    // Image Picker
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("添加图片 (选填)").font(.subheadline).foregroundColor(.secondary)
+                }
+                .padding(.horizontal, DS.spacingL)
+                .padding(.top, DS.spacingL)
+                .padding(.bottom, DS.spacingM)
+                
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: DS.spacingM) {
                         
-                        if let imageData = imageData, let uiImage = UIImage(data: imageData) {
-                            ZStack(alignment: .topTrailing) {
-                                Image(uiImage: uiImage)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(height: 160)
-                                    .frame(maxWidth: .infinity)
-                                    .clipped()
-                                    .cornerRadius(12)
-                                
-                                Button(action: {
-                                    self.imageData = nil
-                                    self.selectedItem = nil
-                                }) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .font(.title2)
-                                        .foregroundColor(.black.opacity(0.6))
-                                        .background(Circle().fill(Color.white))
-                                        .padding(8)
+                        // Mood Section
+                        VStack(alignment: .leading, spacing: DS.spacingM) {
+                            HStack(spacing: 4) {
+                                Text("当前心情")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(DS.onSurface)
+                                Text("*")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.red)
+                            }
+                            
+                            HStack(spacing: 12) {
+                                ForEach(moods, id: \.0) { mood in
+                                    Button(action: {
+                                        withAnimation { selectedMood = mood.0 }
+                                    }) {
+                                        VStack(spacing: 8) {
+                                            Text(mood.1)
+                                                .font(.system(size: 32))
+                                            Text(mood.2)
+                                                .font(.system(size: 14))
+                                                .foregroundColor(DS.onSurfaceVariant)
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 12)
+                                        .background(selectedMood == mood.0 ? Color(hex: "#F5F5F5") : Color.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                                    }
                                 }
                             }
-                        } else {
-                            PhotosPicker(selection: $selectedItem, matching: .images, photoLibrary: .shared()) {
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.gray.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [5]))
+                        }
+                        
+                        // Thoughts Section
+                        VStack(alignment: .leading, spacing: DS.spacingM) {
+                            Text("想法 (选填)")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(DS.onSurface)
+                            
+                            ZStack(alignment: .bottomTrailing) {
+                                TextEditor(text: $noteText)
                                     .frame(height: 100)
-                                    .frame(maxWidth: .infinity)
+                                    .padding(12)
+                                    .background(Color(hex: "#F9F9F9"))
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .scrollContentBackground(.hidden)
                                     .overlay(
-                                        VStack(spacing: 8) {
-                                            Image(systemName: "camera.fill")
-                                                .font(.title2)
-                                                .foregroundColor(.gray)
-                                            Text("点击上传")
-                                                .font(.footnote)
-                                                .foregroundColor(.gray)
+                                        VStack {
+                                            HStack {
+                                                if noteText.isEmpty {
+                                                    Text("写下这一刻的想法...")
+                                                        .foregroundColor(Color.gray.opacity(0.6))
+                                                        .padding(.top, 20)
+                                                        .padding(.leading, 16)
+                                                }
+                                                Spacer()
+                                            }
+                                            Spacer()
                                         }
                                     )
+                                    .onChange(of: noteText) { newValue in
+                                        if newValue.count > 200 {
+                                            noteText = String(newValue.prefix(200))
+                                        }
+                                    }
+                                
+                                Text("\(noteText.count)/200")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(DS.onSurfaceVariant)
+                                    .padding(.bottom, -24)
+                                    .padding(.trailing, 4)
                             }
-                            .onChange(of: selectedItem) { _, newItem in
-                                Task {
-                                    if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                                        imageData = data
+                            .padding(.bottom, 24) // Space for the counter
+                        }
+                        
+                        // Image Section
+                        VStack(alignment: .leading, spacing: DS.spacingM) {
+                            Text("图片 (选填)")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(DS.onSurface)
+                            
+                            if let data = selectedImageData, let uiImage = UIImage(data: data) {
+                                ZStack(alignment: .topTrailing) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 80, height: 80)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    
+                                    Button(action: {
+                                        selectedItem = nil
+                                        selectedImageData = nil
+                                    }) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.gray)
+                                            .background(Color.white.clipShape(Circle()))
+                                            .offset(x: 8, y: -8)
+                                    }
+                                }
+                            } else {
+                                PhotosPicker(selection: $selectedItem, matching: .images, photoLibrary: .shared()) {
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "camera")
+                                            .font(.system(size: 24))
+                                            .foregroundColor(.gray)
+                                        Text("添加图片")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.gray)
+                                    }
+                                    .frame(width: 80, height: 80)
+                                    .background(Color.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [4]))
+                                            .foregroundColor(Color.gray.opacity(0.5))
+                                    )
+                                }
+                                .onChange(of: selectedItem) { newItem in
+                                    Task {
+                                        if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                                            selectedImageData = data
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 40)
+                    .padding(.horizontal, DS.spacingL)
+                    .padding(.bottom, 80)
                 }
             }
+            
+            // Bottom Button
+            VStack {
+                Spacer()
+                Button(action: saveMood) {
+                    Text("记录")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 52)
+                        .background(DS.primary)
+                        .clipShape(Capsule())
+                }
+                .padding(.horizontal, DS.spacingL)
+                .padding(.bottom, DS.spacingL)
+                .background(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0), Color.white],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 100)
+                    .offset(y: 20)
+                )
+            }
         }
-        .background(Color(UIColor.systemBackground))
     }
     
     private func saveMood() {
-        let newMood = MoodRecord(type: selectedMood, text: thoughtsText)
-        newMood.imageData = imageData
-        newMood.habit = habit
-        modelContext.insert(newMood)
+        let record = MoodRecord(type: selectedMood, text: noteText)
+        if let data = selectedImageData {
+            record.imageData = data
+        }
+        if let h = habit {
+            record.habit = h
+        }
+        modelContext.insert(record)
+        try? modelContext.save()
         dismiss()
     }
 }

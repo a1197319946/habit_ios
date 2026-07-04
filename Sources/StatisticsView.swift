@@ -3,596 +3,908 @@ import SwiftData
 import Charts
 
 struct StatisticsView: View {
-    @Query private var habits: [Habit]
+    @Query private var allHabits: [Habit]
+    @State private var showArchived: Bool = false
+    
+    private var habits: [Habit] {
+        if showArchived {
+            return allHabits
+        } else {
+            return allHabits.filter { !$0.isArchived }
+        }
+    }
     @Query private var checkins: [Checkin]
+    @EnvironmentObject private var appSettings: AppSettings
     
-    @State private var filterMode: String = "month" // month, year, all
-    @State private var currentYear: Int = Calendar.current.component(.year, from: Date())
-    @State private var currentMonth: Int = Calendar.current.component(.month, from: Date())
+    @State private var weekOffset: Int = 0
+    @State private var selectedTab: String = "Weekly"
+    @Namespace private var animationNamespace
+    private let calendar = Calendar.current
     
-    // Multi-select Habits filter
-    @State private var selectedHabitIds: Set<String> = []
-    @State private var showingHabitSelector = false
+    @State private var currentMonthDate = Date()
+    @State private var currentYear = Calendar.current.component(.year, from: Date())
+    
+    // Computed properties for date range
+    private var targetDate: Date {
+        calendar.date(byAdding: .weekOfYear, value: weekOffset, to: Date()) ?? Date()
+    }
+    
+    private var weekInterval: DateInterval {
+        calendar.dateInterval(of: .weekOfYear, for: targetDate)!
+    }
+    
+    private var weekDays: [Date] {
+        var days: [Date] = []
+        let startDate = weekInterval.start
+        for i in 0..<7 {
+            if let date = calendar.date(byAdding: .day, value: i, to: startDate) {
+                days.append(date)
+            }
+        }
+        return days
+    }
+    
+    private var dateRangeString: String {
+        let df = DateFormatter()
+        if appSettings.resolvedLanguage == .chinese {
+            df.locale = Locale(identifier: "zh_CN")
+            df.dateFormat = "M月d日"
+        } else {
+            df.locale = Locale(identifier: "en_US")
+            df.dateFormat = "MMM d"
+        }
+        let start = df.string(from: weekInterval.start)
+        let end = df.string(from: weekInterval.end.addingTimeInterval(-1))
+        return "\(start) - \(end)"
+    }
+    
+    private var monthYearString: String {
+        let df = DateFormatter()
+        if appSettings.resolvedLanguage == .chinese {
+            df.locale = Locale(identifier: "zh_CN")
+            df.dateFormat = "yyyy年M月"
+        } else {
+            df.locale = Locale(identifier: "en_US")
+            df.dateFormat = "MMMM yyyy"
+        }
+        return df.string(from: currentMonthDate)
+    }
+    
+    // Calculations for the 4 stat cards (based on current week)
+    private var currentWeekCheckins: [Checkin] {
+        checkins.filter { checkin in
+            let date = checkin.timestamp
+            return weekDays.contains(where: { calendar.isDate($0, inSameDayAs: date) })
+        }
+    }
+    
+    private var currentPeriodCheckins: [Checkin] {
+        switch selectedTab {
+        case "Weekly":
+            return currentWeekCheckins
+        case "Monthly":
+            let month = calendar.component(.month, from: currentMonthDate)
+            let year = calendar.component(.year, from: currentMonthDate)
+            return checkins.filter {
+                let comp = calendar.dateComponents([.year, .month], from: $0.timestamp)
+                return comp.year == year && comp.month == month
+            }
+        case "Yearly":
+            return checkins.filter {
+                calendar.component(.year, from: $0.timestamp) == currentYear
+            }
+        case "All":
+            return checkins
+        default:
+            return []
+        }
+    }
+    
+    private var metPercentage: Int {
+        if habits.isEmpty { return 0 }
+        let totalPossible = habits.count * 7
+        
+        var completed = 0
+        for habit in habits {
+            for day in weekDays {
+                if isHabitChecked(habit: habit, date: day) {
+                    completed += 1
+                }
+            }
+        }
+        return Int((Double(completed) / Double(totalPossible)) * 100)
+    }
+    
+    private var bestDay: String {
+        var dayCounts: [Int: Int] = [:] // day index (0-6) to count
+        for habit in habits {
+            for (index, day) in weekDays.enumerated() {
+                if isHabitChecked(habit: habit, date: day) {
+                    dayCounts[index, default: 0] += 1
+                }
+            }
+        }
+        if let max = dayCounts.max(by: { $0.value < $1.value }) {
+            let df = DateFormatter()
+            df.dateFormat = "EEE"
+            return String(df.string(from: weekDays[max.key]).prefix(3))
+        }
+        return "-"
+    }
+    
+    private var totalDone: Int {
+        var completed = 0
+        for habit in habits {
+            for day in weekDays {
+                if isHabitChecked(habit: habit, date: day) {
+                    completed += 1
+                }
+            }
+        }
+        return completed
+    }
+    
+    private var currentStreak: Int {
+        var maxS = 0
+        for habit in habits {
+            let s = calculateStreak(for: habit)
+            if s > maxS { maxS = s }
+        }
+        return maxS
+    }
+    
+    private func calculateStreak(for habit: Habit) -> Int {
+        var streak = 0
+        var currentDate = Date()
+        
+        while true {
+            if isHabitChecked(habit: habit, date: currentDate) {
+                streak += 1
+                currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate)!
+            } else {
+                if calendar.isDateInToday(currentDate) {
+                    currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate)!
+                } else {
+                    break
+                }
+            }
+        }
+        return streak
+    }
+    
+    private func isHabitChecked(habit: Habit, date: Date) -> Bool {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dateString = formatter.string(from: date)
+        let dayCheckins = checkins.filter { $0.habit?.id == habit.id && $0.dateString == dateString }
+        
+        if habit.goalType == "amount" {
+            let sum = dayCheckins.reduce(0) { $0 + $1.amount }
+            return sum >= habit.amountValue
+        } else {
+            return !dayCheckins.isEmpty
+        }
+    }
+    
+    private func getNarrowDayString(for date: Date) -> String {
+        let df = DateFormatter()
+        if appSettings.resolvedLanguage == .chinese {
+            df.locale = Locale(identifier: "zh_CN")
+        } else {
+            df.locale = Locale(identifier: "en_US")
+        }
+        df.dateFormat = "EEEEE"
+        return df.string(from: date)
+    }
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                DS.bgPrimary.edgesIgnoringSafeArea(.all)
-                
-                ScrollView {
-                    VStack(spacing: DS.spacingM) {
-                        
-                        // Top Filter Section
-                        HStack {
-                            Button(action: { showingHabitSelector = true }) {
-                                HStack(spacing: 6) {
-                                    Text(selectedHabitIds.isEmpty ? "全部习惯" : "\(selectedHabitIds.count) 个习惯")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(DS.textPrimary)
-                                    Image(systemName: "chevron.down")
-                                        .font(.system(size: 11, weight: .semibold))
-                                        .foregroundColor(DS.textSecondary)
-                                }
-                                .padding(.horizontal, DS.spacingM)
-                                .padding(.vertical, 8)
-                                .background(DS.bgSubtle)
-                                .cornerRadius(DS.cornerPill)
-                            }
-                            
-                            Spacer()
-                            
-                            Picker("Time Range", selection: $filterMode) {
-                                Text("全部").tag("all")
-                                Text("年").tag("year")
-                                Text("月").tag("month")
-                            }
-                            .pickerStyle(SegmentedPickerStyle())
-                            .frame(width: 160)
-                        }
-                        .padding(.horizontal, DS.spacingL)
-                        .padding(.top, DS.spacingS)
-                        
-                        // Selected Habit Tags
-                        if !selectedHabitIds.isEmpty {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 8) {
-                                    ForEach(Array(selectedHabitIds), id: \.self) { hid in
-                                        if let h = habits.first(where: { $0.id == hid }) {
-                                            HStack(spacing: 6) {
-                                                Circle()
-                                                    .fill(Color(hex: h.color))
-                                                    .frame(width: 7, height: 7)
-                                                Text(h.name)
-                                                    .font(.system(size: 13, weight: .medium))
-                                                    .foregroundColor(DS.textPrimary)
-                                                Button(action: { selectedHabitIds.remove(hid) }) {
-                                                    Image(systemName: "xmark")
-                                                        .font(.system(size: 10, weight: .bold))
-                                                        .foregroundColor(DS.textSecondary)
-                                                }
-                                            }
-                                            .padding(.horizontal, DS.spacingS + 4)
-                                            .padding(.vertical, 6)
-                                            .background(DS.bgSubtle)
-                                            .cornerRadius(DS.cornerPill)
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal, DS.spacingL)
-                            }
-                        }
-                        
-                        // Overview Card
-                        VStack(spacing: DS.spacingM) {
-                            HStack {
-                                Text(overviewTitle)
-                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                                    .foregroundColor(DS.textSecondary)
-                                Spacer()
-                            }
-                            
-                            HStack(alignment: .top, spacing: DS.spacingL) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack(alignment: .lastTextBaseline, spacing: 3) {
-                                        Text("\(uniqueCheckinDays)")
-                                            .font(.system(size: 44, weight: .heavy, design: .rounded))
-                                            .foregroundColor(DS.accent)
-                                        Text("天")
-                                            .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(DS.textSecondary)
-                                    }
-                                    Text("打卡天数")
-                                        .font(.system(size: 13))
-                                        .foregroundColor(DS.textSecondary)
-                                }
-                                .frame(width: 110, alignment: .leading)
-                                
-                                VStack(alignment: .leading, spacing: DS.spacingS) {
-                                    ForEach(breakdownData) { item in
-                                        HStack {
-                                            Circle()
-                                                .fill(Color(hex: item.colorHex))
-                                                .frame(width: 8, height: 8)
-                                            Text(item.name)
-                                                .font(.system(size: 14, weight: .medium))
-                                                .foregroundColor(DS.textPrimary)
-                                            Spacer()
-                                            Text(item.amountText)
-                                                .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                                                .foregroundColor(DS.textPrimary)
-                                        }
-                                    }
-                                }
-                                .frame(maxHeight: 96)
-                                .clipped()
-                            }
-                        }
-                        .padding(DS.spacingL)
-                        .card()
-                        .padding(.horizontal, DS.spacingL)
-                        
-                        // Charts Area
-                        VStack {
-                            if filterMode == "month" {
-                                MonthCalendarView(year: currentYear, month: currentMonth, checkins: scopedCheckins, habits: habits, onPrev: prevMonth, onNext: nextMonth)
-                            } else if filterMode == "year" {
-                                YearChartView(year: currentYear, chartData: yearlyChartData, onPrev: prevYear, onNext: nextYear, onJump: jumpToMonth)
-                            } else {
-                                AllChartView(chartData: allChartData, availableYears: availableYears, onJump: jumpToYear)
-                            }
-                        }
-                        .padding(DS.spacingL)
-                        .card()
-                        .padding(.horizontal, DS.spacingL)
-                        .padding(.bottom, DS.spacingXL)
-                        
-                    }
-                    .padding(.top, DS.spacingS)
-                }
-            }
-            .navigationTitle("打卡统计")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbarBackground(DS.bgPrimary, for: .navigationBar)
-            .onChange(of: filterMode) { _, newMode in
-                let d = Date()
-                if newMode == "month" {
-                    currentYear = Calendar.current.component(.year, from: d)
-                    currentMonth = Calendar.current.component(.month, from: d)
-                } else if newMode == "year" {
-                    currentYear = Calendar.current.component(.year, from: d)
-                }
-            }
-            .sheet(isPresented: $showingHabitSelector) {
-                HabitSelectorSheet(habits: habits, selectedIds: $selectedHabitIds)
-                    .presentationDetents([.medium, .large])
-            }
-        }
-    }
-    
-    // Overview Logic
-    private var overviewTitle: String {
-        if filterMode == "month" { return "打卡概览 \(currentYear)-\(String(format: "%02d", currentMonth))" }
-        if filterMode == "year" { return "打卡概览 \(currentYear)" }
-        return "打卡概览 全部"
-    }
-    
-    private var activeHabits: [Habit] {
-        if selectedHabitIds.isEmpty { return habits }
-        return habits.filter { selectedHabitIds.contains($0.id) }
-    }
-    
-    private var scopedCheckins: [Checkin] {
-        if selectedHabitIds.isEmpty { return checkins }
-        return checkins.filter { c in
-            if let hid = c.habit?.id {
-                return selectedHabitIds.contains(hid)
-            }
-            return false
-        }
-    }
-    
-    private var timeFilteredCheckins: [Checkin] {
-        return scopedCheckins.filter { c in
-            let parts = c.dateString.split(separator: "-")
-            guard parts.count == 3 else { return false }
-            let cYear = Int(parts[0]) ?? 0
-            let cMonth = Int(parts[1]) ?? 0
-            
-            if filterMode == "month" { return cYear == currentYear && cMonth == currentMonth }
-            if filterMode == "year" { return cYear == currentYear }
-            return true
-        }
-    }
-    
-    private var uniqueCheckinDays: Int {
-        let days = Set(timeFilteredCheckins.map { $0.dateString })
-        return days.count
-    }
-    
-    struct BreakdownItem: Identifiable {
-        let id: String
-        let name: String
-        let colorHex: String
-        let amountText: String
-    }
-    
-    private var breakdownData: [BreakdownItem] {
-        var daysMap: [String: Set<String>] = [:]
-        var amountMap: [String: Double] = [:]
-        
-        for c in timeFilteredCheckins {
-            if let habitId = c.habit?.id {
-                if daysMap[habitId] == nil { daysMap[habitId] = [] }
-                daysMap[habitId]?.insert(c.dateString)
-                amountMap[habitId, default: 0] += c.amount
-            }
-        }
-        
-        return activeHabits.compactMap { h in
-            let isAmount = h.goalType == "amount"
-            let days = daysMap[h.id]?.count ?? 0
-            let amountVal = amountMap[h.id] ?? 0
-            
-            if days == 0 && amountVal == 0 { return nil }
-            
-            // Clean up 0.0 trailing decimals
-            let amountStr = floor(amountVal) == amountVal ? String(Int(amountVal)) : String(format: "%.1f", amountVal)
-            let text = isAmount ? "\(amountStr)\(h.amountUnit)" : "\(days)次"
-            return BreakdownItem(id: h.id, name: h.name, colorHex: h.color, amountText: text)
-        }
-    }
-    
-    // Chart Logic (Year)
-    private var yearlyChartData: [ChartDataPoint] {
-        var data: [ChartDataPoint] = []
-        for m in 1...12 {
-            let monthPrefix = "\(currentYear)-\(String(format: "%02d", m))"
-            let monthCheckins = timeFilteredCheckins.filter { $0.dateString.hasPrefix(monthPrefix) }
-            
-            for h in activeHabits {
-                let hCheckins = monthCheckins.filter { $0.habit?.id == h.id }
-                let count = Set(hCheckins.map { $0.dateString }).count
-                if count > 0 {
-                    data.append(ChartDataPoint(xLabel: "\(m)月", group: h.name, value: count, colorHex: h.color))
-                }
-            }
-        }
-        return data
-    }
-    
-    // Chart Logic (All)
-    private var availableYears: [Int] {
-        var years: Set<Int> = [Calendar.current.component(.year, from: Date())]
-        for c in scopedCheckins {
-            if let y = Int(c.dateString.split(separator: "-").first ?? "0"), y > 0 {
-                years.insert(y)
-            }
-        }
-        return Array(years).sorted()
-    }
-    
-    private var allChartData: [ChartDataPoint] {
-        var data: [ChartDataPoint] = []
-        for y in availableYears {
-            let yearPrefix = "\(y)-"
-            let yearCheckins = timeFilteredCheckins.filter { $0.dateString.hasPrefix(yearPrefix) }
-            
-            for h in activeHabits {
-                let hCheckins = yearCheckins.filter { $0.habit?.id == h.id }
-                let count = Set(hCheckins.map { $0.dateString }).count
-                if count > 0 {
-                    data.append(ChartDataPoint(xLabel: "\(y)", group: h.name, value: count, colorHex: h.color))
-                }
-            }
-        }
-        return data
-    }
-    
-    // Nav Actions
-    private func prevMonth() {
-        if currentMonth == 1 { currentMonth = 12; currentYear -= 1 } else { currentMonth -= 1 }
-    }
-    private func nextMonth() {
-        if currentMonth == 12 { currentMonth = 1; currentYear += 1 } else { currentMonth += 1 }
-    }
-    private func prevYear() { currentYear -= 1 }
-    private func nextYear() { currentYear += 1 }
-    
-    private func jumpToMonth(_ m: Int) {
-        currentMonth = m
-        filterMode = "month"
-    }
-    private func jumpToYear(_ y: Int) {
-        currentYear = y
-        filterMode = "year"
-    }
-}
-
-// Habit Selector Sheet
-struct HabitSelectorSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    let habits: [Habit]
-    @Binding var selectedIds: Set<String>
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("选择习惯")
-                    .font(.headline)
-                Spacer()
-                Button(action: { dismiss() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(Color(UIColor.systemGray4))
-                        .font(.title2)
-                }
-            }
-            .padding()
-            
-            ScrollView {
-                VStack(spacing: 0) {
-                    Button(action: { selectedIds.removeAll() }) {
-                        HStack {
-                            Text("全部习惯").foregroundColor(.primary)
-                            Spacer()
-                            if selectedIds.isEmpty {
-                                Image(systemName: "checkmark.circle.fill").foregroundColor(Color(hex: "#8B5CF6")).font(.title3)
-                            } else {
-                                Circle().stroke(Color(UIColor.systemGray4), lineWidth: 1).frame(width: 20, height: 20)
-                            }
-                        }
-                        .padding(.vertical, 16)
-                        .padding(.horizontal)
-                        .background(Color(UIColor.systemBackground))
-                    }
-                    Divider().padding(.leading, 16)
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: DS.spacingM) {
                     
-                    ForEach(habits) { habit in
-                        Button(action: {
-                            if selectedIds.contains(habit.id) {
-                                selectedIds.remove(habit.id)
-                            } else {
-                                selectedIds.insert(habit.id)
+                    // Title
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Stats".tr(appSettings.resolvedLanguage))
+                                .display()
+                                .foregroundColor(DS.primary)
+                            Text("A detailed look at your journey.".tr(appSettings.resolvedLanguage))
+                                .bodyLg()
+                                .foregroundColor(DS.onSurfaceVariant)
+                        }
+                        
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, DS.spacingM)
+                    .padding(.bottom, DS.spacingS)
+                    .padding(.horizontal, 16)
+                    
+                    // Tabs
+                    HStack(spacing: 24) {
+                        ForEach(["Weekly", "Monthly", "Yearly", "All"], id: \.self) { tab in
+                            Button(action: {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    selectedTab = tab
+                                }
+                            }) {
+                                VStack(spacing: 6) {
+                                    Text(tab.tr(appSettings.resolvedLanguage))
+                                        .font(.system(size: 18, weight: selectedTab == tab ? .bold : .medium))
+                                        .foregroundColor(selectedTab == tab ? DS.onSurface : DS.onSurfaceVariant)
+                                    
+                                    if selectedTab == tab {
+                                        Capsule()
+                                            .fill(DS.primary)
+                                            .frame(height: 3)
+                                            .matchedGeometryEffect(id: "tab_underline", in: animationNamespace)
+                                    } else {
+                                        Capsule()
+                                            .fill(Color.clear)
+                                            .frame(height: 3)
+                                    }
+                                }
+                                .padding(.vertical, 8)
+                                .fixedSize(horizontal: true, vertical: false)
                             }
-                        }) {
-                            HStack {
-                                Circle().fill(Color(hex: habit.color)).frame(width: 12, height: 12)
-                                Text(habit.name).foregroundColor(.primary)
-                                Spacer()
-                                if selectedIds.contains(habit.id) {
-                                    Image(systemName: "checkmark.circle.fill").foregroundColor(Color(hex: "#8B5CF6")).font(.title3)
-                                } else {
-                                    Circle().stroke(Color(UIColor.systemGray4), lineWidth: 1).frame(width: 20, height: 20)
+                        }
+                        Spacer()
+                        
+                        Button(action: { showArchived.toggle() }) {
+                            Text(showArchived ? "隐藏归档" : "显示归档")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(showArchived ? DS.onPrimary : DS.primary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(showArchived ? DS.primary : Color.clear)
+                                .overlay(
+                                    Capsule()
+                                        .stroke(DS.primary, lineWidth: showArchived ? 0 : 1)
+                                )
+                                .clipShape(Capsule())
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 4)
+                    
+                    if selectedTab == "Weekly" {
+                        // Date Selector
+                        HStack {
+                            Button(action: { withAnimation { weekOffset -= 1 } }) {
+                                Image(systemName: "chevron.left")
+                                    .frame(width: 44, height: 44)
+                                    .background(Color.white.opacity(0.8))
+                                    .clipShape(Circle())
+                                    .foregroundColor(DS.onSurface)
+                            }
+                            
+                            Spacer()
+                            
+                            HStack(spacing: 8) {
+                                Image(systemName: "calendar")
+                                    .foregroundColor(DS.primary)
+                                Text(dateRangeString)
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(DS.onSurface)
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(Color.white.opacity(0.8))
+                            .clipShape(Capsule())
+                            
+                            Spacer()
+                            
+                            Button(action: { withAnimation { weekOffset += 1 } }) {
+                                Image(systemName: "chevron.right")
+                                    .frame(width: 44, height: 44)
+                                    .background(Color.white.opacity(0.8))
+                                    .clipShape(Circle())
+                                    .foregroundColor(DS.onSurface)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        
+
+                        // Donut Chart Card
+                        DonutChartCard(
+                            habits: habits,
+                            periodCheckins: currentPeriodCheckins,
+                            appSettings: appSettings
+                        )
+                        
+                        // Weekly Grid Card
+                        VStack(alignment: .leading, spacing: DS.spacingM) {
+                            if habits.isEmpty {
+                                Text("No habits found.".tr(appSettings.resolvedLanguage))
+                                    .foregroundColor(DS.onSurfaceVariant)
+                            } else {
+                                VStack(spacing: 16) {
+                                    // Day headers
+                                    HStack(spacing: 6) {
+                                        Spacer()
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        
+                                        ForEach(weekDays, id: \.self) { date in
+                                            Text(getNarrowDayString(for: date))
+                                                .font(.system(size: 12, weight: .bold))
+                                                .foregroundColor(DS.onSurfaceVariant)
+                                                .frame(width: 22)
+                                        }
+                                    }
+                                    
+                                    // Habit rows
+                                    ForEach(habits) { habit in
+                                        HStack(spacing: 6) {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: habit.icon)
+                                                    .foregroundColor(Color(hex: habit.color))
+                                                    .font(.system(size: 16))
+                                                
+                                                Text(habit.name)
+                                                    .font(.system(size: 14, weight: .semibold))
+                                                    .foregroundColor(DS.onSurface)
+                                                    .lineLimit(1)
+                                                    .minimumScaleFactor(0.8)
+                                                
+                                                Spacer()
+                                            }
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            
+                                            ForEach(weekDays, id: \.self) { date in
+                                                let isChecked = isHabitChecked(habit: habit, date: date)
+                                                RoundedRectangle(cornerRadius: 6)
+                                                    .fill(isChecked ? Color(hex: habit.color) : Color(hex: "#F3F4F6"))
+                                                    .frame(width: 22, height: 22)
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                            .padding(.vertical, 16)
-                            .padding(.horizontal)
-                            .background(Color(UIColor.systemBackground))
                         }
-                        Divider().padding(.leading, 40)
+                        .padding(DS.spacingL)
+                        .background(Color.white.opacity(0.8))
+                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                        .padding(.horizontal, 16)
+                    } else {
+                        if selectedTab == "Monthly" {
+                            // Monthly Date Selector
+                            HStack {
+                                Button(action: { withAnimation { currentMonthDate = calendar.date(byAdding: .month, value: -1, to: currentMonthDate) ?? currentMonthDate } }) {
+                                    Image(systemName: "chevron.left")
+                                        .frame(width: 44, height: 44)
+                                        .background(Color.white.opacity(0.8))
+                                        .clipShape(Circle())
+                                        .foregroundColor(DS.onSurface)
+                                }
+                                
+                                Spacer()
+                                
+                                HStack(spacing: 8) {
+                                    Image(systemName: "calendar")
+                                        .foregroundColor(DS.primary)
+                                    Text(monthYearString)
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(DS.onSurface)
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(Color.white.opacity(0.8))
+                                .clipShape(Capsule())
+                                
+                                Spacer()
+                                
+                                Button(action: { withAnimation { currentMonthDate = calendar.date(byAdding: .month, value: 1, to: currentMonthDate) ?? currentMonthDate } }) {
+                                    Image(systemName: "chevron.right")
+                                        .frame(width: 44, height: 44)
+                                        .background(Color.white.opacity(0.8))
+                                        .clipShape(Circle())
+                                        .foregroundColor(DS.onSurface)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, DS.spacingS)
+                            
+                            DonutChartCard(
+                                habits: habits,
+                                periodCheckins: currentPeriodCheckins,
+                                appSettings: appSettings
+                            )
+                            .padding(.top, 8)
+                            
+                            MonthGridCard(habits: habits, checkins: checkins, appSettings: appSettings, currentMonthDate: $currentMonthDate)
+                        } else if selectedTab == "Yearly" {
+                            // Yearly Date Selector
+                            HStack {
+                                Button(action: { withAnimation { currentYear -= 1 } }) {
+                                    Image(systemName: "chevron.left")
+                                        .frame(width: 44, height: 44)
+                                        .background(Color.white.opacity(0.8))
+                                        .clipShape(Circle())
+                                        .foregroundColor(DS.onSurface)
+                                }
+                                
+                                Spacer()
+                                
+                                HStack(spacing: 8) {
+                                    Image(systemName: "calendar")
+                                        .foregroundColor(DS.primary)
+                                    Text("\(currentYear)")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(DS.onSurface)
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(Color.white.opacity(0.8))
+                                .clipShape(Capsule())
+                                
+                                Spacer()
+                                
+                                Button(action: { withAnimation { currentYear += 1 } }) {
+                                    Image(systemName: "chevron.right")
+                                        .frame(width: 44, height: 44)
+                                        .background(Color.white.opacity(0.8))
+                                        .clipShape(Circle())
+                                        .foregroundColor(DS.onSurface)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, DS.spacingS)
+                            
+                            DonutChartCard(
+                                habits: habits,
+                                periodCheckins: currentPeriodCheckins,
+                                appSettings: appSettings
+                            )
+                            .padding(.top, 8)
+                            
+                            YearChartCard(habits: habits, checkins: checkins, appSettings: appSettings, currentYear: $currentYear)
+                        } else if selectedTab == "All" {
+                            DonutChartCard(
+                                habits: habits,
+                                periodCheckins: currentPeriodCheckins,
+                                appSettings: appSettings
+                            )
+                            .padding(.top, DS.spacingS)
+                            
+                            AllChartCard(habits: habits, checkins: checkins, appSettings: appSettings)
+                        }
                     }
+                    
+                    Spacer().frame(height: 120) // Bottom tab bar padding
                 }
-            }
-            
-            Button(action: { dismiss() }) {
-                Text("确认")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(Color(hex: "#8B5CF6"))
-                    .cornerRadius(26)
-            }
-            .padding()
         }
-        .background(Color(UIColor.systemGroupedBackground).edgesIgnoringSafeArea(.bottom))
+        .background(AmbientBackground())
     }
 }
 
-// Chart Models
+struct StatSmallCard: View {
+    let icon: String
+    let iconColor: Color
+    let value: String
+    let label: String
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundColor(iconColor)
+            
+            Text(value)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.black)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+            
+            Text(label)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.gray)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 4)
+        .background(Color.white.opacity(0.8))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+struct MonthGridCard: View {
+    let habits: [Habit]
+    let checkins: [Checkin]
+    let appSettings: AppSettings
+    @Binding var currentMonthDate: Date
+    
+    private let calendar = Calendar.current
+    
+    private var monthYearString: String {
+        let df = DateFormatter()
+        if appSettings.resolvedLanguage == .chinese {
+            df.locale = Locale(identifier: "zh_CN")
+            df.dateFormat = "yyyy年M月"
+        } else {
+            df.locale = Locale(identifier: "en_US")
+            df.dateFormat = "MMMM yyyy"
+        }
+        return df.string(from: currentMonthDate)
+    }
+    
+    private var daysInMonth: [Int] {
+        guard let range = calendar.range(of: .day, in: .month, for: currentMonthDate) else { return [] }
+        return Array(range)
+    }
+    
+    private var firstWeekday: Int {
+        var components = calendar.dateComponents([.year, .month], from: currentMonthDate)
+        components.day = 1
+        guard let firstDay = calendar.date(from: components) else { return 0 }
+        // 1 = Sunday, 2 = Monday... We want to offset based on calendar's first weekday (usually Sun=1)
+        let wd = calendar.component(.weekday, from: firstDay)
+        return wd - 1 // 0 offset for Sunday
+    }
+    
+    private var weekdaysShort: [String] {
+        if appSettings.resolvedLanguage == .chinese {
+            return ["日", "一", "二", "三", "四", "五", "六"]
+        } else {
+            return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        }
+    }
+    
+    private func habitsOn(day: Int) -> [Habit] {
+        var components = calendar.dateComponents([.year, .month], from: currentMonthDate)
+        components.day = day
+        guard let date = calendar.date(from: components) else { return [] }
+        
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        let dateString = df.string(from: date)
+        
+        var completed: [Habit] = []
+        let dayCheckins = checkins.filter { $0.dateString == dateString }
+        
+        for habit in habits {
+            let hChecks = dayCheckins.filter { $0.habit?.id == habit.id }
+            if habit.goalType == "amount" {
+                let sum = hChecks.reduce(0) { $0 + $1.amount }
+                if sum >= habit.amountValue { completed.append(habit) }
+            } else {
+                if !hChecks.isEmpty { completed.append(habit) }
+            }
+        }
+        return completed
+    }
+    
+    var body: some View {
+        VStack(spacing: DS.spacingM) {
+            // Grid
+            VStack(spacing: 12) {
+                // Weekday headers
+                HStack(spacing: 0) {
+                    ForEach(weekdaysShort, id: \.self) { wd in
+                        Text(wd)
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundColor(DS.onSurfaceVariant)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                
+                // Days
+                let totalCells = daysInMonth.count + firstWeekday
+                let rows = Int(ceil(Double(totalCells) / 7.0))
+                
+                ForEach(0..<rows, id: \.self) { row in
+                    HStack(spacing: 0) {
+                        ForEach(0..<7, id: \.self) { col in
+                            let index = row * 7 + col
+                            let day = index - firstWeekday + 1
+                            
+                            VStack(spacing: 2) {
+                                if day > 0 && day <= daysInMonth.count {
+                                    let isToday = calendar.isDateInToday(calendar.date(bySetting: .day, value: day, of: currentMonthDate) ?? Date())
+                                    Text("\(day)")
+                                        .font(.system(size: 15, weight: isToday ? .bold : .medium))
+                                        .foregroundColor(isToday ? .white : DS.onSurface)
+                                        .frame(width: 24, height: 24)
+                                        .background(isToday ? DS.primary : Color.clear)
+                                        .clipShape(Circle())
+                                    
+                                    // Dots
+                                    let habitsDone = habitsOn(day: day)
+                                    HStack(spacing: 2) {
+                                        ForEach(habitsDone.prefix(4)) { h in
+                                            Circle()
+                                                .fill(Color(hex: h.color))
+                                                .frame(width: 4, height: 4)
+                                        }
+                                        if habitsDone.count > 4 {
+                                            Circle()
+                                                .fill(Color.gray)
+                                                .frame(width: 4, height: 4)
+                                        }
+                                    }
+                                    .frame(height: 4)
+                                } else {
+                                    Text("").frame(width: 24, height: 24)
+                                    Spacer().frame(height: 4)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 40)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(DS.spacingL)
+        .background(Color.white.opacity(0.8))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .padding(.horizontal, 16)
+    }
+}
+
 struct ChartDataPoint: Identifiable {
     let id = UUID()
-    let xLabel: String
     let group: String
-    let value: Int
-    let colorHex: String
+    let habitName: String
+    let color: Color
+    let count: Int
 }
 
-// Year Bar Chart Component
-struct YearChartView: View {
-    let year: Int
-    let chartData: [ChartDataPoint]
-    let onPrev: () -> Void
-    let onNext: () -> Void
-    let onJump: (Int) -> Void
-    
-    var body: some View {
-        VStack {
-            HStack {
-                Button(action: onPrev) { Image(systemName: "chevron.left").padding() }
-                Spacer()
-                Text("\(year)年").font(.headline)
-                Spacer()
-                Button(action: onNext) { Image(systemName: "chevron.right").padding() }
-            }
-            .foregroundColor(.primary)
-            
-            if chartData.isEmpty {
-                Text("暂无数据").foregroundColor(.secondary).padding(.vertical, 40)
-            } else {
-                Chart(chartData) { item in
-                    BarMark(
-                        x: .value("Month", item.xLabel),
-                        y: .value("Count", item.value)
-                    )
-                    .foregroundStyle(Color(hex: item.colorHex))
-                }
-                .frame(height: 200)
-            }
-            
-            // Quick Jump
-            VStack(alignment: .leading, spacing: 12) {
-                Text("快速查看月份")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .padding(.top, 16)
-                
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 8) {
-                    ForEach(1...12, id: \.self) { m in
-                        Button(action: { onJump(m) }) {
-                            Text("\(m)月")
-                                .font(.system(size: 13))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 6)
-                                .background(Color(UIColor.systemGray6))
-                                .foregroundColor(.primary)
-                                .cornerRadius(6)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// All Time Bar Chart Component
-struct AllChartView: View {
-    let chartData: [ChartDataPoint]
-    let availableYears: [Int]
-    let onJump: (Int) -> Void
-    
-    var body: some View {
-        VStack {
-            HStack {
-                Text("所有年份").font(.headline)
-                Spacer()
-            }
-            .padding(.bottom, 8)
-            
-            if chartData.isEmpty {
-                Text("暂无数据").foregroundColor(.secondary).padding(.vertical, 40)
-            } else {
-                Chart(chartData) { item in
-                    BarMark(
-                        x: .value("Year", item.xLabel),
-                        y: .value("Count", item.value)
-                    )
-                    .foregroundStyle(Color(hex: item.colorHex))
-                }
-                .frame(height: 200)
-            }
-            
-            // Quick Jump
-            if !availableYears.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("快速查看年份")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .padding(.top, 16)
-                    
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 8) {
-                        ForEach(availableYears, id: \.self) { y in
-                            Button(action: { onJump(y) }) {
-                                Text("\(y)年")
-                                    .font(.system(size: 13))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 6)
-                                    .background(Color(UIColor.systemGray6))
-                                    .foregroundColor(.primary)
-                                    .cornerRadius(6)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Calendar Dots Component
-struct MonthCalendarView: View {
-    let year: Int
-    let month: Int
-    let checkins: [Checkin]
+struct YearChartCard: View {
     let habits: [Habit]
-    let onPrev: () -> Void
-    let onNext: () -> Void
+    let checkins: [Checkin]
+    let appSettings: AppSettings
+    @Binding var currentYear: Int
     
-    private let daysInWeek = ["日", "一", "二", "三", "四", "五", "六"]
-    
-    var body: some View {
-        VStack {
-            HStack {
-                Button(action: onPrev) { Image(systemName: "chevron.left").padding() }
-                Spacer()
-                Text("\(year)年\(month)月").font(.headline)
-                Spacer()
-                Button(action: onNext) { Image(systemName: "chevron.right").padding() }
-            }
-            .foregroundColor(.primary)
+    private var chartData: [ChartDataPoint] {
+        var points: [ChartDataPoint] = []
+        
+        for m in 1...12 {
+            let monthLabel = "\(m)月"
+            let prefix = String(format: "%04d-%02d", currentYear, m)
+            let monthCheckins = checkins.filter { $0.dateString.hasPrefix(prefix) }
             
-            HStack {
-                ForEach(daysInWeek, id: \.self) { day in
-                    Text(day).font(.caption).foregroundColor(.secondary).frame(maxWidth: .infinity)
-                }
-            }
-            
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                ForEach(0..<emptyDaysCount, id: \.self) { _ in
-                    Color.clear.frame(height: 48)
-                }
+            for habit in habits {
+                let hChecks = monthCheckins.filter { $0.habit?.id == habit.id }
+                if hChecks.isEmpty { continue }
                 
-                ForEach(1...daysInMonth, id: \.self) { day in
-                    VStack(spacing: 4) {
-                        Text("\(day)")
-                            .font(.system(size: 15, weight: isToday(day) ? .bold : .regular))
-                            .foregroundColor(isToday(day) ? .white : .primary)
-                            .frame(width: 24, height: 24)
-                            .background(isToday(day) ? Color(hex: "#8B5CF6") : Color.clear)
-                            .clipShape(Circle())
-                        
-                        // Dots row
-                        HStack(spacing: 2) {
-                            let dayHabits = habitsForDay(day)
-                            // Truncate to max 4 dots to fit UI
-                            ForEach(dayHabits.prefix(4)) { h in
-                                Circle()
-                                    .fill(Color(hex: h.color))
-                                    .frame(width: 5, height: 5)
-                            }
-                            if dayHabits.count > 4 {
-                                Circle().fill(Color.gray).frame(width: 3, height: 3)
-                            }
-                        }
-                    }
-                    .frame(height: 48)
+                let uniqueDays = Set(hChecks.map { $0.dateString }).count
+                if uniqueDays > 0 {
+                    points.append(ChartDataPoint(group: monthLabel, habitName: habit.name, color: Color(hex: habit.color), count: uniqueDays))
                 }
             }
         }
+        return points
     }
     
-    private var emptyDaysCount: Int {
-        var components = DateComponents(year: year, month: month, day: 1)
-        let date = Calendar.current.date(from: components)!
-        return Calendar.current.component(.weekday, from: date) - 1
+    var body: some View {
+        VStack(spacing: DS.spacingL) {
+            if chartData.isEmpty {
+                Text("No data".tr(appSettings.resolvedLanguage))
+                    .foregroundColor(DS.onSurfaceVariant)
+                    .frame(height: 200)
+            } else {
+                Chart(chartData) { point in
+                    BarMark(
+                        x: .value("Month", point.group),
+                        y: .value("Days", point.count)
+                    )
+                    .foregroundStyle(point.color.gradient)
+                    .cornerRadius(4)
+                }
+                .chartLegend(.hidden)
+                .chartXAxis {
+                    AxisMarks { _ in
+                        AxisValueLabel()
+                            .foregroundStyle(DS.onSurfaceVariant)
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                }
+                .chartYAxis {
+                    AxisMarks(position: .leading) { _ in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 1, dash: [4]))
+                            .foregroundStyle(DS.outlineVariant.opacity(0.5))
+                        AxisValueLabel()
+                            .foregroundStyle(DS.onSurfaceVariant)
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                }
+                .frame(height: 220)
+            }
+            
+            // Quick jump
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 8) {
+                ForEach(1...12, id: \.self) { m in
+                    Text("\(m)月")
+                        .font(.system(size: 12))
+                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity)
+                        .background(DS.surfaceContainerLow)
+                        .cornerRadius(6)
+                }
+            }
+        }
+        .padding(DS.spacingL)
+        .background(Color.white.opacity(0.8))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .padding(.horizontal, 16)
+    }
+}
+
+struct AllChartCard: View {
+    let habits: [Habit]
+    let checkins: [Checkin]
+    let appSettings: AppSettings
+    
+    private var chartData: [ChartDataPoint] {
+        var points: [ChartDataPoint] = []
+        let years = Array(Set(checkins.compactMap { String($0.dateString.prefix(4)) })).sorted()
+        
+        for y in years {
+            let yearCheckins = checkins.filter { $0.dateString.hasPrefix(y) }
+            for habit in habits {
+                let hChecks = yearCheckins.filter { $0.habit?.id == habit.id }
+                if hChecks.isEmpty { continue }
+                
+                let uniqueDays = Set(hChecks.map { $0.dateString }).count
+                if uniqueDays > 0 {
+                    points.append(ChartDataPoint(group: y, habitName: habit.name, color: Color(hex: habit.color), count: uniqueDays))
+                }
+            }
+        }
+        return points
     }
     
-    private var daysInMonth: Int {
-        var components = DateComponents(year: year, month: month)
-        let date = Calendar.current.date(from: components)!
-        return Calendar.current.range(of: .day, in: .month, for: date)!.count
+    var body: some View {
+        VStack(spacing: DS.spacingL) {
+            if chartData.isEmpty {
+                Text("No data".tr(appSettings.resolvedLanguage))
+                    .foregroundColor(DS.onSurfaceVariant)
+                    .frame(height: 200)
+            } else {
+                Chart(chartData) { point in
+                    BarMark(
+                        x: .value("Year", point.group),
+                        y: .value("Days", point.count)
+                    )
+                    .foregroundStyle(point.color.gradient)
+                    .cornerRadius(4)
+                }
+                .chartLegend(.hidden)
+                .chartXAxis {
+                    AxisMarks { _ in
+                        AxisValueLabel()
+                            .foregroundStyle(DS.onSurfaceVariant)
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                }
+                .chartYAxis {
+                    AxisMarks(position: .leading) { _ in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 1, dash: [4]))
+                            .foregroundStyle(DS.outlineVariant.opacity(0.5))
+                        AxisValueLabel()
+                            .foregroundStyle(DS.onSurfaceVariant)
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                }
+                .frame(height: 220)
+            }
+        }
+        .padding(DS.spacingL)
+        .background(Color.white.opacity(0.8))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .padding(.horizontal, 16)
+    }
+}
+
+struct HabitCountItem: Identifiable {
+    let id = UUID()
+    let habit: Habit
+    let value: Double
+    var displayString: String {
+        if habit.goalType == "amount" {
+            let formatted = value.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", value) : String(format: "%.1f", value)
+            return "\(formatted)\(habit.amountUnit)"
+        } else {
+            return "\(Int(value))次"
+        }
+    }
+}
+
+struct DonutChartCard: View {
+    let habits: [Habit]
+    let periodCheckins: [Checkin]
+    let appSettings: AppSettings
+    
+    private var chartData: [HabitCountItem] {
+        habits.compactMap { habit in
+            let checks = periodCheckins.filter { $0.habit?.id == habit.id }
+            if habit.goalType == "amount" {
+                let sum = checks.reduce(0.0) { $0 + $1.amount }
+                return sum > 0 ? HabitCountItem(habit: habit, value: sum) : nil
+            } else {
+                let count = checks.count
+                return count > 0 ? HabitCountItem(habit: habit, value: Double(count)) : nil
+            }
+        }.sorted { $0.value > $1.value }
     }
     
-    private func isToday(_ day: Int) -> Bool {
-        let d = Date()
-        return day == Calendar.current.component(.day, from: d) &&
-               month == Calendar.current.component(.month, from: d) &&
-               year == Calendar.current.component(.year, from: d)
+    private var totalEvents: Int {
+        periodCheckins.filter { checkin in habits.contains(where: { $0.id == checkin.habit?.id }) }.count
     }
     
-    private func habitsForDay(_ day: Int) -> [Habit] {
-        let dateStr = "\(year)-\(String(format: "%02d", month))-\(String(format: "%02d", day))"
-        let dayCheckins = checkins.filter { $0.dateString == dateStr }
-        let habitIds = Set(dayCheckins.compactMap { $0.habit?.id })
-        return habits.filter { habitIds.contains($0.id) }
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.spacingM) {
+            HStack(spacing: 6) {
+                Image(systemName: "chart.pie.fill")
+                    .foregroundColor(DS.primary)
+                    .frame(width: 24)
+                Text("统计概览")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(DS.onSurface)
+                Spacer()
+            }
+            
+            if chartData.isEmpty {
+                Text("No data for this week.".tr(appSettings.resolvedLanguage))
+                    .foregroundColor(DS.onSurfaceVariant)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, DS.spacingL)
+            } else {
+                HStack(spacing: 24) {
+                    // Donut Chart
+                    ZStack {
+                        Chart(chartData) { item in
+                            SectorMark(
+                                angle: .value("Count", item.value),
+                                innerRadius: .ratio(0.75),
+                                angularInset: 2.0
+                            )
+                            .cornerRadius(4.0)
+                            .foregroundStyle(Color(hex: item.habit.color))
+                        }
+                        .frame(width: 80, height: 80)
+                        
+                        VStack(spacing: 2) {
+                            Text("\(totalEvents)")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(DS.onSurface)
+                            Text("次")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(DS.onSurfaceVariant)
+                        }
+                    }
+                    
+                    // Legend
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(chartData) { item in
+                            HStack(spacing: 8) {
+                                Circle()
+                                    .fill(Color(hex: item.habit.color))
+                                    .frame(width: 8, height: 8)
+                                
+                                Text(item.habit.name)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(DS.onSurface)
+                                    .lineLimit(1)
+                                
+                                Spacer()
+                                
+                                Text(item.displayString)
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundColor(DS.onSurfaceVariant)
+                            }
+                        }
+                    }
+                    
+                    Spacer(minLength: 0)
+                }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 4)
+            }
+        }
+        .padding(16)
+        .background(Color.white.opacity(0.8))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .padding(.horizontal, 16)
     }
 }

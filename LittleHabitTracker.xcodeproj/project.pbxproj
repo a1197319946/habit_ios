@@ -10,22 +10,27 @@
 		0BEA439F62B14E35DECED32F /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = E338DD15B0AFDF7E621A8A09 /* Constants.swift */; };
 		156592AAAF0C26FD5B5418C8 /* HabitListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FBD7612B05474238D48F79 /* HabitListView.swift */; };
 		214F9D0D061FDB690162561C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E62589DA97C36CAE55D66A4 /* ContentView.swift */; };
+		2C0217F7450C582914928A10 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88127A9DEACFFE63BDD2CFD2 /* SettingsView.swift */; };
 		3F0E7867E7544880061F4F84 /* MoodRecorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6F3FD8046594E7D6C1A2F6E /* MoodRecorderView.swift */; };
-		402A3C1A0CD9C93F798C3669 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0842830F1E02A031DBFA2ED9 /* ProfileView.swift */; };
+		4281B2CF987B2476753AD94D /* StatisticsExtViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A57B29DD7206AFA589C8EE /* StatisticsExtViews.swift */; };
 		64943EBF99D6BC9D2CD376C0 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A3DCF9CA59FA167E27A6E1 /* HomeView.swift */; };
 		65F716D2A8CF31F61005B51E /* LittleHabitTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733B06F96043BCDFC9FF5CB8 /* LittleHabitTrackerApp.swift */; };
+		6844A7F81C309AF32C0A7128 /* ArchivedHabitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0BED2952BB57235A86E4CA9 /* ArchivedHabitsView.swift */; };
 		7BFAD94EADE35B6D0EC8E2FE /* CheckinSuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9EB032F7D0436067ADBB5E /* CheckinSuccessView.swift */; };
 		91C957E677979F8BAAA6B39F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9C04FE6875637B83EC49C71D /* Assets.xcassets */; };
+		9DCC845E63ADCBDBF77E7A42 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B61FCA6EEC5DE8EBB709890 /* ConfettiView.swift */; };
+		A2691EA3AF19D0709FC896F0 /* AmountCheckinSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D34E69D2ED238F93EA2FB9CB /* AmountCheckinSheet.swift */; };
 		BA5147AB6FBFF403AE498217 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481A84F251ED310038917041 /* Models.swift */; };
+		C49F02B0A4E3E13111A3884A /* HabitStatsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F400E30A32862BC66A030359 /* HabitStatsDetailView.swift */; };
 		CC16735BFB4146000F00B45D /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E32D4DA98A3BEBF1FB0FDCC /* DesignSystem.swift */; };
 		D21079AE56EF1FEA6A8BEFC6 /* HabitDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B8FC675A13D85D862613F7A /* HabitDetailView.swift */; };
+		E1ACA329951A3D341534A3E3 /* HabitMonthDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDA790B71A18BA2236DC270 /* HabitMonthDetailView.swift */; };
 		FBB4BBDED5615E1630468F5E /* StatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64C1C23158D8D65B0E699D19 /* StatisticsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0842830F1E02A031DBFA2ED9 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		0B8FC675A13D85D862613F7A /* HabitDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitDetailView.swift; sourceTree = "<group>"; };
-		0BF5B8AAE9C56808197D34C7 /* LittleHabitTracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LittleHabitTracker.entitlements; sourceTree = "<group>"; };
+		0DDA790B71A18BA2236DC270 /* HabitMonthDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitMonthDetailView.swift; sourceTree = "<group>"; };
 		1E62589DA97C36CAE55D66A4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		29BD75FE888FD7347C53AA52 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		481A84F251ED310038917041 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
@@ -34,11 +39,17 @@
 		64C1C23158D8D65B0E699D19 /* StatisticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsView.swift; sourceTree = "<group>"; };
 		733B06F96043BCDFC9FF5CB8 /* LittleHabitTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LittleHabitTrackerApp.swift; sourceTree = "<group>"; };
 		7C9EB032F7D0436067ADBB5E /* CheckinSuccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckinSuccessView.swift; sourceTree = "<group>"; };
+		88127A9DEACFFE63BDD2CFD2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		8B61FCA6EEC5DE8EBB709890 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
 		9C04FE6875637B83EC49C71D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B0BED2952BB57235A86E4CA9 /* ArchivedHabitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchivedHabitsView.swift; sourceTree = "<group>"; };
 		C2FBD7612B05474238D48F79 /* HabitListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListView.swift; sourceTree = "<group>"; };
+		D34E69D2ED238F93EA2FB9CB /* AmountCheckinSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmountCheckinSheet.swift; sourceTree = "<group>"; };
 		D6F3FD8046594E7D6C1A2F6E /* MoodRecorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodRecorderView.swift; sourceTree = "<group>"; };
 		E338DD15B0AFDF7E621A8A09 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
-		E505F21C8BE7EC7D595AFF6B /* LittleHabitTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LittleHabitTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E505F21C8BE7EC7D595AFF6B /* LittleHabitTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LittleHabitTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F400E30A32862BC66A030359 /* HabitStatsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitStatsDetailView.swift; sourceTree = "<group>"; };
+		F4A57B29DD7206AFA589C8EE /* StatisticsExtViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsExtViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -61,20 +72,25 @@
 		8327E060ABE10F1021F9D9E6 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				D34E69D2ED238F93EA2FB9CB /* AmountCheckinSheet.swift */,
+				B0BED2952BB57235A86E4CA9 /* ArchivedHabitsView.swift */,
 				9C04FE6875637B83EC49C71D /* Assets.xcassets */,
 				7C9EB032F7D0436067ADBB5E /* CheckinSuccessView.swift */,
+				8B61FCA6EEC5DE8EBB709890 /* ConfettiView.swift */,
 				E338DD15B0AFDF7E621A8A09 /* Constants.swift */,
 				1E62589DA97C36CAE55D66A4 /* ContentView.swift */,
 				4E32D4DA98A3BEBF1FB0FDCC /* DesignSystem.swift */,
 				0B8FC675A13D85D862613F7A /* HabitDetailView.swift */,
 				C2FBD7612B05474238D48F79 /* HabitListView.swift */,
+				0DDA790B71A18BA2236DC270 /* HabitMonthDetailView.swift */,
+				F400E30A32862BC66A030359 /* HabitStatsDetailView.swift */,
 				49A3DCF9CA59FA167E27A6E1 /* HomeView.swift */,
 				29BD75FE888FD7347C53AA52 /* Info.plist */,
-				0BF5B8AAE9C56808197D34C7 /* LittleHabitTracker.entitlements */,
 				733B06F96043BCDFC9FF5CB8 /* LittleHabitTrackerApp.swift */,
 				481A84F251ED310038917041 /* Models.swift */,
 				D6F3FD8046594E7D6C1A2F6E /* MoodRecorderView.swift */,
-				0842830F1E02A031DBFA2ED9 /* ProfileView.swift */,
+				88127A9DEACFFE63BDD2CFD2 /* SettingsView.swift */,
+				F4A57B29DD7206AFA589C8EE /* StatisticsExtViews.swift */,
 				64C1C23158D8D65B0E699D19 /* StatisticsView.swift */,
 			);
 			path = Sources;
@@ -109,8 +125,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
-				TargetAttributes = {
-				};
 			};
 			buildConfigurationList = 74372347BBF6DEF21D94AF83 /* Build configuration list for PBXProject "LittleHabitTracker" */;
 			developmentRegion = en;
@@ -147,17 +161,23 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A2691EA3AF19D0709FC896F0 /* AmountCheckinSheet.swift in Sources */,
+				6844A7F81C309AF32C0A7128 /* ArchivedHabitsView.swift in Sources */,
 				7BFAD94EADE35B6D0EC8E2FE /* CheckinSuccessView.swift in Sources */,
+				9DCC845E63ADCBDBF77E7A42 /* ConfettiView.swift in Sources */,
 				0BEA439F62B14E35DECED32F /* Constants.swift in Sources */,
 				214F9D0D061FDB690162561C /* ContentView.swift in Sources */,
 				CC16735BFB4146000F00B45D /* DesignSystem.swift in Sources */,
 				D21079AE56EF1FEA6A8BEFC6 /* HabitDetailView.swift in Sources */,
 				156592AAAF0C26FD5B5418C8 /* HabitListView.swift in Sources */,
+				E1ACA329951A3D341534A3E3 /* HabitMonthDetailView.swift in Sources */,
+				C49F02B0A4E3E13111A3884A /* HabitStatsDetailView.swift in Sources */,
 				64943EBF99D6BC9D2CD376C0 /* HomeView.swift in Sources */,
 				65F716D2A8CF31F61005B51E /* LittleHabitTrackerApp.swift in Sources */,
 				BA5147AB6FBFF403AE498217 /* Models.swift in Sources */,
 				3F0E7867E7544880061F4F84 /* MoodRecorderView.swift in Sources */,
-				402A3C1A0CD9C93F798C3669 /* ProfileView.swift in Sources */,
+				2C0217F7450C582914928A10 /* SettingsView.swift in Sources */,
+				4281B2CF987B2476753AD94D /* StatisticsExtViews.swift in Sources */,
 				FBB4BBDED5615E1630468F5E /* StatisticsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -216,7 +236,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -232,8 +252,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Sources/LittleHabitTracker.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = G6G686R2TD;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -249,8 +269,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Sources/LittleHabitTracker.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = G6G686R2TD;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -307,7 +327,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -3,144 +3,279 @@ import SwiftData
 
 struct HabitListView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Habit.order) private var habits: [Habit]
+    @EnvironmentObject private var appSettings: AppSettings
+    @Query(filter: #Predicate<Habit> { $0.isArchived == false }, sort: \Habit.order) private var habits: [Habit]
     
     @State private var showingAddSheet = false
-    @State private var editMode: EditMode = .inactive
+    @State private var draggedHabit: Habit?
+    @State private var localHabits: [Habit] = []
+    @State private var habitToDelete: Habit?
+    @State private var showDeleteAlert = false
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                DS.bgPrimary.edgesIgnoringSafeArea(.all)
-                
-                if habits.isEmpty {
-                    VStack(spacing: DS.spacingL) {
-                        Image(systemName: "text.badge.plus")
-                            .font(.system(size: 48))
-                            .foregroundColor(DS.textTertiary)
-                        Text("还没有习惯")
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
-                            .foregroundColor(DS.textPrimary)
-                        Text("点击下方按钮添加你的第一个习惯")
-                            .font(.system(size: 15))
-                            .foregroundColor(DS.textSecondary)
-                            .multilineTextAlignment(.center)
+        ZStack {
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Header
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Habit".tr(appSettings.resolvedLanguage))
+                                .display()
+                                .foregroundColor(DS.primary)
+                            Text("You have ".tr(appSettings.resolvedLanguage))
+                                .bodyLg()
+                                .foregroundColor(DS.onSurfaceVariant) + 
+                            Text("\(habits.count)")
+                                .bodyLg()
+                                .foregroundColor(DS.primary)
+                                .bold() +
+                            Text(" habits.".tr(appSettings.resolvedLanguage))
+                                .bodyLg()
+                                .foregroundColor(DS.onSurfaceVariant)
+                        }
+                        
+                        Spacer()
+                        
+                        NavigationLink(value: "archived_habits") {
+                            Image(systemName: "archivebox")
+                                .font(.system(size: 20))
+                                .foregroundColor(DS.onSurfaceVariant)
+                                .padding(8)
+                                .background(Color.white.opacity(0.8))
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.05), radius: 5)
+                        }
                     }
-                    .padding(.horizontal, DS.spacingXL)
-                } else {
-                    List {
-                        ForEach(habits) { habit in
-                            ZStack {
-                                NavigationLink(destination: HabitDetailView(habit: habit)) {
-                                    EmptyView()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, DS.spacingM)
+                    .padding(.bottom, DS.spacingM)
+                    .padding(.horizontal, 16)
+                    
+                    // Habit List
+                    if localHabits.isEmpty {
+                        EmptyHabitsView()
+                            .padding(.top, 20)
+                            .padding(.horizontal, 16)
+                    } else {
+                        LazyVStack(spacing: 16) {
+                            ForEach(localHabits) { habit in
+                                NavigationLink(value: habit) {
+                                    HabitListCard(habit: habit)
                                 }
-                                .opacity(0)
-                                
-                                HStack(spacing: DS.spacingM) {
-                                    ZStack {
-                                        RoundedRectangle(cornerRadius: DS.cornerSmall)
-                                            .fill(Color(hex: habit.color).opacity(0.15))
-                                            .frame(width: 44, height: 44)
+                                .buttonStyle(PlainButtonStyle())
+                                .contextMenu {
+                                    NavigationLink(value: HabitEditRoute(habit: habit)) {
+                                        Label("Edit".tr(appSettings.resolvedLanguage), systemImage: "pencil")
+                                    }
+                                        Button(action: {
+                                            habit.isArchived = true
+                                            try? modelContext.save()
+                                        }) {
+                                            Label("Archive".tr(appSettings.resolvedLanguage), systemImage: "archivebox")
+                                        }
                                         
-                                        Image(systemName: habit.icon)
-                                            .foregroundColor(Color(hex: habit.color))
-                                            .font(.system(size: 20, weight: .medium))
+                                        Button(role: .destructive, action: {
+                                            habitToDelete = habit
+                                            showDeleteAlert = true
+                                        }) {
+                                            Label("Delete".tr(appSettings.resolvedLanguage), systemImage: "trash")
+                                        }
                                     }
-                                    
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text(habit.name)
-                                            .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(DS.textPrimary)
-                                        Text(goalSummary(habit))
-                                            .font(.system(size: 13))
-                                            .foregroundColor(DS.textSecondary)
+                                    .onDrag {
+                                        self.draggedHabit = habit
+                                        return NSItemProvider(object: habit.id as NSString)
+                                    } preview: {
+                                        HabitListCard(habit: habit)
+                                            .environmentObject(appSettings)
+                                            .frame(width: UIScreen.main.bounds.width - 32)
                                     }
+                                    .onDrop(of: [.text], delegate: HabitDropDelegate(item: habit, habits: $localHabits, draggedHabit: $draggedHabit, modelContext: modelContext))
                                     
-                                    Spacer()
-                                    
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(DS.textTertiary)
-                                        .font(.system(size: 13, weight: .semibold))
-                                }
-                                .padding(.vertical, DS.spacingS)
                             }
-                            .listRowBackground(DS.bgCard)
-                            .listRowSeparatorTint(DS.border)
-                            .listRowInsets(EdgeInsets(top: 4, leading: DS.spacingL, bottom: 4, trailing: DS.spacingL))
                         }
-                        .onDelete(perform: deleteHabits)
-                        .onMove(perform: moveHabits)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 24)
                     }
-                    .listStyle(InsetGroupedListStyle())
-                    .scrollContentBackground(.hidden)
+                    
+                    // Spacer for Bottom Navigation Bar & FAB
+                    Spacer().frame(height: 120)
+                }
+            }
+            .scrollIndicators(.hidden)
+            
+            // FAB
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    NavigationLink(value: "add_habit") {
+                        ZStack {
+                            Circle()
+                                .fill(DS.primary)
+                                .frame(width: 56, height: 56)
+                                .shadow(color: DS.primary.opacity(0.3), radius: 20, x: 0, y: 10)
+                            
+                            Image(systemName: "plus")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .padding(.trailing, DS.spacingL)
+                    .padding(.bottom, 16)
+                }
+            }
+        }
+        .navigationBarHidden(true)
+        .onAppear {
+            localHabits = habits
+        }
+        .onChange(of: habits) { _, newHabits in
+            if draggedHabit == nil {
+                localHabits = newHabits
+            }
+        }
+        .background(AmbientBackground())
+        .alert("确认删除?", isPresented: $showDeleteAlert, presenting: habitToDelete) { habit in
+            Button("取消", role: .cancel) {
+                habitToDelete = nil
+            }
+            Button("删除", role: .destructive) {
+                deleteHabit(habit)
+                habitToDelete = nil
+            }
+        } message: { _ in
+            Text("删除后所有相关打卡数据将无法恢复。")
+        }
+    }
+    
+    private func deleteHabit(_ habit: Habit) {
+        withAnimation {
+            modelContext.delete(habit)
+        }
+    }
+}
+
+struct HabitDropDelegate: DropDelegate {
+    let item: Habit
+    @Binding var habits: [Habit]
+    @Binding var draggedHabit: Habit?
+    let modelContext: ModelContext
+    
+    func dropEntered(info: DropInfo) {
+        guard let draggedHabit = self.draggedHabit,
+              draggedHabit.id != item.id,
+              let from = habits.firstIndex(of: draggedHabit),
+              let to = habits.firstIndex(of: item) else {
+            return
+        }
+        
+        if from != to {
+            withAnimation(.default) {
+                habits.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
+            }
+        }
+    }
+    
+    func performDrop(info: DropInfo) -> Bool {
+        for (index, habit) in habits.enumerated() {
+            habit.order = index
+        }
+        try? modelContext.save()
+        self.draggedHabit = nil
+        return true
+    }
+    
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        return DropProposal(operation: .move)
+    }
+}
+
+struct HabitListCard: View {
+    @EnvironmentObject private var appSettings: AppSettings
+    let habit: Habit
+    
+    private var habitColor: Color { Color(hex: habit.color) }
+    
+    var body: some View {
+        VStack(spacing: DS.spacingM) {
+            // Top Row
+            HStack(spacing: DS.spacingS) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(habitColor.opacity(0.15))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: habit.icon)
+                        .foregroundColor(habitColor)
+                        .font(.system(size: 16))
                 }
                 
-                // Bottom Button
-                VStack {
-                    Spacer()
-                    Button(action: { showingAddSheet = true }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "plus")
-                                .font(.system(size: 16, weight: .bold))
-                            Text("添加习惯")
-                                .font(.system(size: 16, weight: .semibold))
+                // Name & Streak
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(habit.name)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(DS.onSurface)
+                    
+                    Text("\(habit.currentStreak) \("Days Streak".tr(appSettings.resolvedLanguage))")
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(DS.onSurfaceVariant)
+                }
+                
+                Spacer()
+                
+                // Right Side: Last 30 Days Count
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(habit.checkinCountLast30Days)次")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(habitColor)
+                    
+                    Text("近30天")
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundColor(DS.onSurfaceVariant)
+                }
+            }
+            
+            // Heatmap Grid
+            let gridData = habit.last182DaysCheckins
+            HStack(spacing: 4) {
+                ForEach(0..<26, id: \.self) { weekIndex in
+                    VStack(spacing: 4) {
+                        ForEach(0..<7, id: \.self) { dayIndex in
+                            let index = weekIndex * 7 + dayIndex
+                            let isChecked = gridData[index]
+                            
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(isChecked ? habitColor : DS.surfaceContainerLow)
+                                .frame(width: 8, height: 8)
                         }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .background(DS.accent)
-                        .cornerRadius(DS.cornerPill)
-                        .padding(.horizontal, DS.spacingXL)
-                        .shadow(color: DS.accent.opacity(0.3), radius: 12, x: 0, y: 6)
                     }
-                    .padding(.bottom, 30)
-                    .background(
-                        LinearGradient(
-                            colors: [DS.bgPrimary.opacity(0), DS.bgPrimary],
-                            startPoint: .top, endPoint: .bottom
-                        )
-                        .frame(height: 100)
-                        .allowsHitTesting(false)
-                    )
-                }
-                .edgesIgnoringSafeArea(.bottom)
-            }
-            .navigationTitle("管理习惯")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                EditButton()
-                    .foregroundColor(DS.accent)
-            }
-            .environment(\.editMode, $editMode)
-            .sheet(isPresented: $showingAddSheet) {
-                NavigationView {
-                    HabitDetailView(habit: nil)
                 }
             }
+            .frame(maxWidth: .infinity)
         }
+        .padding(DS.spacingM)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
     }
+}
+
+struct StatBlock: View {
+    let value: String
+    let label: String
     
-    private func goalSummary(_ habit: Habit) -> String {
-        let period = habit.frequencyType == "weekly" ? "每周" : "每月"
-        if habit.goalType == "amount" {
-            return "\(period) \(Int(habit.amountValue)) \(habit.amountUnit)"
-        } else {
-            let target = habit.frequencyType == "weekly" ? habit.weeklyTarget : habit.monthlyTarget
-            return "\(period) \(target) 次"
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(DS.onSurface)
+            Text(label)
+                .font(.system(size: 11, weight: .regular))
+                .foregroundColor(DS.onSurfaceVariant)
         }
-    }
-    
-    private func deleteHabits(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets { modelContext.delete(habits[index]) }
-        }
-    }
-    
-    private func moveHabits(from source: IndexSet, to destination: Int) {
-        var revisedItems: [Habit] = habits.map { $0 }
-        revisedItems.move(fromOffsets: source, toOffset: destination)
-        for reverseIndex in stride(from: revisedItems.count - 1, through: 0, by: -1) {
-            revisedItems[reverseIndex].order = reverseIndex
-        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(DS.surfaceContainerLow)
+        .cornerRadius(12)
     }
 }
