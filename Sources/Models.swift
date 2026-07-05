@@ -77,7 +77,8 @@ extension Habit {
     }
     
     var checkinCountLast30Days: Int {
-        let calendar = Calendar.current
+                var calendar = Calendar.current
+        calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
         let today = Date()
         var count = 0
         let dates = checkinDates
@@ -97,7 +98,8 @@ extension Habit {
     }
     
     var currentStreak: Int {
-        let calendar = Calendar.current
+                var calendar = Calendar.current
+        calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
         let today = Date()
         let dates = checkinDates
         
@@ -157,7 +159,8 @@ extension Habit {
         var maxStreak = 1
         var currentStreak = 1
         
-        let calendar = Calendar.current
+                var calendar = Calendar.current
+        calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
         for i in 1..<sortedDates.count {
             let diff = calendar.dateComponents([.day], from: calendar.startOfDay(for: sortedDates[i-1]), to: calendar.startOfDay(for: sortedDates[i])).day ?? 0
             
@@ -175,7 +178,8 @@ extension Habit {
     // Returns array of booleans for the last 154 days (22 weeks).
     // Index 0 is 153 days ago, Index 153 is today.
     var last154DaysCheckins: [Bool] {
-        let calendar = Calendar.current
+                var calendar = Calendar.current
+        calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
         let today = Date()
         let dates = checkinDates
         
@@ -197,7 +201,8 @@ extension Habit {
     // Returns array of booleans for the last 182 days (26 weeks).
     // Index 0 is 181 days ago, Index 181 is today.
     var last182DaysCheckins: [Bool] {
-        let calendar = Calendar.current
+                var calendar = Calendar.current
+        calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
         let today = Date()
         let dates = checkinDates
         

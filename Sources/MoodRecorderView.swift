@@ -38,7 +38,7 @@ struct MoodRecorderView: View {
     
     var body: some View {
         ZStack {
-            Color.white.ignoresSafeArea()
+            DS.bgPrimary.ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // Header & Close Button
@@ -91,7 +91,7 @@ struct MoodRecorderView: View {
                                         }
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 12)
-                                        .background(selectedMood == mood.0 ? Color(hex: "#F5F5F5") : Color.white)
+                                        .background(selectedMood == mood.0 ? DS.surfaceVariant : DS.surface)
                                         .clipShape(RoundedRectangle(cornerRadius: 16))
                                     }
                                 }
@@ -108,7 +108,7 @@ struct MoodRecorderView: View {
                                 TextEditor(text: $noteText)
                                     .frame(height: 100)
                                     .padding(12)
-                                    .background(Color(hex: "#F9F9F9"))
+                                    .background(DS.surfaceVariant)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                                     .scrollContentBackground(.hidden)
                                     .overlay(
@@ -160,7 +160,7 @@ struct MoodRecorderView: View {
                                     }) {
                                         Image(systemName: "xmark.circle.fill")
                                             .foregroundColor(.gray)
-                                            .background(Color.white.clipShape(Circle()))
+                                            .background(DS.surface.clipShape(Circle()))
                                             .offset(x: 8, y: -8)
                                     }
                                 }
@@ -175,7 +175,7 @@ struct MoodRecorderView: View {
                                             .foregroundColor(.gray)
                                     }
                                     .frame(width: 80, height: 80)
-                                    .background(Color.white)
+                                    .background(DS.surface)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 12)
@@ -214,7 +214,7 @@ struct MoodRecorderView: View {
                 .padding(.bottom, DS.spacingL)
                 .background(
                     LinearGradient(
-                        colors: [Color.white.opacity(0), Color.white],
+                        colors: [DS.surface.opacity(0), DS.surface],
                         startPoint: .top,
                         endPoint: .bottom
                     )

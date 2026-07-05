@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import SwiftData
 
 struct HabitMonthRoute: Hashable {
@@ -15,14 +16,27 @@ struct HabitMonthDetailView: View {
     @Query private var moodRecords: [MoodRecord]
     
     let habit: Habit
+    @State private var selectedImageForFullscreen: IdentifiableImage? = nil
     @State var year: Int
     @State var month: Int
     
     @State private var currentMonthDate: Date
-    private let calendar = Calendar.current
+    private var calendar: Calendar { appSettings.customCalendar }
+    private var monthYearString: String {
+        let df = DateFormatter()
+        if appSettings.resolvedLanguage == .chinese {
+            df.locale = Locale(identifier: "zh_CN")
+            df.dateFormat = appSettings.resolvedLanguage == .chinese ? "yyyy年M月" : "MMM yyyy"
+        } else {
+            df.locale = Locale(identifier: "en_US")
+            df.dateFormat = "MMMM yyyy"
+        }
+        return df.string(from: currentMonthDate)
+    }
     
     init(habit: Habit, year: Int, month: Int) {
         self.habit = habit
+        self._selectedImageForFullscreen = State(initialValue: nil)
         self._year = State(initialValue: year)
         self._month = State(initialValue: month)
         var comp = DateComponents()
@@ -34,10 +48,49 @@ struct HabitMonthDetailView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "#F8F9FA").ignoresSafeArea()
+            AmbientBackground()
             
             ScrollView(showsIndicators: false) {
                 VStack(spacing: DS.spacingM) {
+                    
+                    // Month Selector
+                    HStack {
+                        Button(action: { withAnimation { currentMonthDate = calendar.date(byAdding: .month, value: -1, to: currentMonthDate) ?? currentMonthDate } }) {
+                            Image(systemName: "chevron.left")
+                                .frame(width: 44, height: 44)
+                                .background(DS.surface.opacity(0.8))
+                                .background(.ultraThinMaterial)
+                                .clipShape(Circle())
+                                .foregroundColor(DS.onSurface)
+                        }
+                        
+                        Spacer()
+                        
+                        HStack(spacing: 8) {
+                            Image(systemName: "calendar")
+                                .foregroundColor(DS.primary)
+                            Text(monthYearString)
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(DS.onSurface)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(DS.surface.opacity(0.8))
+                        .background(.ultraThinMaterial)
+                        .clipShape(Capsule())
+                        
+                        Spacer()
+                        
+                        Button(action: { withAnimation { currentMonthDate = calendar.date(byAdding: .month, value: 1, to: currentMonthDate) ?? currentMonthDate } }) {
+                            Image(systemName: "chevron.right")
+                                .frame(width: 44, height: 44)
+                                .background(DS.surface.opacity(0.8))
+                                .background(.ultraThinMaterial)
+                                .clipShape(Circle())
+                                .foregroundColor(DS.onSurface)
+                        }
+                    }
+                    .padding(.horizontal, 16)
                     
                     // Month Grid Card (Reused from StatisticsView)
                     MonthGridCard(
@@ -58,13 +111,17 @@ struct HabitMonthDetailView: View {
                             Text("\(completedDaysCount)")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(DS.onSurface)
-                            Text("打卡天数")
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
+                            Text("Check-in Days".tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 12))
                                 .foregroundColor(DS.onSurfaceVariant)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(Color.white.opacity(0.7))
+                        .background(DS.surface.opacity(0.7))
                         .background(.ultraThinMaterial)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                         .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white, lineWidth: 1))
@@ -76,13 +133,17 @@ struct HabitMonthDetailView: View {
                                 Text("\(String(format: "%.1f", totalAmount).replacingOccurrences(of: ".0", with: ""))")
                                     .font(.system(size: 24, weight: .bold))
                                     .foregroundColor(DS.onSurface)
-                                Text("打卡数量")
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.5)
+                                Text("Check-in Amount".tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 12))
                                     .foregroundColor(DS.onSurfaceVariant)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(Color.white.opacity(0.7))
+                            .background(DS.surface.opacity(0.7))
                             .background(.ultraThinMaterial)
                             .clipShape(RoundedRectangle(cornerRadius: 20))
                             .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white, lineWidth: 1))
@@ -94,14 +155,14 @@ struct HabitMonthDetailView: View {
                     // Timeline Records
                     VStack(alignment: .leading, spacing: DS.spacingL) {
                         HStack {
-                            Text("打卡记录")
+                            Text("Check-in Records".tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(DS.onSurface)
                             Spacer()
                         }
                         
                         if currentMonthCheckins.isEmpty {
-                            Text("暂无打卡记录")
+                            Text("No check-in records".tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 14))
                                 .foregroundColor(DS.onSurfaceVariant)
                         } else {
@@ -123,11 +184,11 @@ struct HabitMonthDetailView: View {
                 .padding(.top, 16)
             }
         }
-        .navigationTitle("\(String(format: "%04d", year))年 \(String(format: "%02d", month))月 ｜ \(habit.name)")
+        .navigationTitle(habit.name)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(Color(hex: "#F8F9FA"), for: .navigationBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: { dismiss() }) {
@@ -139,34 +200,15 @@ struct HabitMonthDetailView: View {
                         .clipShape(Circle())
                 }
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                HStack(spacing: 8) {
-                    Button(action: { 
-                        if let newDate = calendar.date(byAdding: .month, value: -1, to: currentMonthDate) {
-                            currentMonthDate = newDate
-                        }
-                    }) {
-                        Image(systemName: "chevron.left.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundColor(DS.surfaceContainerLow)
-                            .overlay(Image(systemName: "chevron.left").font(.system(size: 10, weight: .bold)).foregroundColor(DS.onSurfaceVariant))
-                    }
-                    Button(action: { 
-                        if let newDate = calendar.date(byAdding: .month, value: 1, to: currentMonthDate) {
-                            currentMonthDate = newDate
-                        }
-                    }) {
-                        Image(systemName: "chevron.right.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundColor(DS.surfaceContainerLow)
-                            .overlay(Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundColor(DS.onSurfaceVariant))
-                    }
-                }
-            }
         }
         .onChange(of: currentMonthDate) { _, newValue in
             year = calendar.component(.year, from: newValue)
             month = calendar.component(.month, from: newValue)
+        }
+        .fullScreenCover(item: $selectedImageForFullscreen) { identImg in
+            FullscreenImageView(image: identImg.image) {
+                selectedImageForFullscreen = nil
+            }
         }
     }
     
@@ -215,15 +257,15 @@ struct HabitMonthDetailView: View {
             ZStack(alignment: .top) {
                 if !isLast {
                     Rectangle()
-                        .fill(Color(hex: habit.color).opacity(0.2))
+                        .fill(DS.primary.opacity(0.2))
                         .frame(width: 2)
                         .padding(.top, 24)
                 }
                 
                 Circle()
-                    .fill(Color(hex: habit.color).opacity(0.15))
+                    .fill(DS.primary.opacity(0.15))
                     .frame(width: 12, height: 12)
-                    .overlay(Circle().stroke(Color(hex: habit.color), lineWidth: 2))
+                    .overlay(Circle().stroke(DS.primary, lineWidth: 2))
                     .padding(.top, 4)
             }
             .frame(width: 32)
@@ -239,16 +281,16 @@ struct HabitMonthDetailView: View {
                     Spacer()
                     
                     if habit.goalType == "amount" && checkin.amount > 0 {
-                        Text("+\(String(format: "%.1f", checkin.amount).replacingOccurrences(of: ".0", with: "")) \(habit.amountUnit)")
+                        Text("+\(String(format: "%.1f", checkin.amount).replacingOccurrences(of: ".0", with: "")) \(habit.amountUnit.tr(appSettings.resolvedLanguage))")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(Color(hex: habit.color))
+                            .foregroundColor(DS.primary)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color(hex: habit.color).opacity(0.1))
+                            .background(DS.primary.opacity(0.1))
                             .clipShape(Capsule())
                     } else {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(Color(hex: habit.color))
+                            .foregroundColor(DS.primary)
                             .font(.system(size: 16))
                     }
                 }
@@ -265,7 +307,22 @@ struct HabitMonthDetailView: View {
                                 .foregroundColor(DS.onSurfaceVariant)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
-                        Spacer()
+                        
+                        Spacer(minLength: 8)
+                        
+                        if let imageData = mood.imageData, let uiImage = UIImage(data: imageData) {
+                            Button(action: {
+                                selectedImageForFullscreen = IdentifiableImage(image: uiImage)
+                            }) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 48, height: 48)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    .shadow(color: Color.black.opacity(0.1), radius: 2)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
                     }
                     .padding(10)
                     .background(Color.black.opacity(0.02))
@@ -273,7 +330,7 @@ struct HabitMonthDetailView: View {
                 }
             }
             .padding(16)
-            .background(Color.white)
+            .background(DS.surface)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .shadow(color: Color.black.opacity(0.02), radius: 6, x: 0, y: 2)
             .padding(.bottom, isLast ? 0 : 16)
@@ -285,5 +342,74 @@ struct HabitMonthDetailView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "MM月dd日 HH:mm"
         return formatter.string(from: date)
+    }
+}
+
+struct IdentifiableImage: Identifiable {
+    let id = UUID()
+    let image: UIImage
+}
+
+struct FullscreenImageView: View {
+    let image: UIImage
+    let onDismiss: () -> Void
+    @State private var showingSaveAlert = false
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFit()
+                .scaleEffect(scale)
+                .gesture(
+                    MagnificationGesture()
+                        .onChanged { val in
+                            scale = lastScale * val
+                        }
+                        .onEnded { val in
+                            lastScale = scale
+                        }
+                )
+                .onTapGesture(count: 2) {
+                    withAnimation {
+                        scale = scale > 1 ? 1.0 : 2.0
+                        lastScale = scale
+                    }
+                }
+            
+            VStack {
+                HStack {
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(16)
+                            .background(Color.black.opacity(0.5))
+                            .clipShape(Circle())
+                    }
+                    Spacer()
+                    Button(action: {
+                        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+                        showingSaveAlert = true
+                    }) {
+                        Image(systemName: "square.and.arrow.down")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(16)
+                            .background(Color.black.opacity(0.5))
+                            .clipShape(Circle())
+                    }
+                }
+                .padding()
+                Spacer()
+            }
+        }
+        .alert("已保存到相册", isPresented: $showingSaveAlert) {
+            Button("好的", role: .cancel) { }
+        }
     }
 }

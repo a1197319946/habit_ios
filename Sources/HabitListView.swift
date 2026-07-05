@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 struct HabitListView: View {
     @Environment(\.modelContext) private var modelContext
@@ -8,6 +9,9 @@ struct HabitListView: View {
     
     @State private var showingAddSheet = false
     @State private var draggedHabit: Habit?
+    @State private var navigateToAddHabit = false
+    @State private var editingHabit: Habit?
+    @State private var showPaywall = false
     @State private var localHabits: [Habit] = []
     @State private var habitToDelete: Habit?
     @State private var showDeleteAlert = false
@@ -39,9 +43,9 @@ struct HabitListView: View {
                         NavigationLink(value: "archived_habits") {
                             Image(systemName: "archivebox")
                                 .font(.system(size: 20))
-                                .foregroundColor(DS.onSurfaceVariant)
+                                .foregroundColor(DS.primary)
                                 .padding(8)
-                                .background(Color.white.opacity(0.8))
+                                .background(DS.surface.opacity(0.8))
                                 .clipShape(Circle())
                                 .shadow(color: .black.opacity(0.05), radius: 5)
                         }
@@ -53,8 +57,8 @@ struct HabitListView: View {
                     
                     // Habit List
                     if localHabits.isEmpty {
-                        EmptyHabitsView()
-                            .padding(.top, 20)
+                        EmptyHabitsView(onAction: nil)
+                            .padding(.top, 100)
                             .padding(.horizontal, 16)
                     } else {
                         LazyVStack(spacing: 16) {
@@ -64,7 +68,7 @@ struct HabitListView: View {
                                 }
                                 .buttonStyle(PlainButtonStyle())
                                 .contextMenu {
-                                    NavigationLink(value: HabitEditRoute(habit: habit)) {
+                                    Button(action: { editingHabit = habit }) {
                                         Label("Edit".tr(appSettings.resolvedLanguage), systemImage: "pencil")
                                     }
                                         Button(action: {
@@ -108,7 +112,13 @@ struct HabitListView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    NavigationLink(value: "add_habit") {
+                    Button(action: {
+                        if localHabits.count >= 5 && !appSettings.isPremium {
+                            showPaywall = true
+                        } else {
+                            navigateToAddHabit = true
+                        }
+                    }) {
                         ZStack {
                             Circle()
                                 .fill(DS.primary)
@@ -126,6 +136,16 @@ struct HabitListView: View {
             }
         }
         .navigationBarHidden(true)
+        .sheet(isPresented: $navigateToAddHabit) {
+            HabitDetailView(habit: nil)
+        }
+        .sheet(item: $editingHabit) { habit in
+            HabitDetailView(habit: habit)
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+                .presentationDragIndicator(.visible)
+        }
         .onAppear {
             localHabits = habits
         }
@@ -150,7 +170,12 @@ struct HabitListView: View {
     
     private func deleteHabit(_ habit: Habit) {
         withAnimation {
+            if let index = localHabits.firstIndex(of: habit) {
+                localHabits.remove(at: index)
+            }
             modelContext.delete(habit)
+            try? modelContext.save()
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 }
@@ -225,11 +250,11 @@ struct HabitListCard: View {
                 
                 // Right Side: Last 30 Days Count
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(habit.checkinCountLast30Days)次")
+                    Text("\(habit.checkinCountLast30Days) \("times".tr(appSettings.resolvedLanguage))")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(habitColor)
                     
-                    Text("近30天")
+                    Text("30 Days".tr(appSettings.resolvedLanguage))
                         .font(.system(size: 11, weight: .regular))
                         .foregroundColor(DS.onSurfaceVariant)
                 }
@@ -245,7 +270,7 @@ struct HabitListCard: View {
                             let isChecked = gridData[index]
                             
                             RoundedRectangle(cornerRadius: 2)
-                                .fill(isChecked ? habitColor : DS.surfaceContainerLow)
+                                .fill(isChecked ? habitColor : DS.uncheckedPlaceholder)
                                 .frame(width: 8, height: 8)
                         }
                     }
@@ -254,7 +279,7 @@ struct HabitListCard: View {
             .frame(maxWidth: .infinity)
         }
         .padding(DS.spacingM)
-        .background(Color.white)
+        .background(DS.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
     }
@@ -275,7 +300,7 @@ struct StatBlock: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
-        .background(DS.surfaceContainerLow)
+        .background(DS.uncheckedPlaceholder)
         .cornerRadius(12)
     }
 }

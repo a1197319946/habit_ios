@@ -10,17 +10,53 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     
     var displayName: String {
         switch self {
-        case .system: return "跟随系统 (System)"
-        case .english: return "English"
-        case .chinese: return "中文 (Chinese)"
+        case .system: return "系统"
+        case .english: return "EN"
+        case .chinese: return "中文"
+        }
+    }
+}
+
+enum AppTheme: String, CaseIterable, Identifiable {
+    case system = "system"
+    case light = "light"
+    case dark = "dark"
+    
+    var id: String { self.rawValue }
+    
+    func displayName(in language: AppLanguage) -> String {
+        switch self {
+        case .system: return "System".tr(language)
+        case .light: return "Light".tr(language)
+        case .dark: return "Dark".tr(language)
         }
     }
 }
 
 class AppSettings: ObservableObject {
-    @AppStorage("appLanguage") var language: AppLanguage = .system
-    @AppStorage("themeColorHex") var themeColorHex: String = "#5e4dbb"
+    @AppStorage("isPremium", store: UserDefaults(suiteName: "group.com.littlehabit.tracker")) var isPremium: Bool = false
+    @AppStorage("appLockEnabled", store: UserDefaults(suiteName: "group.com.littlehabit.tracker")) var appLockEnabled: Bool = false
+    @AppStorage("iCloudSyncEnabled", store: UserDefaults(suiteName: "group.com.littlehabit.tracker")) var iCloudSyncEnabled: Bool = false
     
+    @Published var showPaywall: Bool = false
+    @Published var showPaywallFromSettings: Bool = false
+    @Published var showRetentionOffer: Bool = false
+    @AppStorage("hasSeenRetentionOffer", store: UserDefaults(suiteName: "group.com.littlehabit.tracker")) var hasSeenRetentionOffer: Bool = false
+
+    @AppStorage("appLanguage", store: UserDefaults(suiteName: "group.com.littlehabit.tracker")) var language: AppLanguage = .system
+    @AppStorage("themeColorHex", store: UserDefaults(suiteName: "group.com.littlehabit.tracker")) var themeColorHex: String = "#5e4dbb"
+    @AppStorage("themeMode", store: UserDefaults(suiteName: "group.com.littlehabit.tracker")) var themeMode: AppTheme = .system
+    @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.littlehabit.tracker")) var firstWeekday: Int = 2 // 2 = Monday, 1 = Sunday
+    
+    
+    var colorScheme: ColorScheme? {
+        switch themeMode {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+
     var locale: Locale? {
         if language == .system {
             return nil
@@ -28,10 +64,16 @@ class AppSettings: ObservableObject {
         return Locale(identifier: language.rawValue)
     }
     
+    var customCalendar: Calendar {
+        var cal = Calendar.current
+        cal.firstWeekday = firstWeekday
+        return cal
+    }
+    
     var resolvedLanguage: AppLanguage {
         if language == .system {
-            if let langCode = Locale.current.language.languageCode?.identifier {
-                if langCode.hasPrefix("zh") { return .chinese }
+            if let firstLang = Locale.preferredLanguages.first {
+                if firstLang.hasPrefix("zh") { return .chinese }
             }
             return .english
         }
@@ -98,6 +140,99 @@ extension String {
             "Edit Habit": [.chinese: "编辑习惯", .english: "Edit Habit"],
             "Record Mood": [.chinese: "记录心情", .english: "Record Mood"],
             "Generate Sharing Image": [.chinese: "生成分享图", .english: "Generate Sharing Image"],
+            "公里": [.chinese: "公里", .english: "km"],
+            "米": [.chinese: "米", .english: "m"],
+            "分钟": [.chinese: "分钟", .english: "mins"],
+            "小时": [.chinese: "小时", .english: "hours"],
+            "次": [.chinese: "次", .english: "times"],
+            "页": [.chinese: "页", .english: "pages"],
+            "天": [.chinese: "天", .english: "days"],
+            "周": [.chinese: "周", .english: "week"],
+            "本周": [.chinese: "本周", .english: "This week"],
+            "本月": [.chinese: "本月", .english: "This month"],
+            "月": [.chinese: "月", .english: "month"],
+            "App Locked": [.chinese: "应用已锁定", .english: "App Locked"],
+            "Unlock": [.chinese: "解锁", .english: "Unlock"],
+            "Unlock Little Habit": [.chinese: "解锁小习惯", .english: "Unlock Little Habit"],
+            "Restore Purchase": [.chinese: "恢复购买", .english: "Restore"],
+            "Monthly Card": [.chinese: "月度卡", .english: "Monthly Card"],
+            "Yearly Card": [.chinese: "年度卡", .english: "Yearly Card"],
+            "Lifetime Card": [.chinese: "终身卡", .english: "Lifetime Card"],
+            "Start Free Trial": [.chinese: "开始免费试用", .english: "Start Free Trial"],
+            "Purchase Now": [.chinese: "立即购买", .english: "Purchase Now"],
+            "Wait, a special offer!": [.chinese: "等一下，送您一份专属优惠！", .english: "Wait, a special offer!"],
+            "Claim Yearly Discount": [.chinese: "领取年度卡折扣", .english: "Claim Yearly Discount"],
+            "No, thanks": [.chinese: "残忍拒绝", .english: "No, thanks"],
+            "Cancel anytime during trial": [.chinese: "试用期间随时取消", .english: "Cancel anytime during trial"],
+            "Ad-Free Experience": [.chinese: "纯净无广告", .english: "Ad-Free Experience"],
+            "Reduce the resistance to your daily habits.": [.chinese: "降低坚持的阻力", .english: "Reduce the resistance to your daily habits."],
+            "Enter Data": [.chinese: "录入打卡数据", .english: "Enter Data"],
+            "Edit Data": [.chinese: "修改打卡数据", .english: "Edit Data"],
+            "Period Target: ": [.chinese: "本周期目标: ", .english: "Period Target: "],
+            "Period Total: ": [.chinese: "本周期已累计: ", .english: "Period Total: "],
+            "Amount Completed": [.chinese: "本次完成量", .english: "Amount Completed"],
+            "Undo Check-in": [.chinese: "撤销打卡", .english: "Undo Check-in"],
+            "Edit Amount": [.chinese: "修改数值", .english: "Edit Amount"],
+                        " Total": [.chinese: "累计", .english: " Total"],
+            " Achieved!": [.chinese: "已达成！", .english: " Achieved!"],
+                        "Options": [.chinese: "操作", .english: "Options"],
+                        "Check-in Successful": [.chinese: "打卡成功", .english: "Check-in Successful"],
+
+            "Hide Archived": [.chinese: "隐藏归档", .english: "Hide Archived"],
+            "Statistics Overview": [.chinese: "统计概览", .english: "Statistics Overview"],
+            " Times": [.chinese: "次", .english: " Times"],
+            " Month": [.chinese: "月", .english: " Month"],
+            " Year": [.chinese: " 年", .english: " Year"],
+            "Target: ": [.chinese: "目标: ", .english: "Target: "],
+            " Times/Week": [.chinese: "次/周", .english: " Times/Week"],
+            "Statistics": [.chinese: "统计数据", .english: "Statistics"],
+            "Yearly Calendar": [.chinese: "年度日历", .english: "Yearly Calendar"],
+            "Data irrecoverable after deletion.": [.chinese: "删除后所有相关打卡数据将无法恢复。", .english: "Data irrecoverable after deletion."],
+            "Check-in Days": [.chinese: "打卡天数", .english: "Check-in Days"],
+            "Check-in Amount": [.chinese: "打卡数量", .english: "Check-in Amount"],
+            "Check-in Records": [.chinese: "打卡记录", .english: "Check-in Records"],
+            "No check-in records": [.chinese: "暂无打卡记录", .english: "No check-in records"],
+            "No data": [.chinese: "暂无数据", .english: "No data"],
+            "No data for this week.": [.chinese: "本周暂无数据", .english: "No data for this week."],
+            "美好的改变，从今天开始": [.chinese: "美好的改变，从今天开始", .english: "Beautiful changes begin today"],
+            "开启你的第一个小习惯吧": [.chinese: "开启你的第一个小习惯吧", .english: "Let's create your first habit"],
+            "Habit Details": [.chinese: "习惯详情", .english: "Habit Details"],
+            
+            "Features": [.chinese: "功能", .english: "Features"],
+            "Widgets": [.chinese: "小组件", .english: "Widgets"],
+            "Add to Home Screen": [.chinese: "添加到主屏幕", .english: "Add to Home Screen"],
+            "How to add Widgets": [.chinese: "如何添加小组件", .english: "How to add Widgets"],
+            "Go to your Home Screen.": [.chinese: "回到手机主屏幕", .english: "Go to your Home Screen."],
+            "Long press any empty space until apps jiggle.": [.chinese: "长按主屏幕空白处，直到应用图标开始抖动", .english: "Long press any empty space until apps jiggle."],
+            "Tap the '+' button in the top left corner.": [.chinese: "点击左上角的“+”按钮", .english: "Tap the '+' button in the top left corner."],
+            "Search for 'Little Habit' and add your favorite widget.": [.chinese: "搜索“Little Habit”，选择并添加你喜欢的小组件", .english: "Search for 'Little Habit' and add your favorite widget."],
+            "Got it": [.chinese: "我知道了", .english: "Got it"],
+
+            "Frequency Goal": [.chinese: "次数目标", .english: "Frequency Goal"],
+            "Amount Goal": [.chinese: "总量目标", .english: "Amount Goal"],
+
+            "打卡天数": [.chinese: "打卡天数", .english: "Check-in Days"],
+            "总数值": [.chinese: "总数值", .english: "Total Amount"],
+            "习惯详情": [.chinese: "习惯详情", .english: "Habit Details"],
+
+            "System": [.chinese: "系统", .english: "System"],
+            "Light": [.chinese: "浅色", .english: "Light"],
+            "Dark": [.chinese: "深色", .english: "Dark"],
+            "Appearance": [.chinese: "外观", .english: "Appearance"],
+            "Start of Week": [.chinese: "一周开始", .english: "Start of Week"],
+            "Monday": [.chinese: "周一", .english: "Monday"],
+            "Sunday": [.chinese: "周日", .english: "Sunday"],
+            "Cancel": [.chinese: "取消", .english: "Cancel"],
+            "Close": [.chinese: "关闭", .english: "Close"],
+            "Show Completed": [.chinese: "显示已打卡", .english: "Show Completed"],
+            "Hide Completed": [.chinese: "隐藏已打卡", .english: "Hide Completed"],
+            "This Week": [.chinese: "本周", .english: "This Week"],
+            "This Month": [.chinese: "本月", .english: "This Month"],
+            "Week": [.chinese: "本周", .english: "Week"],
+            " times": [.chinese: "次", .english: " times"],
+            " time": [.chinese: "次", .english: " time"],
+            "Cancel Check-in?": [.chinese: "操作", .english: "Options"],
+
             "Generating...": [.chinese: "生成中...", .english: "Generating..."],
             "Today": [.chinese: "今日", .english: "Today"],
             "Total": [.chinese: "累计", .english: "Total"],
@@ -149,24 +284,59 @@ extension String {
             "Archive": [.chinese: "归档", .english: "Archive"],
             "Restore": [.chinese: "恢复", .english: "Restore"],
             "Settings": [.chinese: "设置", .english: "Settings"],
+            "Developer (Test Only)": [.chinese: "开发者 (仅供测试)", .english: "Developer (Test Only)"],
+            "Mock Premium Status": [.chinese: "模拟高级版状态", .english: "Mock Premium Status"],
+            "Little Habit Premium": [.chinese: "小习惯高级版", .english: "Little Habit Premium"],
+            "Unlock your full potential": [.chinese: "解锁所有特权与功能", .english: "Unlock your full potential"],
+            "Theme Colors": [.chinese: "自定义主题", .english: "Theme Colors"],
+            "Personalize your app with custom colors": [.chinese: "丰富的主题色彩个性化你的应用", .english: "Personalize your app with custom colors"],
+            "Dark Mode": [.chinese: "深色模式", .english: "Dark Mode"],
+            "Reduce eye strain with a sleek dark theme": [.chinese: "时尚的深色主题，缓解眼睛疲劳", .english: "Reduce eye strain with a sleek dark theme"],
+            "Protect your habits with Face ID / Touch ID": [.chinese: "使用 Face ID 或 Touch ID 保护你的隐私", .english: "Protect your habits with Face ID / Touch ID"],
+            "Unlimited Habits": [.chinese: "无限习惯", .english: "Unlimited Habits"],
+            "Create as many habits as you want": [.chinese: "突破限制，创建任意数量的习惯（免费版最多5个）", .english: "Create as many habits as you want (Free version max 5)"],
+            "Import / Export Data": [.chinese: "导入 / 导出数据", .english: "Import / Export Data"],
+            "Backup to Excel & Import": [.chinese: "备份到 Excel 文件，并支持导入其他 app 打卡记录", .english: "Backup to Excel & import from other apps"],
+            "Keep your habits synced across all devices": [.chinese: "让你的习惯在所有设备上保持同步", .english: "Keep your habits synced across all devices"],
+            "Billed monthly": [.chinese: "按月扣款", .english: "Billed monthly"],
+            "Billed yearly": [.chinese: "按年扣款", .english: "Billed yearly"],
+            "15 天免费试用，结束后按 ¥29.9/年收费": [.chinese: "15 天免费试用，结束后按 ¥29.9/年收费", .english: "15-day free trial, then ¥29.9/year"],
+            "试用期间可以随时取消，不扣费": [.chinese: "试用期间可以随时取消，不扣费", .english: "Cancel anytime during trial, no charge"],
+            "POPULAR": [.chinese: "最受欢迎", .english: "POPULAR"],
+            "Lifetime": [.chinese: "终身买断", .english: "Lifetime"],
+            "Limited Time Offer": [.chinese: "限时特惠", .english: "Limited Time Offer"],
+            "One-time payment": [.chinese: "一次性买断", .english: "One-time payment"],
+            "BEST VALUE": [.chinese: "最超值", .english: "BEST VALUE"],
+            "Continue": [.chinese: "继续", .english: "Continue"],
+            "By continuing, you agree to our": [.chinese: "继续即表示您同意我们的", .english: "By continuing, you agree to our"],
+            "and": [.chinese: "和", .english: "and"],
+            "App Lock": [.chinese: "应用锁", .english: "App Lock"],
+            "Data": [.chinese: "数据", .english: "Data"],
+            "iCloud Sync": [.chinese: "iCloud 同步", .english: "iCloud Sync"],
+            "Import Data": [.chinese: "导入数据", .english: "Import Data"],
+            "Export Data": [.chinese: "导出数据", .english: "Export Data"],
+            "Terms of Service": [.chinese: "使用条款", .english: "Terms of Service"],
+            "Privacy Policy": [.chinese: "隐私政策", .english: "Privacy Policy"],
+            "On": [.chinese: "开启", .english: "On"],
+            "Off": [.chinese: "关闭", .english: "Off"],
+            "Upgrade to Premium": [.chinese: "升级至高级版", .english: "Upgrade to Premium"],
+            "Unlock all features": [.chinese: "解锁全部特权与功能", .english: "Unlock all features"],
+            "Premium Member": [.chinese: "高级版会员", .english: "Premium Member"],
+            "All features unlocked": [.chinese: "已解锁全部特权与功能", .english: "All features unlocked"],
+
             "Archived Habits": [.chinese: "已归档习惯", .english: "Archived Habits"],
             "Show Archived": [.chinese: "显示归档", .english: "Show Archived"],
             "No archived habits.": [.chinese: "暂无已归档的习惯。", .english: "No archived habits."],
             "This action will permanently delete this habit and all its check-in records. It cannot be recovered.": [.chinese: "此操作将永久删除该习惯及其所有打卡记录，且不可恢复。", .english: "This action will permanently delete this habit and all its check-in records. It cannot be recovered."],
-            "This Week": [.chinese: "本周", .english: "This Week"],
-            "This Month": [.chinese: "本月", .english: "This Month"],
             "This Session": [.chinese: "本次", .english: "This Session"],
             "Undo Check-in?": [.chinese: "撤销打卡？", .english: "Undo Check-in?"],
-            "Cancel": [.chinese: "取消", .english: "Cancel"],
             "Undo": [.chinese: "撤销打卡", .english: "Undo"],
-            "Edit Amount": [.chinese: "修改数据", .english: "Edit Amount"],
             "Share": [.chinese: "分享", .english: "Share"],
             "Save": [.chinese: "保存", .english: "Save"],
             "Saved to Photos": [.chinese: "已保存到相册", .english: "Saved to Photos"],
             "Check-in Success": [.chinese: "打卡成功", .english: "Check-in Success"],
             "W:": [.chinese: "周：", .english: "W:"],
             "M:": [.chinese: "月：", .english: "M:"],
-            " times": [.chinese: " 次", .english: " times"]
         ]
         
         if let entry = translations[self] {
@@ -186,7 +356,41 @@ struct LittleHabitTrackerApp: App {
             Checkin.self,
             MoodRecord.self
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")!.appendingPathComponent("shared.store")
+        
+        // Data Migration: move from old default.store to shared App Group store
+        let defaultURL = URL.applicationSupportDirectory.appending(path: "default.store")
+        let fileManager = FileManager.default
+        
+        let hasMigrated = UserDefaults.standard.bool(forKey: "didMigrateToAppGroup2")
+        if !hasMigrated && fileManager.fileExists(atPath: defaultURL.path) {
+            do {
+                if fileManager.fileExists(atPath: sharedStoreURL.path) {
+                    try fileManager.removeItem(at: sharedStoreURL)
+                }
+                try fileManager.copyItem(at: defaultURL, to: sharedStoreURL)
+                
+                let defaultShmURL = URL.applicationSupportDirectory.appending(path: "default.store-shm")
+                let sharedShmURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")!.appendingPathComponent("shared.store-shm")
+                if fileManager.fileExists(atPath: sharedShmURL.path) { try fileManager.removeItem(at: sharedShmURL) }
+                if fileManager.fileExists(atPath: defaultShmURL.path) {
+                    try fileManager.copyItem(at: defaultShmURL, to: sharedShmURL)
+                }
+                
+                let defaultWalURL = URL.applicationSupportDirectory.appending(path: "default.store-wal")
+                let sharedWalURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")!.appendingPathComponent("shared.store-wal")
+                if fileManager.fileExists(atPath: sharedWalURL.path) { try fileManager.removeItem(at: sharedWalURL) }
+                if fileManager.fileExists(atPath: defaultWalURL.path) {
+                    try fileManager.copyItem(at: defaultWalURL, to: sharedWalURL)
+                }
+                UserDefaults.standard.set(true, forKey: "didMigrateToAppGroup2")
+                print("Successfully migrated SwiftData to App Group container.")
+            } catch {
+                print("Migration failed: \(error)")
+            }
+        }
+        
+        let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -202,7 +406,9 @@ struct LittleHabitTrackerApp: App {
             ContentView()
                 .environmentObject(appSettings)
                 .environment(\.locale, appSettings.locale ?? Locale.current)
-                .id(appSettings.themeColorHex) // Global reload on theme change
+                .preferredColorScheme(appSettings.colorScheme)
+                
+                
         }
         .modelContainer(sharedModelContainer)
     }

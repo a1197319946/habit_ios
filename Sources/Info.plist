@@ -24,5 +24,9 @@
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>我们需要保存心情卡片图片到您的相册 (We need access to save mood images to your photo library)</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>我们需要使用 Face ID 解锁应用 (We need Face ID to unlock the app)</string>
 </dict>
 </plist>

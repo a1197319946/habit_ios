@@ -19,7 +19,7 @@ struct StatisticsView: View {
     @State private var weekOffset: Int = 0
     @State private var selectedTab: String = "Weekly"
     @Namespace private var animationNamespace
-    private let calendar = Calendar.current
+    private var calendar: Calendar { appSettings.customCalendar }
     
     @State private var currentMonthDate = Date()
     @State private var currentYear = Calendar.current.component(.year, from: Date())
@@ -199,10 +199,11 @@ struct StatisticsView: View {
     
     var body: some View {
         ScrollView(showsIndicators: false) {
+            let _ = appSettings.firstWeekday // Force dependency
             VStack(spacing: DS.spacingM) {
                     
                     // Title
-                    HStack {
+                    HStack(alignment: .bottom) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Stats".tr(appSettings.resolvedLanguage))
                                 .display()
@@ -213,10 +214,25 @@ struct StatisticsView: View {
                         }
                         
                         Spacer()
+                        
+                        Button(action: { showArchived.toggle() }) {
+                            Text(showArchived ? "Hide Archived".tr(appSettings.resolvedLanguage) : "Show Archived".tr(appSettings.resolvedLanguage))
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(showArchived ? DS.onPrimary : DS.primary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(showArchived ? DS.primary : Color.clear)
+                                .overlay(
+                                    Capsule()
+                                        .stroke(DS.primary, lineWidth: showArchived ? 0 : 1)
+                                )
+                                .clipShape(Capsule())
+                        }
+                        .padding(.bottom, 2)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, DS.spacingM)
-                    .padding(.bottom, DS.spacingS)
+                    .padding(.top, DS.spacingS)
+                    .padding(.bottom, 0)
                     .padding(.horizontal, 16)
                     
                     // Tabs
@@ -248,20 +264,6 @@ struct StatisticsView: View {
                             }
                         }
                         Spacer()
-                        
-                        Button(action: { showArchived.toggle() }) {
-                            Text(showArchived ? "隐藏归档" : "显示归档")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(showArchived ? DS.onPrimary : DS.primary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(showArchived ? DS.primary : Color.clear)
-                                .overlay(
-                                    Capsule()
-                                        .stroke(DS.primary, lineWidth: showArchived ? 0 : 1)
-                                )
-                                .clipShape(Capsule())
-                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 4)
@@ -272,7 +274,7 @@ struct StatisticsView: View {
                             Button(action: { withAnimation { weekOffset -= 1 } }) {
                                 Image(systemName: "chevron.left")
                                     .frame(width: 44, height: 44)
-                                    .background(Color.white.opacity(0.8))
+                                    .background(DS.surface.opacity(0.8))
                                     .clipShape(Circle())
                                     .foregroundColor(DS.onSurface)
                             }
@@ -288,7 +290,7 @@ struct StatisticsView: View {
                             }
                             .padding(.horizontal, 20)
                             .padding(.vertical, 12)
-                            .background(Color.white.opacity(0.8))
+                            .background(DS.surface.opacity(0.8))
                             .clipShape(Capsule())
                             
                             Spacer()
@@ -296,7 +298,7 @@ struct StatisticsView: View {
                             Button(action: { withAnimation { weekOffset += 1 } }) {
                                 Image(systemName: "chevron.right")
                                     .frame(width: 44, height: 44)
-                                    .background(Color.white.opacity(0.8))
+                                    .background(DS.surface.opacity(0.8))
                                     .clipShape(Circle())
                                     .foregroundColor(DS.onSurface)
                             }
@@ -316,6 +318,8 @@ struct StatisticsView: View {
                             if habits.isEmpty {
                                 Text("No habits found.".tr(appSettings.resolvedLanguage))
                                     .foregroundColor(DS.onSurfaceVariant)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.vertical, DS.spacingL)
                             } else {
                                 VStack(spacing: 16) {
                                     // Day headers
@@ -352,7 +356,7 @@ struct StatisticsView: View {
                                             ForEach(weekDays, id: \.self) { date in
                                                 let isChecked = isHabitChecked(habit: habit, date: date)
                                                 RoundedRectangle(cornerRadius: 6)
-                                                    .fill(isChecked ? Color(hex: habit.color) : Color(hex: "#F3F4F6"))
+                                                    .fill(isChecked ? Color(hex: habit.color) : DS.uncheckedPlaceholder)
                                                     .frame(width: 22, height: 22)
                                             }
                                         }
@@ -361,7 +365,7 @@ struct StatisticsView: View {
                             }
                         }
                         .padding(DS.spacingL)
-                        .background(Color.white.opacity(0.8))
+                        .background(DS.surface.opacity(0.8))
                         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                         .padding(.horizontal, 16)
                     } else {
@@ -371,7 +375,7 @@ struct StatisticsView: View {
                                 Button(action: { withAnimation { currentMonthDate = calendar.date(byAdding: .month, value: -1, to: currentMonthDate) ?? currentMonthDate } }) {
                                     Image(systemName: "chevron.left")
                                         .frame(width: 44, height: 44)
-                                        .background(Color.white.opacity(0.8))
+                                        .background(DS.surface.opacity(0.8))
                                         .clipShape(Circle())
                                         .foregroundColor(DS.onSurface)
                                 }
@@ -387,7 +391,7 @@ struct StatisticsView: View {
                                 }
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 12)
-                                .background(Color.white.opacity(0.8))
+                                .background(DS.surface.opacity(0.8))
                                 .clipShape(Capsule())
                                 
                                 Spacer()
@@ -395,7 +399,7 @@ struct StatisticsView: View {
                                 Button(action: { withAnimation { currentMonthDate = calendar.date(byAdding: .month, value: 1, to: currentMonthDate) ?? currentMonthDate } }) {
                                     Image(systemName: "chevron.right")
                                         .frame(width: 44, height: 44)
-                                        .background(Color.white.opacity(0.8))
+                                        .background(DS.surface.opacity(0.8))
                                         .clipShape(Circle())
                                         .foregroundColor(DS.onSurface)
                                 }
@@ -417,7 +421,7 @@ struct StatisticsView: View {
                                 Button(action: { withAnimation { currentYear -= 1 } }) {
                                     Image(systemName: "chevron.left")
                                         .frame(width: 44, height: 44)
-                                        .background(Color.white.opacity(0.8))
+                                        .background(DS.surface.opacity(0.8))
                                         .clipShape(Circle())
                                         .foregroundColor(DS.onSurface)
                                 }
@@ -433,7 +437,7 @@ struct StatisticsView: View {
                                 }
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 12)
-                                .background(Color.white.opacity(0.8))
+                                .background(DS.surface.opacity(0.8))
                                 .clipShape(Capsule())
                                 
                                 Spacer()
@@ -441,7 +445,7 @@ struct StatisticsView: View {
                                 Button(action: { withAnimation { currentYear += 1 } }) {
                                     Image(systemName: "chevron.right")
                                         .frame(width: 44, height: 44)
-                                        .background(Color.white.opacity(0.8))
+                                        .background(DS.surface.opacity(0.8))
                                         .clipShape(Circle())
                                         .foregroundColor(DS.onSurface)
                                 }
@@ -503,7 +507,7 @@ struct StatSmallCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .padding(.horizontal, 4)
-        .background(Color.white.opacity(0.8))
+        .background(DS.surface.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
@@ -514,7 +518,7 @@ struct MonthGridCard: View {
     let appSettings: AppSettings
     @Binding var currentMonthDate: Date
     
-    private let calendar = Calendar.current
+    private var calendar: Calendar { appSettings.customCalendar }
     
     private var monthYearString: String {
         let df = DateFormatter()
@@ -537,16 +541,20 @@ struct MonthGridCard: View {
         var components = calendar.dateComponents([.year, .month], from: currentMonthDate)
         components.day = 1
         guard let firstDay = calendar.date(from: components) else { return 0 }
-        // 1 = Sunday, 2 = Monday... We want to offset based on calendar's first weekday (usually Sun=1)
         let wd = calendar.component(.weekday, from: firstDay)
-        return wd - 1 // 0 offset for Sunday
+        let first = appSettings.firstWeekday
+        var offset = wd - first
+        if offset < 0 { offset += 7 }
+        return offset
     }
     
     private var weekdaysShort: [String] {
-        if appSettings.resolvedLanguage == .chinese {
-            return ["日", "一", "二", "三", "四", "五", "六"]
+        let isChinese = appSettings.resolvedLanguage == .chinese
+        let sunFirst = appSettings.firstWeekday == 1
+        if isChinese {
+            return sunFirst ? ["日", "一", "二", "三", "四", "五", "六"] : ["一", "二", "三", "四", "五", "六", "日"]
         } else {
-            return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+            return sunFirst ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         }
     }
     
@@ -635,8 +643,10 @@ struct MonthGridCard: View {
             }
         }
         .padding(DS.spacingL)
-        .background(Color.white.opacity(0.8))
+        .background(DS.surface.opacity(0.8))
+        .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.white.opacity(0.3), lineWidth: 1))
         .padding(.horizontal, 16)
     }
 }
@@ -681,7 +691,8 @@ struct YearChartCard: View {
             if chartData.isEmpty {
                 Text("No data".tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurfaceVariant)
-                    .frame(height: 200)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 40)
             } else {
                 Chart(chartData) { point in
                     BarMark(
@@ -711,20 +722,10 @@ struct YearChartCard: View {
                 .frame(height: 220)
             }
             
-            // Quick jump
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 8) {
-                ForEach(1...12, id: \.self) { m in
-                    Text("\(m)月")
-                        .font(.system(size: 12))
-                        .padding(.vertical, 6)
-                        .frame(maxWidth: .infinity)
-                        .background(DS.surfaceContainerLow)
-                        .cornerRadius(6)
-                }
-            }
+
         }
         .padding(DS.spacingL)
-        .background(Color.white.opacity(0.8))
+        .background(DS.surface.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .padding(.horizontal, 16)
     }
@@ -759,7 +760,8 @@ struct AllChartCard: View {
             if chartData.isEmpty {
                 Text("No data".tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurfaceVariant)
-                    .frame(height: 200)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 40)
             } else {
                 Chart(chartData) { point in
                     BarMark(
@@ -790,7 +792,7 @@ struct AllChartCard: View {
             }
         }
         .padding(DS.spacingL)
-        .background(Color.white.opacity(0.8))
+        .background(DS.surface.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .padding(.horizontal, 16)
     }
@@ -801,12 +803,12 @@ struct HabitCountItem: Identifiable {
     let habit: Habit
     let value: Double
     let checkinCount: Int
-    var displayString: String {
+    func displayString(lang: AppLanguage) -> String {
         if habit.goalType == "amount" {
             let formatted = value.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", value) : String(format: "%.1f", value)
-            return "\(formatted)\(habit.amountUnit)"
+            return "\(formatted)\(habit.amountUnit.tr(lang))"
         } else {
-            return "\(Int(value))次"
+            return "\(Int(value))\("次".tr(lang))"
         }
     }
 }
@@ -840,14 +842,14 @@ struct DonutChartCard: View {
                 Image(systemName: "chart.pie.fill")
                     .foregroundColor(DS.primary)
                     .frame(width: 24)
-                Text("统计概览")
+                Text("Statistics Overview".tr(appSettings.resolvedLanguage))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(DS.onSurface)
                 Spacer()
             }
             
             if chartData.isEmpty {
-                Text("No data for this week.".tr(appSettings.resolvedLanguage))
+                Text("No data".tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurfaceVariant)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, DS.spacingL)
@@ -870,7 +872,7 @@ struct DonutChartCard: View {
                             Text("\(totalEvents)")
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(DS.onSurface)
-                            Text("次")
+                            Text(" Times".tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundColor(DS.onSurfaceVariant)
                         }
@@ -891,7 +893,7 @@ struct DonutChartCard: View {
                                 
                                 Spacer()
                                 
-                                Text(item.displayString)
+                                Text(item.displayString(lang: appSettings.resolvedLanguage))
                                     .font(.system(size: 13, weight: .bold))
                                     .foregroundColor(DS.onSurfaceVariant)
                             }
@@ -905,7 +907,7 @@ struct DonutChartCard: View {
             }
         }
         .padding(16)
-        .background(Color.white.opacity(0.8))
+        .background(DS.surface.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .padding(.horizontal, 16)
     }

@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 import SwiftData
 
 extension Array {
@@ -32,8 +33,9 @@ struct HabitDetailView: View {
     let unitOptions = ["公里", "米", "分钟", "小时", "次", "页"]
     
     var body: some View {
-        ZStack(alignment: .bottom) {
-            ScrollView(showsIndicators: false) {
+        NavigationView {
+            ZStack(alignment: .bottom) {
+                ScrollView(showsIndicators: false) {
                 VStack(spacing: DS.spacingS) {
                     
                     // Card 1: Name
@@ -53,7 +55,7 @@ struct HabitDetailView: View {
                                     .foregroundColor(DS.onSurface)
                                     .padding(.vertical, DS.spacingS)
                             }
-                            .background(Color.white.opacity(0.9))
+                            .background(DS.surface.opacity(0.9))
                             .cornerRadius(8)
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(DS.outlineVariant, lineWidth: 1))
                         }
@@ -160,7 +162,7 @@ struct HabitDetailView: View {
                                             .labelMd()
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 10)
-                                            .background(goalType == "frequency" ? Color.white : Color.clear)
+                                            .background(goalType == "frequency" ? DS.surface : Color.clear)
                                             .foregroundColor(goalType == "frequency" ? DS.primary : DS.onSurfaceVariant)
                                             .cornerRadius(8)
                                             .shadow(color: goalType == "frequency" ? .black.opacity(0.05) : .clear, radius: 2, x: 0, y: 1)
@@ -171,7 +173,7 @@ struct HabitDetailView: View {
                                             .labelMd()
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 10)
-                                            .background(goalType == "amount" ? Color.white : Color.clear)
+                                            .background(goalType == "amount" ? DS.surface : Color.clear)
                                             .foregroundColor(goalType == "amount" ? DS.primary : DS.onSurfaceVariant)
                                             .cornerRadius(8)
                                             .shadow(color: goalType == "amount" ? .black.opacity(0.05) : .clear, radius: 2, x: 0, y: 1)
@@ -187,7 +189,7 @@ struct HabitDetailView: View {
                                             .labelMd()
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 10)
-                                            .background(frequencyType == "weekly" ? Color.white : Color.clear)
+                                            .background(frequencyType == "weekly" ? DS.surface : Color.clear)
                                             .foregroundColor(frequencyType == "weekly" ? DS.primary : DS.onSurfaceVariant)
                                             .cornerRadius(8)
                                             .shadow(color: frequencyType == "weekly" ? .black.opacity(0.05) : .clear, radius: 2, x: 0, y: 1)
@@ -198,7 +200,7 @@ struct HabitDetailView: View {
                                             .labelMd()
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 10)
-                                            .background(frequencyType == "monthly" ? Color.white : Color.clear)
+                                            .background(frequencyType == "monthly" ? DS.surface : Color.clear)
                                             .foregroundColor(frequencyType == "monthly" ? DS.primary : DS.onSurfaceVariant)
                                             .cornerRadius(8)
                                             .shadow(color: frequencyType == "monthly" ? .black.opacity(0.05) : .clear, radius: 2, x: 0, y: 1)
@@ -220,7 +222,7 @@ struct HabitDetailView: View {
                                         HStack {
                                             Button(action: { if weeklyTarget > 1 { weeklyTarget -= 1 } }) {
                                                 Circle()
-                                                    .fill(Color.white)
+                                                    .fill(DS.surface)
                                                     .frame(width: 40, height: 40)
                                                     .shadow(color: .black.opacity(0.05), radius: 2)
                                                     .overlay(Image(systemName: "minus").foregroundColor(DS.onSurfaceVariant))
@@ -237,7 +239,7 @@ struct HabitDetailView: View {
                                             Spacer()
                                             Button(action: { if weeklyTarget < 7 { weeklyTarget += 1 } }) {
                                                 Circle()
-                                                    .fill(Color.white)
+                                                    .fill(DS.surface)
                                                     .frame(width: 40, height: 40)
                                                     .shadow(color: .black.opacity(0.05), radius: 2)
                                                     .overlay(Image(systemName: "plus").foregroundColor(DS.onSurfaceVariant))
@@ -251,7 +253,7 @@ struct HabitDetailView: View {
                                         HStack {
                                             Button(action: { if monthlyTarget > 1 { monthlyTarget -= 1 } }) {
                                                 Circle()
-                                                    .fill(Color.white)
+                                                    .fill(DS.surface)
                                                     .frame(width: 40, height: 40)
                                                     .shadow(color: .black.opacity(0.05), radius: 2)
                                                     .overlay(Image(systemName: "minus").foregroundColor(DS.onSurfaceVariant))
@@ -268,7 +270,7 @@ struct HabitDetailView: View {
                                             Spacer()
                                             Button(action: { if monthlyTarget < 31 { monthlyTarget += 1 } }) {
                                                 Circle()
-                                                    .fill(Color.white)
+                                                    .fill(DS.surface)
                                                     .frame(width: 40, height: 40)
                                                     .shadow(color: .black.opacity(0.05), radius: 2)
                                                     .overlay(Image(systemName: "plus").foregroundColor(DS.onSurfaceVariant))
@@ -339,18 +341,26 @@ struct HabitDetailView: View {
                 .ignoresSafeArea(edges: .bottom)
             }
         }
-        .background(Color(hex: "#F8F9FA").ignoresSafeArea())
+        .background(AmbientBackground())
         .navigationTitle(habit == nil ? "New Habit".tr(appSettings.resolvedLanguage) : "Edit Habit".tr(appSettings.resolvedLanguage))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(Color(hex: "#F8F9FA"), for: .navigationBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: { dismiss() }) {
+                    Text("关闭")
+                        .foregroundColor(DS.primary)
+                        .font(.system(size: 16, weight: .medium))
+                }
+            }
             if let h = habit, h.isArchived {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button(action: {
                             h.isArchived = false
                             try? modelContext.save()
+            WidgetCenter.shared.reloadAllTimelines()
                             dismiss()
                         }) {
                             Label("Restore".tr(appSettings.resolvedLanguage), systemImage: "arrow.uturn.backward")
@@ -374,6 +384,7 @@ struct HabitDetailView: View {
                 if let h = habit {
                     modelContext.delete(h)
                     try? modelContext.save()
+            WidgetCenter.shared.reloadAllTimelines()
                     dismiss()
                 }
             }
@@ -387,6 +398,7 @@ struct HabitDetailView: View {
                 weeklyTarget = h.weeklyTarget; monthlyTarget = h.monthlyTarget
                 amountValue = h.amountValue; amountUnit = h.amountUnit
             }
+        }
         }
     }
     
@@ -406,6 +418,7 @@ struct HabitDetailView: View {
                 newHabit.amountValue = amountValue; newHabit.amountUnit = amountUnit
                 modelContext.insert(newHabit)
             }
+            WidgetCenter.shared.reloadAllTimelines()
             isSubmitting = false
             dismiss()
         }
@@ -415,14 +428,57 @@ struct HabitDetailView: View {
         content()
             .padding(DS.spacingL)
             .background(
-                Color.white.opacity(0.7)
+                DS.surface.opacity(0.7)
             )
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(Color.white, lineWidth: 1)
+                    .stroke(DS.outline, lineWidth: 1)
             )
             .shadow(color: DS.primary.opacity(0.08), radius: 20, x: 0, y: 10)
+    }
+}
+
+struct HabitSection<Content: View>: View {
+    let title: String
+    let content: Content
+    
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.spacingS) {
+            Text(title)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(DS.onSurfaceVariant)
+                .padding(.horizontal, DS.spacingL)
+                .padding(.leading, 8)
+            
+            VStack(spacing: DS.spacingS) {
+                content
+            }
+            .padding(DS.spacingL)
+            .background(
+                DS.surface.opacity(0.7)
+            )
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(DS.outlineVariant, lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 5)
+            .padding(.horizontal, DS.spacingL)
+        }
+    }
+}
+                    .stroke(DS.outlineVariant, lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 5)
+            .padding(.horizontal, DS.spacingL)
+        }
     }
 }

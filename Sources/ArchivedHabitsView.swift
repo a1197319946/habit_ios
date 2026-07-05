@@ -37,7 +37,7 @@ struct ArchivedHabitsView: View {
                 }
             }
         }
-        .background(Color(hex: "#F8F9FA").ignoresSafeArea())
+        .background(AmbientBackground())
         .navigationTitle("Archived Habits".tr(appSettings.resolvedLanguage))
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -72,12 +72,13 @@ struct ArchivedHabitCard: View {
                 .font(.system(size: 14, weight: .semibold))
         }
         .padding(DS.spacingM)
-        .background(Color.white.opacity(0.7))
+        .background(DS.surface.opacity(0.7))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.white, lineWidth: 1)
+                .stroke(DS.outlineVariant, lineWidth: 1)
         )
         .shadow(color: DS.primary.opacity(0.05), radius: 10, x: 0, y: 4)
     }
+}
 }

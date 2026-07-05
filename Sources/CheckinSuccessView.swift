@@ -12,9 +12,10 @@ struct CheckinSuccessView: View {
     
     @State private var isGenerating = false
     @State private var appeared = false
+    @State private var showSharePreview = false
     
     private var isAmount: Bool { habit.goalType == "amount" }
-    private var unit: String { isAmount ? habit.amountUnit : "次" }
+    private var unit: String { isAmount ? habit.amountUnit.tr(appSettings.resolvedLanguage) : "次".tr(appSettings.resolvedLanguage) }
     private var label: String { habit.frequencyType == "weekly" ? "本周" : "本月" }
     private var targetLabel: String { habit.frequencyType == "weekly" ? "周目标" : "月目标" }
     
@@ -24,7 +25,22 @@ struct CheckinSuccessView: View {
     }
     
     private var currentTotal: Double {
-        let periodCheckins = checkins.filter { $0.habit?.id == habit.id }
+                var calendar = Calendar.current
+        calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        let periodCheckins = checkins.filter { checkin in
+            guard checkin.habit?.id == habit.id,
+                  let cDate = formatter.date(from: checkin.dateString) else { return false }
+            
+            if habit.frequencyType == "weekly" {
+                return calendar.isDate(cDate, equalTo: date, toGranularity: .weekOfYear)
+            } else {
+                return calendar.isDate(cDate, equalTo: date, toGranularity: .month)
+            }
+        }
+        
         return isAmount ? periodCheckins.reduce(0) { $0 + $1.amount } : Double(periodCheckins.count)
     }
     
@@ -39,44 +55,40 @@ struct CheckinSuccessView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-            Spacer().frame(height: 32)
-            // Icon + name
-            VStack(spacing: DS.spacingM) {
-                ZStack {
-                    Circle()
-                        .fill(DS.successMuted)
-                        .frame(width: 72, height: 72)
-                    
-                    Image(systemName: habit.icon)
-                        .font(.system(size: 30, weight: .semibold))
-                        .foregroundColor(DS.success)
-                }
-                .scaleEffect(appeared ? 1.0 : 0.6)
-                .animation(.spring(response: 0.4, dampingFraction: 0.65), value: appeared)
+            Spacer().frame(height: 64)
+            // Header + Icon + Name
+            VStack(spacing: 12) {
+                Text("Check-in Successful".tr(appSettings.resolvedLanguage))
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundColor(DS.textPrimary)
                 
-                VStack(spacing: 4) {
-                    Text("打卡成功")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundColor(DS.textPrimary)
+                HStack(spacing: 8) {
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: habit.color).opacity(0.1))
+                            .frame(width: 32, height: 32)
+                        
+                        Image(systemName: habit.icon)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(Color(hex: habit.color))
+                    }
                     
                     Text(habit.name)
-                        .font(.system(size: 15))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(DS.textSecondary)
                 }
-                .opacity(appeared ? 1 : 0)
-                .animation(.easeOut(duration: 0.3).delay(0.1), value: appeared)
             }
-            .padding(.bottom, DS.spacingL)
+            .padding(.bottom, 32)
             
             // Stats
             HStack(spacing: 0) {
-                StatCell(label: "本次完成", value: formatNumber(todayAmount), unit: unit, accent: true)
+                StatCell(label: "Amount Completed".tr(appSettings.resolvedLanguage), value: formatNumber(todayAmount), unit: unit, accent: true)
                 
                 Rectangle()
                     .fill(DS.border)
                     .frame(width: 1, height: 48)
                 
-                StatCell(label: "\(label)累计", value: formatNumber(currentTotal), unit: unit, accent: false)
+                StatCell(label: "\(label)\(" Total".tr(appSettings.resolvedLanguage))", value: formatNumber(currentTotal), unit: unit, accent: false)
                 
                 Rectangle()
                     .fill(DS.border)
@@ -93,7 +105,7 @@ struct CheckinSuccessView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "checkmark.seal.fill")
                         .foregroundColor(DS.success)
-                    Text("\(targetLabel)已达成！")
+                    Text("\(targetLabel)\(" Achieved!".tr(appSettings.resolvedLanguage))")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(DS.success)
                 }
@@ -121,12 +133,9 @@ struct CheckinSuccessView: View {
                         .cornerRadius(DS.cornerPill)
                 }
                 
-                Button(action: generatePoster) {
+                Button(action: { showSharePreview = true }) {
                     HStack {
-                        if isGenerating {
-                            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: DS.textSecondary))
-                        }
-                        Text(isGenerating ? "生成中..." : "生成分享图")
+                        Text("Generate Sharing Image".tr(appSettings.resolvedLanguage))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(DS.textSecondary)
                     }
@@ -135,7 +144,7 @@ struct CheckinSuccessView: View {
                     .background(DS.bgSubtle)
                     .cornerRadius(DS.cornerPill)
                 }
-                .disabled(isGenerating)
+                
             }
             .padding(.horizontal, DS.spacingL)
             .padding(.bottom, DS.spacingXL)
@@ -146,35 +155,15 @@ struct CheckinSuccessView: View {
                 appeared = true
             }
             .navigationBarHidden(true)
+            .sheet(isPresented: $showSharePreview) {
+                SharePreviewSheet(habit: habit, date: date, checkins: checkins, isAmount: isAmount, todayAmount: todayAmount, currentTotal: currentTotal, unit: unit)
+            }
+
         }
     }
     
     private func formatNumber(_ val: Double) -> String {
         val.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", val) : String(format: "%.1f", val)
-    }
-    
-    @MainActor
-    private func generatePoster() {
-        isGenerating = true
-        let posterView = PosterView(habit: habit, date: date, checkins: checkins)
-        let renderer = ImageRenderer(content: posterView)
-        renderer.scale = 3.0
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            if let uiImage = renderer.uiImage {
-                let activityVC = UIActivityViewController(activityItems: [uiImage], applicationActivities: nil)
-                if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let window = scene.windows.first,
-                   let rootVC = window.rootViewController {
-                    dismiss()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        activityVC.popoverPresentationController?.sourceView = window
-                        rootVC.present(activityVC, animated: true, completion: nil)
-                    }
-                }
-            }
-            isGenerating = false
-        }
     }
 }
 
@@ -205,36 +194,137 @@ struct StatCell: View {
     }
 }
 
-// MARK: - Poster View (Clean Japandi poster)
+    
+
+struct SharePreviewSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var appSettings: AppSettings
+    
+    let habit: Habit
+    let date: Date
+    let checkins: [Checkin]
+    let isAmount: Bool
+    let todayAmount: Double
+    let currentTotal: Double
+    let unit: String
+    
+    @State private var isGenerating = false
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                DS.bgPrimary.ignoresSafeArea()
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: DS.spacingL) {
+                        PosterView(habit: habit, date: date, checkins: checkins, isAmount: isAmount, todayAmount: todayAmount, currentTotal: currentTotal, unit: unit, appSettings: appSettings)
+                            .scaleEffect(0.8)
+                            .shadow(color: Color.black.opacity(0.1), radius: 20, y: 10)
+                        
+                        Button(action: generatePoster) {
+                            HStack {
+                                if isGenerating {
+                                    ProgressView().tint(.white)
+                                } else {
+                                    Image(systemName: "square.and.arrow.up")
+                                    Text("Share with Friends".tr(appSettings.resolvedLanguage))
+                                }
+                            }
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(DS.primary)
+                            .cornerRadius(DS.cornerPill)
+                            .shadow(color: DS.primary.opacity(0.3), radius: 10, y: 5)
+                        }
+                        .disabled(isGenerating)
+                        .padding(.horizontal, DS.spacingXL)
+                        .padding(.bottom, DS.spacingL)
+                    }
+                    .padding(.top, DS.spacingM)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { dismiss() }) {
+                        Text("Close".tr(appSettings.resolvedLanguage))
+                            .foregroundColor(DS.textPrimary)
+                    }
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func generatePoster() {
+        isGenerating = true
+        let posterView = PosterView(habit: habit, date: date, checkins: checkins, isAmount: isAmount, todayAmount: todayAmount, currentTotal: currentTotal, unit: unit, appSettings: appSettings)
+        let renderer = ImageRenderer(content: posterView)
+        renderer.scale = 3.0
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if let uiImage = renderer.uiImage {
+                let activityVC = UIActivityViewController(activityItems: [uiImage], applicationActivities: nil)
+                if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let window = scene.windows.first,
+                   let rootVC = window.rootViewController {
+                    activityVC.popoverPresentationController?.sourceView = window
+                    
+                    // Dismiss the preview sheet first, then present the activity VC on the root
+                    dismiss()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        rootVC.present(activityVC, animated: true, completion: nil)
+                    }
+                }
+            }
+            isGenerating = false
+        }
+    }
+}
+
+// MARK: - Poster View
 
 struct PosterView: View {
     let habit: Habit
     let date: Date
     let checkins: [Checkin]
-    
-    private var totalCheckins: Int {
-        checkins.filter { $0.habit?.id == habit.id }.count
-    }
+    let isAmount: Bool
+    let todayAmount: Double
+    let currentTotal: Double
+    let unit: String
+    let appSettings: AppSettings
     
     var body: some View {
         ZStack {
-            Color(hex: "#F7F4EF") // Warm off-white
+            // Premium Gradient Background
+            LinearGradient(
+                colors: [Color(hex: habit.color).opacity(0.1), DS.bgPrimary, DS.bgPrimary],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
             
             VStack(alignment: .leading, spacing: 0) {
                 // Top accent bar
                 Rectangle()
-                    .fill(Color(hex: habit.color))
-                    .frame(height: 6)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: habit.color), Color(hex: habit.color).opacity(0.7)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(height: 8)
                 
                 VStack(alignment: .leading, spacing: 32) {
                     // Date
                     VStack(alignment: .leading, spacing: 4) {
                         Text(monthName())
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(Color(hex: "#9B9088"))
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundColor(Color(hex: habit.color))
                         Text("\(Calendar.current.component(.day, from: date))")
-                            .font(.system(size: 72, weight: .heavy, design: .rounded))
-                            .foregroundColor(Color(hex: "#2D2D2D"))
+                            .font(.system(size: 80, weight: .heavy, design: .rounded))
+                            .foregroundColor(DS.textPrimary)
                     }
                     .padding(.top, 40)
                     
@@ -243,72 +333,100 @@ struct PosterView: View {
                         ZStack {
                             Circle()
                                 .fill(Color(hex: habit.color).opacity(0.15))
-                                .frame(width: 56, height: 56)
+                                .frame(width: 64, height: 64)
                             Image(systemName: habit.icon)
-                                .font(.system(size: 26))
+                                .font(.system(size: 30))
                                 .foregroundColor(Color(hex: habit.color))
                         }
                         Text(habit.name)
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundColor(Color(hex: "#2D2D2D"))
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .foregroundColor(DS.textPrimary)
                     }
-                    
-                    // Divider
-                    Rectangle()
-                        .fill(Color(hex: "#EAE6E0"))
-                        .frame(height: 1)
                     
                     // Quote
-                    Text("人生没有白走的路，\n每一步都算数。")
-                        .font(.system(size: 22, weight: .semibold, design: .rounded))
-                        .foregroundColor(Color(hex: "#2D2D2D"))
-                        .lineSpacing(6)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Image(systemName: "quote.opening")
+                            .font(.system(size: 24, weight: .black))
+                            .foregroundColor(DS.surfaceVariant)
+                        
+                        Text("\"Small steps, big changes.\"".tr(appSettings.resolvedLanguage))
+                            .font(.system(size: 24, weight: .semibold, design: .serif))
+                            .foregroundColor(DS.textPrimary)
+                            .lineSpacing(8)
+                    }
+                    .padding(.vertical, 20)
                     
                     // Stats
-                    HStack(spacing: 40) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("今日")
-                                .font(.system(size: 13))
-                                .foregroundColor(Color(hex: "#9B9088"))
-                            Text("1 次")
-                                .font(.system(size: 28, weight: .heavy, design: .monospaced))
-                                .foregroundColor(Color(hex: habit.color))
+                    HStack(spacing: 48) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Today".tr(appSettings.resolvedLanguage))
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(DS.textTertiary)
+                            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                Text(formatNumber(todayAmount))
+                                    .font(.system(size: 36, weight: .black, design: .rounded))
+                                    .foregroundColor(Color(hex: habit.color))
+                                Text(unit)
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(Color(hex: habit.color).opacity(0.8))
+                            }
                         }
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("累计")
-                                .font(.system(size: 13))
-                                .foregroundColor(Color(hex: "#9B9088"))
-                            Text("\(totalCheckins) 次")
-                                .font(.system(size: 28, weight: .heavy, design: .monospaced))
-                                .foregroundColor(Color(hex: "#2D2D2D"))
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Total".tr(appSettings.resolvedLanguage))
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(DS.textTertiary)
+                            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                Text(formatNumber(currentTotal))
+                                    .font(.system(size: 36, weight: .black, design: .rounded))
+                                    .foregroundColor(DS.textPrimary)
+                                Text(unit)
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(DS.textSecondary)
+                            }
                         }
                     }
+                    .padding(24)
+                    .background(Color.white.opacity(0.6))
+                    .cornerRadius(20)
+                    .shadow(color: Color.black.opacity(0.03), radius: 10, y: 5)
                     
                     Spacer()
                     
                     // Bottom branding
                     HStack {
-                        Text("小习惯")
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color(hex: "#9B9088"))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Little Habit Tracker")
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundColor(DS.textSecondary)
+                            Text("Track your daily progress")
+                                .font(.system(size: 12))
+                                .foregroundColor(DS.textTertiary)
+                        }
                         Spacer()
                         Image("app_logo")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 32, height: 32)
-                            .clipShape(Circle())
+                            .frame(width: 65, height: 65)
+                            .clipShape(RoundedRectangle(cornerRadius: 15))
+                            .shadow(color: Color.black.opacity(0.1), radius: 5, y: 2)
                     }
-                    .padding(.bottom, 32)
+                    .padding(.bottom, 40)
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal, 40)
             }
         }
-        .frame(width: 390, height: 690)
+        .frame(width: 414, height: 736) // Fixed 16:9 ratio size for better posters
+        .clipShape(RoundedRectangle(cornerRadius: 24))
     }
     
     private func monthName() -> String {
-        let months = ["January", "February", "March", "April", "May", "June",
-                      "July", "August", "September", "October", "November", "December"]
-        return months[Calendar.current.component(.month, from: date) - 1].uppercased()
+        let f = DateFormatter()
+        f.locale = appSettings.locale ?? Locale.current
+        f.dateFormat = appSettings.resolvedLanguage == .chinese ? "yyyy年M月" : "MMM yyyy"
+        return f.string(from: date).uppercased()
+    }
+    
+    private func formatNumber(_ val: Double) -> String {
+        val.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", val) : String(format: "%.1f", val)
     }
 }
