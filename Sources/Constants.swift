@@ -3,25 +3,25 @@ import SwiftUI
 
 struct Constants {
     static let allColors: [String] = [
-        // Page 1: Reds, Pinks, Oranges
-        "#B71C1C", "#FF3B30", "#F87171", "#FCA5A5", "#FFADAD", "#FFB3BA",
-        "#880E4F", "#E91E63", "#FF2D55", "#FB7185", "#FFC6FF", "#FDE2E4",
-        "#BF360C", "#E65100", "#FF6F00", "#F57F17", "#FF9500", "#FFDFBA",
+        // Page 1: Teals, Cyans, Blues (Default)
+        "#007AFF", "#38BDF8", "#004D40", "#006064", "#009688", "#B5EAD7",
+        "#00BCD4", "#67E8F9", "#9BF6FF", "#5AC8FA", "#BAE1FF", "#A0C4FF",
+        "#01579B", "#0D47A1", "#2196F3", "#1A237E", "#3F51B5", "#818CF8",
         
         // Page 2: Yellows, Limes, Greens
         "#FFD6A5", "#FFCC00", "#FBBF24", "#FDE047", "#FFFFBA", "#FDFFB6",
         "#827717", "#CDDC39", "#8BC34A", "#E2F0CB", "#33691E", "#1B5E20",
         "#4CAF50", "#4CD964", "#34D399", "#86EFAC", "#BAFFC9", "#CAFFBF",
         
-        // Page 3: Teals, Cyans, Blues
-        "#004D40", "#006064", "#009688", "#B5EAD7", "#00BCD4", "#67E8F9",
-        "#9BF6FF", "#5AC8FA", "#38BDF8", "#BAE1FF", "#A0C4FF", "#01579B",
-        "#0D47A1", "#007AFF", "#2196F3", "#1A237E", "#3F51B5", "#818CF8",
-        
-        // Page 4: Indigos, Purples, Neutrals
+        // Page 3: Indigos, Purples, Neutrals
         "#311B92", "#5856D6", "#BDB2FF", "#C7CEEA", "#4A148C", "#673AB7",
         "#9C27B0", "#A78BFA", "#E879F9", "#E6B3FF", "#3E2723", "#78716C",
-        "#212121", "#94A3B8", "#9CA3AF", "#A1A1AA", "#D4D4D8", "#E5E7EB"
+        "#212121", "#94A3B8", "#9CA3AF", "#A1A1AA", "#D4D4D8", "#E5E7EB",
+        
+        // Page 4: Reds, Pinks, Oranges
+        "#B71C1C", "#FF3B30", "#F87171", "#FCA5A5", "#FFADAD", "#FFB3BA",
+        "#880E4F", "#E91E63", "#FF2D55", "#FB7185", "#FFC6FF", "#FDE2E4",
+        "#BF360C", "#E65100", "#FF6F00", "#F57F17", "#FF9500", "#FFDFBA"
     ]
     
     static let allIcons: [String] = [

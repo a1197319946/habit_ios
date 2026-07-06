@@ -125,17 +125,17 @@ struct HomeView: View {
                         .padding(.horizontal, 16)
                         
                         Spacer(minLength: 24)
-                        
-                        // Motivational Banner
-                        VStack {
-                            Text("\"Small steps, big changes.\"".tr(appSettings.resolvedLanguage))
-                                .font(.system(size: 16, weight: .bold, design: .rounded).italic())
-                                .foregroundStyle(DS.onSurfaceVariant)
-                                .opacity(0.8)
-                                .padding(.bottom, 30)
-                        }
-                        .frame(maxWidth: .infinity)
                     }
+                    
+                    // Motivational Banner
+                    VStack {
+                        Text("\"Small steps, big changes.\"".tr(appSettings.resolvedLanguage))
+                            .font(.system(size: 16, weight: .bold, design: .rounded).italic())
+                            .foregroundStyle(DS.onSurfaceVariant)
+                            .opacity(0.8)
+                            .padding(.bottom, 30)
+                    }
+                    .frame(maxWidth: .infinity)
                 }
                 .frame(minHeight: geo.size.height, alignment: .top)
             }
@@ -144,6 +144,10 @@ struct HomeView: View {
         .onAppear {
             selectedDate = Date()
             weekOffset = 0
+            for c in checkins where c.habit == nil {
+                modelContext.delete(c)
+            }
+            try? modelContext.save()
         }
         // Overlays & Sheets
         .sheet(isPresented: $showingSuccessModal) {
@@ -234,7 +238,7 @@ struct HomeView: View {
     
     private func executeCheckin(habit: Habit) {
         if habit.goalType == "amount" {
-            initialAmountForSheet = habit.amountValue
+            initialAmountForSheet = nil
             showingAmountSheet = true
         } else {
             let checkin = Checkin(dateString: formatDate(selectedDate))
@@ -261,7 +265,7 @@ struct HomeView: View {
         if let firstCheckin = checkins.first(where: { $0.habit?.id == habit.id && $0.dateString == dateString }) {
             initialAmountForSheet = firstCheckin.amount
         } else {
-            initialAmountForSheet = habit.amountValue
+            initialAmountForSheet = nil
         }
         showingAmountSheet = true
     }
@@ -307,56 +311,54 @@ struct ListHabitCard: View {
         return checkins.contains(where: { $0.habit?.id == habit.id && $0.dateString == dateString })
     }
     
-    var periodTarget: Int {
-        habit.frequencyType == "weekly" ? habit.weeklyTarget : habit.monthlyTarget
-    }
-    
-    var periodCompleted: Int {
+    var periodValidCheckins: [Checkin] {
         var calendar: Calendar { appSettings.customCalendar }
         let targetComponent: Calendar.Component = habit.frequencyType == "weekly" ? .weekOfYear : .month
         let interval = calendar.dateInterval(of: targetComponent, for: selectedDate)
         
-        guard let start = interval?.start, let end = interval?.end else { return 0 }
+        guard let start = interval?.start, let end = interval?.end else { return [] }
         
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         
-        let validCheckins = checkins.filter {
+        return checkins.filter {
             guard $0.habit?.id == habit.id else { return false }
             guard let date = formatter.date(from: $0.dateString) else { return false }
             return date >= start && date < end
         }
-        
-        if habit.goalType == "amount" {
-            // Count unique days for frequency goal completion
-            let uniqueDays = Set(validCheckins.map { $0.dateString })
-            return uniqueDays.count
-        } else {
-            return validCheckins.count
-        }
+    }
+    
+    var periodCompletedCount: Int {
+        periodValidCheckins.count
+    }
+    
+    var periodCompletedAmount: Double {
+        periodValidCheckins.reduce(0.0) { $0 + $1.amount }
+    }
+    
+    var periodTarget: Int {
+        habit.frequencyType == "weekly" ? habit.weeklyTarget : habit.monthlyTarget
     }
     
     var progressFraction: Double {
-        if periodTarget == 0 { return 0.0 }
-        return min(1.0, Double(periodCompleted) / Double(periodTarget))
+        if habit.goalType == "amount" {
+            if habit.amountValue <= 0 { return 0.0 }
+            return min(1.0, periodCompletedAmount / habit.amountValue)
+        } else {
+            if periodTarget == 0 { return 0.0 }
+            return min(1.0, Double(periodCompletedCount) / Double(periodTarget))
+        }
     }
     
     var progressText: String {
         if habit.goalType == "amount" {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-            let dateString = formatter.string(from: selectedDate)
-            let hCheckins = checkins.filter { $0.habit?.id == habit.id && $0.dateString == dateString }
+            let sum = periodCompletedAmount
             let target = habit.amountValue
-            let sum = hCheckins.reduce(0) { $0 + $1.amount }
-            
-            // Format number cleanly
             let sumFormatted = sum.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", sum) : String(format: "%.1f", sum)
             let targetFormatted = target.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", target) : String(format: "%.1f", target)
-            
             return "\(sumFormatted)/\(targetFormatted) \(habit.amountUnit.tr(appSettings.resolvedLanguage))"
         } else {
-            return "\(periodCompleted)/\(periodTarget)\("次".tr(appSettings.resolvedLanguage))"
+            return "\(periodCompletedCount)/\(periodTarget)\("次".tr(appSettings.resolvedLanguage))"
         }
     }
     
@@ -520,7 +522,7 @@ struct WeeklySlider: View {
                 let isToday = calendar.isDateInToday(date)
                 let dayStr = shortDayString(for: date)
                 let dayNum = calendar.component(.day, from: date)
-                let isCheckedIn = checkins.contains(where: { $0.dateString == formatDate(date) })
+                let isCheckedIn = checkins.contains(where: { $0.dateString == formatDate(date) && $0.habit != nil && $0.habit?.isArchived == false })
                 
                 Button(action: {
                     withAnimation { selectedDate = date }
@@ -554,6 +556,10 @@ struct WeeklySlider: View {
                         }
                     )
                     .clipShape(Capsule())
+                    .overlay(
+                        Capsule()
+                            .stroke((!isSelected && isToday) ? DS.primary : Color.clear, lineWidth: 2)
+                    )
                     .shadow(color: isSelected ? DS.primary.opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
                 }
                 .buttonStyle(PlainButtonStyle())

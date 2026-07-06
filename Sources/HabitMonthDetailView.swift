@@ -45,67 +45,64 @@ struct HabitMonthDetailView: View {
         comp.day = 1
         self._currentMonthDate = State(initialValue: Calendar.current.date(from: comp) ?? Date())
     }
-    
     var body: some View {
-        ZStack {
-            AmbientBackground()
-            
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: DS.spacingM) {
-                    
-                    // Month Selector
-                    HStack {
-                        Button(action: { withAnimation { currentMonthDate = calendar.date(byAdding: .month, value: -1, to: currentMonthDate) ?? currentMonthDate } }) {
-                            Image(systemName: "chevron.left")
-                                .frame(width: 44, height: 44)
-                                .background(DS.surface.opacity(0.8))
-                                .background(.ultraThinMaterial)
-                                .clipShape(Circle())
-                                .foregroundColor(DS.onSurface)
-                        }
-                        
-                        Spacer()
-                        
-                        HStack(spacing: 8) {
-                            Image(systemName: "calendar")
-                                .foregroundColor(DS.primary)
-                            Text(monthYearString)
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(DS.onSurface)
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .background(DS.surface.opacity(0.8))
-                        .background(.ultraThinMaterial)
-                        .clipShape(Capsule())
-                        
-                        Spacer()
-                        
-                        Button(action: { withAnimation { currentMonthDate = calendar.date(byAdding: .month, value: 1, to: currentMonthDate) ?? currentMonthDate } }) {
-                            Image(systemName: "chevron.right")
-                                .frame(width: 44, height: 44)
-                                .background(DS.surface.opacity(0.8))
-                                .background(.ultraThinMaterial)
-                                .clipShape(Circle())
-                                .foregroundColor(DS.onSurface)
-                        }
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: DS.spacingM) {
+                
+                // Month Selector
+                HStack {
+                    Button(action: { withAnimation { currentMonthDate = calendar.date(byAdding: .month, value: -1, to: currentMonthDate) ?? currentMonthDate } }) {
+                        Image(systemName: "chevron.left")
+                            .frame(width: 44, height: 44)
+                            .background(DS.surface.opacity(0.8))
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                            .foregroundColor(DS.onSurface)
                     }
-                    .padding(.horizontal, 16)
                     
-                    // Month Grid Card (Reused from StatisticsView)
-                    MonthGridCard(
-                        habits: [habit],
-                        checkins: checkins.filter { $0.habit?.id == habit.id },
-                        appSettings: appSettings,
-                        currentMonthDate: $currentMonthDate
-                    )
+                    Spacer()
                     
-                    // Stats Summary Card
+                    HStack(spacing: 8) {
+                        Image(systemName: "calendar")
+                            .foregroundColor(DS.primary)
+                        Text(monthYearString)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(DS.onSurface)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(DS.surface.opacity(0.8))
+                    .background(.ultraThinMaterial)
+                    .clipShape(Capsule())
+                    
+                    Spacer()
+                    
+                    Button(action: { withAnimation { currentMonthDate = calendar.date(byAdding: .month, value: 1, to: currentMonthDate) ?? currentMonthDate } }) {
+                        Image(systemName: "chevron.right")
+                            .frame(width: 44, height: 44)
+                            .background(DS.surface.opacity(0.8))
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                            .foregroundColor(DS.onSurface)
+                    }
+                }
+                .padding(.horizontal, 16)
+                
+                // Month Grid Card (Reused from StatisticsView)
+                MonthGridCard(
+                    habits: [habit],
+                    checkins: checkins.filter { $0.habit?.id == habit.id },
+                    appSettings: appSettings,
+                    currentMonthDate: $currentMonthDate
+                )
+                
+                // Stats Summary Card
                     let currentMonthCheckins = checkinsForCurrentMonth()
                     let completedDaysCount = Set(currentMonthCheckins.map { $0.dateString }).count
                     let totalAmount = currentMonthCheckins.reduce(0) { $0 + $1.amount }
+                    let allCheckinDays = Set(checkins.filter { $0.habit?.id == habit.id }.map { $0.dateString }).count
                     
-                    HStack(spacing: 12) {
+                    HStack(spacing: 14) {
                         // Days card
                         VStack(spacing: 4) {
                             Text("\(completedDaysCount)")
@@ -114,20 +111,19 @@ struct HabitMonthDetailView: View {
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.5)
                             Text("Check-in Days".tr(appSettings.resolvedLanguage))
-                                .font(.system(size: 12))
+                                .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(DS.onSurfaceVariant)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(DS.surface.opacity(0.7))
-                        .background(.ultraThinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white, lineWidth: 1))
-                        .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 4)
+                        .background(DS.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(DS.outlineVariant, lineWidth: 1))
+                        .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
                         
-                        // Total card
+                        // Total card or Total All Time card
                         if habit.goalType == "amount" {
                             VStack(spacing: 4) {
                                 Text("\(String(format: "%.1f", totalAmount).replacingOccurrences(of: ".0", with: ""))")
@@ -136,25 +132,45 @@ struct HabitMonthDetailView: View {
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.5)
                                 Text("Check-in Amount".tr(appSettings.resolvedLanguage))
-                                    .font(.system(size: 12))
+                                    .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.8)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(DS.surface.opacity(0.7))
-                            .background(.ultraThinMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 20))
-                            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white, lineWidth: 1))
-                            .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 4)
+                            .background(DS.surface)
+                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(DS.outlineVariant, lineWidth: 1))
+                            .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+                        } else {
+                            VStack(spacing: 4) {
+                                Text("\(allCheckinDays)")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(DS.onSurface)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.5)
+                                Text("累计打卡".tr(appSettings.resolvedLanguage))
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(DS.onSurfaceVariant)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(DS.surface)
+                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(DS.outlineVariant, lineWidth: 1))
+                            .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
                         }
                     }
                     .padding(.horizontal, 16)
                     
                     // Timeline Records
-                    VStack(alignment: .leading, spacing: DS.spacingL) {
+                    VStack(alignment: .leading, spacing: 16) {
                         HStack {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .foregroundColor(Color(hex: habit.color))
                             Text("Check-in Records".tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(DS.onSurface)
@@ -165,6 +181,7 @@ struct HabitMonthDetailView: View {
                             Text("No check-in records".tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 14))
                                 .foregroundColor(DS.onSurfaceVariant)
+                                .padding(.vertical, 10)
                         } else {
                             // Sort descending
                             let sortedCheckins = currentMonthCheckins.sorted(by: { $0.timestamp > $1.timestamp })
@@ -176,31 +193,21 @@ struct HabitMonthDetailView: View {
                             }
                         }
                     }
-                    .padding(.vertical, DS.spacingM)
+                    .padding(20)
+                    .background(DS.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(DS.outlineVariant, lineWidth: 1))
+                    .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 6)
                     .padding(.horizontal, 16)
-                    
                     Spacer().frame(height: 40)
                 }
                 .padding(.top, 16)
             }
-        }
+        .background(AmbientBackground())
         .navigationTitle(habit.name)
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(DS.onSurface)
-                        .padding(8)
-                        .background(Color.clear)
-                        .clipShape(Circle())
-                }
-            }
-        }
+        .toolbar(.hidden, for: .tabBar)
         .onChange(of: currentMonthDate) { _, newValue in
             year = calendar.component(.year, from: newValue)
             month = calendar.component(.month, from: newValue)
@@ -209,6 +216,7 @@ struct HabitMonthDetailView: View {
             FullscreenImageView(image: identImg.image) {
                 selectedImageForFullscreen = nil
             }
+            .environmentObject(appSettings)
         }
     }
     
@@ -340,7 +348,13 @@ struct HabitMonthDetailView: View {
     
     private func formattedDisplayDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MM月dd日 HH:mm"
+        if appSettings.resolvedLanguage == .chinese {
+            formatter.locale = Locale(identifier: "zh_CN")
+            formatter.dateFormat = "MM月dd日 HH:mm"
+        } else {
+            formatter.locale = Locale(identifier: "en_US")
+            formatter.dateFormat = "MMM dd, HH:mm"
+        }
         return formatter.string(from: date)
     }
 }
@@ -353,6 +367,7 @@ struct IdentifiableImage: Identifiable {
 struct FullscreenImageView: View {
     let image: UIImage
     let onDismiss: () -> Void
+    @EnvironmentObject private var appSettings: AppSettings
     @State private var showingSaveAlert = false
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
@@ -408,8 +423,8 @@ struct FullscreenImageView: View {
                 Spacer()
             }
         }
-        .alert("已保存到相册", isPresented: $showingSaveAlert) {
-            Button("好的", role: .cancel) { }
+        .alert("Saved to Album".tr(appSettings.resolvedLanguage), isPresented: $showingSaveAlert) {
+            Button("OK".tr(appSettings.resolvedLanguage), role: .cancel) { }
         }
     }
 }

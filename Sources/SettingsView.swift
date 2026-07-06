@@ -6,272 +6,26 @@ struct SettingsView: View {
     @EnvironmentObject private var appSettings: AppSettings
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     
     @State private var showingExport = false
     @State private var showingImport = false
     @State private var exportURL: URL?
     @State private var showingWidgetGuide = false
+    @State private var toastMessage: String? = nil
     
     var body: some View {
         NavigationView {
             ScrollView(showsIndicators: false) {
-                VStack(spacing: DS.spacingL) {
-                    
-                    // Premium Banner
-                    if !appSettings.isPremium {
-                        Button(action: {
-                            appSettings.showPaywallFromSettings = true
-                        }) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Upgrade to Premium".tr(appSettings.resolvedLanguage))
-                                        .font(.system(size: 18, weight: .bold))
-                                        .foregroundColor(DS.onSurface)
-                                    Text("Unlock all features".tr(appSettings.resolvedLanguage))
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundColor(DS.onSurfaceVariant)
-                                }
-                                Spacer()
-                                Image(systemName: "crown.fill")
-                                    .font(.system(size: 24))
-                                    .foregroundColor(.yellow)
-                            }
-                            .padding(DS.spacingL)
-                            .background(
-                                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                    .fill(DS.surface)
-                                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.horizontal, DS.spacingL)
-                        .padding(.top, DS.spacingS)
-                    } else {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Premium Member".tr(appSettings.resolvedLanguage))
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundColor(DS.onSurface)
-                                Text("All features unlocked".tr(appSettings.resolvedLanguage))
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(DS.onSurfaceVariant)
-                            }
-                            Spacer()
-                            Image(systemName: "crown.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.yellow)
-                        }
-                        .padding(DS.spacingL)
-                        .background(
-                            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                .fill(DS.surface)
-                                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
-                        )
-                        .padding(.horizontal, DS.spacingL)
-                        .padding(.top, DS.spacingS)
-                    }
-
-                    // Features
-                    SettingsSection(title: "Features".tr(appSettings.resolvedLanguage)) {
-                        Button {
-                            showingWidgetGuide = true
-                        } label: {
-                            SettingsRowLabel(icon: "squareshape.split.2x2", color: .purple, title: "Widgets".tr(appSettings.resolvedLanguage), value: "Add to Home Screen".tr(appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
-                        }
-                    }
-                    
-                    // Appearance & General
-                    SettingsSection(title: "Appearance".tr(appSettings.resolvedLanguage)) {
-                        
-                        // Dark Mode
-                        if appSettings.isPremium {
-                            Menu {
-                                Picker("", selection: $appSettings.themeMode) {
-                                    ForEach(AppTheme.allCases) { theme in
-                                        Text(theme.displayName(in: appSettings.resolvedLanguage)).tag(theme)
-                                    }
-                                }
-                                .onChange(of: appSettings.themeMode) { _ in
-                                    appSettings.objectWillChange.send()
-                                    WidgetCenter.shared.reloadAllTimelines()
-                                }
-                            } label: {
-                                SettingsRowLabel(icon: "moon.stars", color: DS.primary, title: "Dark Mode".tr(appSettings.resolvedLanguage), value: appSettings.themeMode.displayName(in: appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
-                            }
-                        } else {
-                            Button { appSettings.showPaywallFromSettings = true } label: {
-                                SettingsRowLabel(icon: "moon.stars", color: DS.primary, title: "Dark Mode".tr(appSettings.resolvedLanguage), value: appSettings.themeMode.displayName(in: appSettings.resolvedLanguage), isPremiumFeature: true, isPremiumUser: false)
-                            }
-                        }
-                        
-                        Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, DS.spacingL)
-                        
-                        // Theme Color Picker
-                        VStack(alignment: .leading, spacing: DS.spacingM) {
-                            HStack(spacing: DS.spacingM) {
-                                ZStack {
-                                    Circle().fill(DS.accent.opacity(0.15)).frame(width: 40, height: 40)
-                                    Image(systemName: "paintpalette").font(.system(size: 18, weight: .medium)).foregroundColor(DS.accent)
-                                }
-                                Text("Theme Color".tr(appSettings.resolvedLanguage))
-                                    .labelMd()
-                                    .foregroundColor(DS.onSurface)
-                                Spacer()
-                                if !appSettings.isPremium {
-                                    Image(systemName: "lock.fill").foregroundColor(DS.primary).font(.system(size: 14))
-                                }
-                            }
-                            .padding(.top, 12)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                if !appSettings.isPremium {
-                                    appSettings.showPaywallFromSettings = true
-                                }
-                            }
-                            
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
-                                    let colors = ["#5e4dbb", "#2E8B57", "#4169E1", "#E07A5F", "#D72638", "#8D6E63", "#F4A261", "#607D8B", "#2A9D8F", "#F28482"]
-                                    ForEach(colors, id: \.self) { hex in
-                                        Circle()
-                                            .fill(Color(hex: hex))
-                                            .frame(width: 36, height: 36)
-                                            .overlay(Circle().stroke(Color.white, lineWidth: appSettings.themeColorHex == hex ? 3 : 0))
-                                            .shadow(color: Color(hex: hex).opacity(0.4), radius: appSettings.themeColorHex == hex ? 6 : 0)
-                                            .scaleEffect(appSettings.themeColorHex == hex ? 1.1 : 1.0)
-                                            .onTapGesture {
-                                                if !appSettings.isPremium {
-                                                    appSettings.showPaywallFromSettings = true
-                                                } else {
-                                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                                        appSettings.themeColorHex = hex
-                                                        appSettings.objectWillChange.send()
-                                                    }
-                                                }
-                                            }
-                                    }
-                                }
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 4)
-                            }
-                        }
-                        .padding(.horizontal, DS.spacingL)
-                        .padding(.vertical, 12)
-                        
-                        Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, DS.spacingL)
-                        
-                        // Start of Week
-                        Menu {
-                            Picker("", selection: $appSettings.firstWeekday) {
-                                Text("Monday".tr(appSettings.resolvedLanguage)).tag(2)
-                                Text("Sunday".tr(appSettings.resolvedLanguage)).tag(1)
-                            }
-                            .onChange(of: appSettings.firstWeekday) { _ in appSettings.objectWillChange.send() }
-                        } label: {
-                            SettingsRowLabel(icon: "calendar", color: DS.secondary, title: "Start of Week".tr(appSettings.resolvedLanguage), value: appSettings.firstWeekday == 2 ? "Monday".tr(appSettings.resolvedLanguage) : "Sunday".tr(appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
-                        }
-                    }
-                    
-                    // Language
-                    SettingsSection(title: "Language".tr(appSettings.resolvedLanguage)) {
-                        Menu {
-                            Picker("", selection: $appSettings.language) {
-                                ForEach(AppLanguage.allCases) { lang in
-                                    Text(lang.displayName).tag(lang)
-                                }
-                            }
-                            .onChange(of: appSettings.language) { _ in appSettings.objectWillChange.send() }
-                        } label: {
-                            SettingsRowLabel(icon: "globe", color: DS.tertiary, title: "Language".tr(appSettings.resolvedLanguage), value: appSettings.language.displayName, isPremiumFeature: false, isPremiumUser: true)
-                        }
-                    }
-                    
-                    // App Lock
-                    SettingsSection(title: "App Lock".tr(appSettings.resolvedLanguage)) {
-                        Button {
-                            if !appSettings.isPremium {
-                                appSettings.showPaywallFromSettings = true
-                            } else {
-                                appSettings.appLockEnabled.toggle()
-                            }
-                        } label: {
-                            SettingsRowLabel(icon: "lock.shield", color: .green, title: "App Lock".tr(appSettings.resolvedLanguage), value: appSettings.appLockEnabled ? "On".tr(appSettings.resolvedLanguage) : "Off".tr(appSettings.resolvedLanguage), isPremiumFeature: true, isPremiumUser: appSettings.isPremium)
-                        }
-                    }
-                    
-                    // Data
-                    SettingsSection(title: "Data".tr(appSettings.resolvedLanguage)) {
-                        
-                        // iCloud Sync
-                        Button {
-                            if !appSettings.isPremium {
-                                appSettings.showPaywallFromSettings = true
-                            } else {
-                                appSettings.iCloudSyncEnabled.toggle()
-                            }
-                        } label: {
-                            SettingsRowLabel(icon: "icloud", color: .cyan, title: "iCloud Sync".tr(appSettings.resolvedLanguage), value: appSettings.iCloudSyncEnabled ? "On".tr(appSettings.resolvedLanguage) : "Off".tr(appSettings.resolvedLanguage), isPremiumFeature: true, isPremiumUser: appSettings.isPremium)
-                        }
-                        
-                        Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, DS.spacingL)
-                        
-                        // Import
-                        Button {
-                            if !appSettings.isPremium {
-                                appSettings.showPaywallFromSettings = true
-                            } else {
-                                showingImport = true
-                            }
-                        } label: {
-                            SettingsRowLabel(icon: "arrow.down.doc", color: .blue, title: "Import Data".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: true, isPremiumUser: appSettings.isPremium)
-                        }
-                        
-                        Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, DS.spacingL)
-                        
-                        // Export
-                        Button {
-                            if !appSettings.isPremium {
-                                appSettings.showPaywallFromSettings = true
-                            } else {
-                                if let url = DataBackupManager.shared.exportData(modelContext: modelContext) {
-                                    exportURL = url
-                                    showingExport = true
-                                }
-                            }
-                        } label: {
-                            SettingsRowLabel(icon: "arrow.up.doc", color: .pink, title: "Export Data".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: true, isPremiumUser: appSettings.isPremium)
-                        }
-                    }
-                    
-                    // About
-                    SettingsSection(title: "About".tr(appSettings.resolvedLanguage)) {
-                        Button {
-                            // Dummy Action
-                        } label: {
-                            SettingsRowLabel(icon: "doc.text", color: .gray, title: "Terms of Service".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
-                        }
-                        
-                        Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, DS.spacingL)
-                        
-                        Button {
-                            // Dummy Action
-                        } label: {
-                            SettingsRowLabel(icon: "hand.raised", color: .gray, title: "Privacy Policy".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
-                        }
-                    }
-                    
-                    // Developer Testing
-                    SettingsSection(title: "Developer (Test Only)".tr(appSettings.resolvedLanguage)) {
-                        Toggle(isOn: $appSettings.isPremium) {
-                            Text("Mock Premium Status".tr(appSettings.resolvedLanguage))
-                                .labelMd()
-                                .foregroundColor(DS.onSurface)
-                        }
-                        .padding(.horizontal, DS.spacingL)
-                        .padding(.vertical, 12)
-                        .tint(DS.primary)
-                    }
-
+                VStack(spacing: 22) {
+                    bannerSection
+                    featuresSection
+                    appearanceSection
+                    languageSection
+                    appLockSection
+                    dataSection
+                    aboutSection
+                    developerSection
                 }
                 .padding(.bottom, 40)
             }
@@ -281,14 +35,26 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { dismiss() }) {
-                        Text("关闭")
+                        Text("Close".tr(appSettings.resolvedLanguage))
                             .foregroundColor(DS.primary)
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.system(size: 15, weight: .medium))
                     }
                 }
             }
-            .fileExporter(isPresented: $showingExport, document: JSONDocument(url: exportURL), contentType: .json, defaultFilename: "LittleHabitBackup") { result in
-                // Handle result
+            .fileExporter(isPresented: $showingExport, document: JSONDocument(url: exportURL), contentType: .commaSeparatedText, defaultFilename: "LittleHabit_Excel_Data") { result in
+                switch result {
+                case .success(_):
+                    withAnimation(.spring()) {
+                        toastMessage = "导出成功！".tr(appSettings.resolvedLanguage)
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                        withAnimation(.spring()) {
+                            toastMessage = nil
+                        }
+                    }
+                case .failure(let err):
+                    print("Export failed: \(err)")
+                }
             }
             .fileImporter(isPresented: $showingImport, allowedContentTypes: [.json]) { result in
                 switch result {
@@ -296,6 +62,20 @@ struct SettingsView: View {
                     DataBackupManager.shared.importData(from: url, modelContext: modelContext)
                 case .failure(let err):
                     print("Import failed: \(err)")
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if let message = toastMessage {
+                    Text(message)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 22)
+                        .padding(.vertical, 12)
+                        .background(Color.black.opacity(0.85))
+                        .clipShape(Capsule())
+                        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+                        .padding(.bottom, 80)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
         }
@@ -310,10 +90,270 @@ struct SettingsView: View {
         }
         .preferredColorScheme(appSettings.colorScheme)
     }
+    
+    @ViewBuilder private var bannerSection: some View {
+        if !appSettings.isPremium {
+            Button(action: {
+                appSettings.showPaywallFromSettings = true
+            }) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Upgrade to Premium".tr(appSettings.resolvedLanguage))
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(DS.onSurface)
+                        Text("Unlock all features".tr(appSettings.resolvedLanguage))
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(DS.onSurfaceVariant)
+                    }
+                    Spacer()
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.yellow)
+                }
+                .padding(DS.spacingL)
+                .background(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .fill(DS.surface)
+                        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                )
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 20)
+            .padding(.top, DS.spacingS)
+        } else {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Premium Member".tr(appSettings.resolvedLanguage))
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(DS.onSurface)
+                    Text("All features unlocked".tr(appSettings.resolvedLanguage))
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(DS.onSurfaceVariant)
+                }
+                Spacer()
+                Image(systemName: "crown.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(.yellow)
+            }
+            .padding(DS.spacingL)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(DS.surface)
+                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+            )
+            .padding(.horizontal, 20)
+            .padding(.top, DS.spacingS)
+        }
+    }
+    
+    @ViewBuilder private var featuresSection: some View {
+        SettingsSection(title: "Features".tr(appSettings.resolvedLanguage)) {
+            Button {
+                showingWidgetGuide = true
+            } label: {
+                SettingsRowLabel(icon: "squareshape.split.2x2", color: .purple, title: "Widgets".tr(appSettings.resolvedLanguage), value: "Add to Home Screen".tr(appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
+            }
+        }
+    }
+    
+    @ViewBuilder private var appearanceSection: some View {
+        SettingsSection(title: "Appearance".tr(appSettings.resolvedLanguage)) {
+            
+            // Dark Mode
+            if appSettings.isPremium {
+                Menu {
+                    Picker("", selection: $appSettings.themeMode) {
+                        ForEach(AppTheme.allCases) { theme in
+                            Text(theme.displayName(in: appSettings.resolvedLanguage)).tag(theme)
+                        }
+                    }
+                    .onChange(of: appSettings.themeMode) { _ in
+                        appSettings.applyTheme()
+                        appSettings.objectWillChange.send()
+                        WidgetCenter.shared.reloadAllTimelines()
+                    }
+                } label: {
+                    SettingsRowLabel(icon: "moon.stars", color: DS.primary, title: "Dark Mode".tr(appSettings.resolvedLanguage), value: appSettings.themeMode.displayName(in: appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
+                }
+            } else {
+                Button { appSettings.showPaywallFromSettings = true } label: {
+                    SettingsRowLabel(icon: "moon.stars", color: DS.primary, title: "Dark Mode".tr(appSettings.resolvedLanguage), value: appSettings.themeMode.displayName(in: appSettings.resolvedLanguage), isPremiumFeature: true, isPremiumUser: false)
+                }
+            }
+            
+            Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)
+            
+            // Theme Color Picker
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle().fill(DS.accent.opacity(0.15)).frame(width: 36, height: 36)
+                        Image(systemName: "paintpalette").font(.system(size: 16, weight: .semibold)).foregroundColor(DS.accent)
+                    }
+                    Text("Theme Color".tr(appSettings.resolvedLanguage))
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(DS.onSurface)
+                    Spacer()
+                    if !appSettings.isPremium {
+                        Image(systemName: "lock.fill").foregroundColor(DS.primary).font(.system(size: 14))
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if !appSettings.isPremium {
+                        appSettings.showPaywallFromSettings = true
+                    }
+                }
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 14) {
+                        let colors = ["#5e4dbb", "#2E8B57", "#4169E1", "#E07A5F", "#D72638", "#8D6E63", "#F4A261", "#607D8B", "#2A9D8F", "#F28482"]
+                        ForEach(colors, id: \.self) { hex in
+                            Circle()
+                                .fill(Color(hex: hex))
+                                .frame(width: 32, height: 32)
+                                .overlay(Circle().stroke(Color.white, lineWidth: appSettings.themeColorHex == hex ? 2.5 : 0))
+                                .shadow(color: Color(hex: hex).opacity(0.4), radius: appSettings.themeColorHex == hex ? 5 : 0)
+                                .scaleEffect(appSettings.themeColorHex == hex ? 1.15 : 1.0)
+                                .zIndex(appSettings.themeColorHex == hex ? 100 : 1)
+                                .onTapGesture {
+                                    if !appSettings.isPremium {
+                                        appSettings.showPaywallFromSettings = true
+                                    } else {
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                            appSettings.themeColorHex = hex
+                                            appSettings.objectWillChange.send()
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 8)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            
+            Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)
+            
+            // Start of Week
+            Menu {
+                Picker("", selection: $appSettings.firstWeekday) {
+                    Text("Monday".tr(appSettings.resolvedLanguage)).tag(2)
+                    Text("Sunday".tr(appSettings.resolvedLanguage)).tag(1)
+                }
+                .onChange(of: appSettings.firstWeekday) { _ in appSettings.objectWillChange.send() }
+            } label: {
+                SettingsRowLabel(icon: "calendar", color: DS.secondary, title: "Start of Week".tr(appSettings.resolvedLanguage), value: appSettings.firstWeekday == 2 ? "Monday".tr(appSettings.resolvedLanguage) : "Sunday".tr(appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
+            }
+        }
+    }
+    
+    @ViewBuilder private var languageSection: some View {
+        SettingsSection(title: "Language".tr(appSettings.resolvedLanguage)) {
+            Menu {
+                Picker("", selection: $appSettings.language) {
+                    ForEach(AppLanguage.allCases) { lang in
+                        Text(lang.displayName).tag(lang)
+                    }
+                }
+                .onChange(of: appSettings.language) { _ in appSettings.objectWillChange.send() }
+            } label: {
+                SettingsRowLabel(icon: "globe", color: DS.tertiary, title: "Language".tr(appSettings.resolvedLanguage), value: appSettings.language.displayName, isPremiumFeature: false, isPremiumUser: true)
+            }
+        }
+    }
+    
+    @ViewBuilder private var appLockSection: some View {
+        SettingsSection(title: "App Lock".tr(appSettings.resolvedLanguage)) {
+            SettingsRowToggle(icon: "lock.shield", color: .green, title: "App Lock".tr(appSettings.resolvedLanguage), isOn: appSettings.appLockEnabled, isPremiumFeature: true, isPremiumUser: appSettings.isPremium) {
+                if !appSettings.isPremium {
+                    appSettings.showPaywallFromSettings = true
+                } else {
+                    withAnimation { appSettings.appLockEnabled.toggle() }
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder private var dataSection: some View {
+        SettingsSection(title: "Data".tr(appSettings.resolvedLanguage)) {
+            
+            // iCloud Sync
+            SettingsRowToggle(icon: "icloud", color: .cyan, title: "iCloud Sync".tr(appSettings.resolvedLanguage), isOn: appSettings.iCloudSyncEnabled, isPremiumFeature: true, isPremiumUser: appSettings.isPremium) {
+                if !appSettings.isPremium {
+                    appSettings.showPaywallFromSettings = true
+                } else {
+                    withAnimation { appSettings.iCloudSyncEnabled.toggle() }
+                }
+            }
+            
+            Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)
+            
+            // Import
+            Button {
+                if !appSettings.isPremium {
+                    appSettings.showPaywallFromSettings = true
+                } else {
+                    showingImport = true
+                }
+            } label: {
+                SettingsRowLabel(icon: "arrow.down.doc", color: .blue, title: "Import Data".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: true, isPremiumUser: appSettings.isPremium)
+            }
+            
+            Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)
+            
+            // Export
+            Button {
+                if !appSettings.isPremium {
+                    appSettings.showPaywallFromSettings = true
+                } else {
+                    if let url = DataBackupManager.shared.exportExcelData(modelContext: modelContext, language: appSettings.resolvedLanguage) {
+                        exportURL = url
+                        showingExport = true
+                    }
+                }
+            } label: {
+                SettingsRowLabel(icon: "arrow.up.doc", color: .pink, title: "Export Data".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: true, isPremiumUser: appSettings.isPremium)
+            }
+        }
+    }
+    
+    @ViewBuilder private var aboutSection: some View {
+        SettingsSection(title: "About".tr(appSettings.resolvedLanguage)) {
+            Button {
+                // Dummy Action
+            } label: {
+                SettingsRowLabel(icon: "doc.text", color: .gray, title: "Terms of Service".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
+            }
+            
+            Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)
+            
+            Button {
+                // Dummy Action
+            } label: {
+                SettingsRowLabel(icon: "hand.raised", color: .gray, title: "Privacy Policy".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
+            }
+        }
+    }
+    
+    @ViewBuilder private var developerSection: some View {
+        SettingsSection(title: "Developer (Test Only)".tr(appSettings.resolvedLanguage)) {
+            Toggle(isOn: $appSettings.isPremium) {
+                Text("Mock Premium Status".tr(appSettings.resolvedLanguage))
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(DS.onSurface)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .tint(DS.primary)
+        }
+    }
 }
 
 struct JSONDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [.json] }
+    static var readableContentTypes: [UTType] { [.json, .commaSeparatedText, .spreadsheet, .data] }
     var url: URL?
     init(url: URL?) { self.url = url }
     init(configuration: ReadConfiguration) throws { }
@@ -333,19 +373,19 @@ struct SettingsSection<Content: View>: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.spacingS) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(size: 14, weight: .bold))
+                .font(.system(size: 15, weight: .bold))
                 .foregroundColor(DS.onSurfaceVariant)
-                .padding(.horizontal, DS.spacingL)
-                .padding(.leading, 8)
+                .padding(.horizontal, 20)
+                .padding(.leading, 6)
             
             VStack(spacing: 0) {
                 content
             }
             .buttonStyle(.plain) // This makes any buttons inside this stack render normally without default button styling, but their touch area is active.
             .background(
-                DS.surface.opacity(0.7)
+                DS.surface.opacity(0.85)
             )
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
@@ -353,8 +393,8 @@ struct SettingsSection<Content: View>: View {
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .stroke(DS.outlineVariant, lineWidth: 1)
             )
-            .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 5)
-            .padding(.horizontal, DS.spacingL)
+            .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 6)
+            .padding(.horizontal, 20)
         }
     }
 }
@@ -368,18 +408,18 @@ struct SettingsRowLabel: View {
     let isPremiumUser: Bool
     
     var body: some View {
-        HStack(spacing: DS.spacingM) {
+        HStack(spacing: 14) {
             ZStack {
-                Circle().fill(color.opacity(0.15)).frame(width: 40, height: 40)
-                Image(systemName: icon).font(.system(size: 18, weight: .medium)).foregroundColor(color)
+                Circle().fill(color.opacity(0.15)).frame(width: 36, height: 36)
+                Image(systemName: icon).font(.system(size: 16, weight: .semibold)).foregroundColor(color)
             }
             
-            Text(title).labelMd().foregroundColor(DS.onSurface)
+            Text(title).font(.system(size: 16, weight: .medium)).foregroundColor(DS.onSurface)
             
             Spacer()
             
             if !value.isEmpty {
-                Text(value).labelMd().foregroundColor(DS.onSurfaceVariant)
+                Text(value).font(.system(size: 16, weight: .medium)).foregroundColor(DS.onSurfaceVariant)
             }
             
             if isPremiumFeature && !isPremiumUser {
@@ -388,9 +428,49 @@ struct SettingsRowLabel: View {
                 Image(systemName: "chevron.right").font(.system(size: 14)).foregroundColor(DS.onSurfaceVariant.opacity(0.5))
             }
         }
-        .padding(.horizontal, DS.spacingL)
+        .padding(.horizontal, 20)
         .padding(.vertical, 12)
         .contentShape(Rectangle()) // Makes the whole row touchable
+    }
+}
+
+struct SettingsRowToggle: View {
+    let icon: String
+    let color: Color
+    let title: String
+    let isOn: Bool
+    let isPremiumFeature: Bool
+    let isPremiumUser: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle().fill(color.opacity(0.15)).frame(width: 36, height: 36)
+                Image(systemName: icon).font(.system(size: 16, weight: .semibold)).foregroundColor(color)
+            }
+            
+            Text(title).font(.system(size: 16, weight: .medium)).foregroundColor(DS.onSurface)
+            
+            Spacer()
+            
+            if isPremiumFeature && !isPremiumUser {
+                Image(systemName: "lock.fill").font(.system(size: 14)).foregroundColor(DS.primary)
+            }
+            
+            Toggle("", isOn: Binding(
+                get: { isOn },
+                set: { _ in action() }
+            ))
+            .labelsHidden()
+            .tint(DS.primary)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            action()
+        }
     }
 }
 
@@ -407,11 +487,6 @@ struct WidgetGuideSheet: View {
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(DS.onSurface)
                 Spacer()
-                Button(action: { dismiss() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(DS.onSurfaceVariant.opacity(0.5))
-                }
             }
             .padding(.top, DS.spacingM)
             
@@ -427,11 +502,11 @@ struct WidgetGuideSheet: View {
                 )
                 WidgetGuideStepRow(
                     number: "3",
-                    text: "Tap the '+' button in the top left corner.".tr(appSettings.resolvedLanguage)
+                    text: "Tap '+' in top left, search 'Little Habit', and tap 'Add Widget'.".tr(appSettings.resolvedLanguage)
                 )
                 WidgetGuideStepRow(
                     number: "4",
-                    text: "Search for 'Little Habit' and add your favorite widget.".tr(appSettings.resolvedLanguage)
+                    text: "Choose your favorite widget size and place it on your Home Screen.".tr(appSettings.resolvedLanguage)
                 )
             }
             .padding(DS.spacingM)
@@ -470,18 +545,6 @@ struct WidgetGuideStepRow: View {
                 .foregroundColor(.white)
                 .frame(width: 24, height: 24)
                 .background(DS.primary)
-                .clipShape(Circle())
-            
-            Text(text)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundColor(DS.onSurface)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 2)
-            
-            Spacer()
-        }
-    }
-}
                 .clipShape(Circle())
             
             Text(text)

@@ -23,8 +23,6 @@ struct HabitStatsDetailView: View {
     
     var body: some View {
         ZStack {
-            AmbientBackground()
-            
             ScrollView(showsIndicators: false) {
                 VStack(spacing: DS.spacingM) {
                     
@@ -72,7 +70,7 @@ struct HabitStatsDetailView: View {
                     VStack(alignment: .leading, spacing: DS.spacingM) {
                         HStack {
                             Image(systemName: "chart.bar.fill")
-                                .foregroundColor(DS.onSurfaceVariant)
+                                .foregroundColor(DS.primary)
                             Text("Statistics".tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(DS.onSurface)
@@ -82,11 +80,14 @@ struct HabitStatsDetailView: View {
                         let yearCheckins = getCheckinsForYear()
                         let completedDays = Set(yearCheckins.map { $0.dateString }).count
                         let totalAmount = yearCheckins.reduce(0) { $0 + $1.amount }
+                        let allCheckinDays = Set(checkins.filter { $0.habit?.id == habit.id }.map { $0.dateString }).count
                         
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.spacingM) {
-                            statBox(icon: "checkmark.circle.fill", iconColor: Color(hex: "#FF8C8C"), value: "\(completedDays)", unit: "天".tr(appSettings.resolvedLanguage), label: "打卡天数".tr(appSettings.resolvedLanguage))
+                            statBox(icon: "checkmark.circle.fill", iconColor: Color(hex: habit.color), value: "\(completedDays)", unit: "天".tr(appSettings.resolvedLanguage), label: "打卡天数".tr(appSettings.resolvedLanguage))
                             if habit.goalType == "amount" {
                                 statBox(icon: "number.circle.fill", iconColor: Color.yellow, value: "\(Int(totalAmount))", unit: habit.amountUnit.tr(appSettings.resolvedLanguage), label: "总数值".tr(appSettings.resolvedLanguage))
+                            } else {
+                                statBox(icon: "flame.fill", iconColor: Color.orange, value: "\(allCheckinDays)", unit: "天".tr(appSettings.resolvedLanguage), label: "累计打卡".tr(appSettings.resolvedLanguage))
                             }
                         }
                     }
@@ -101,7 +102,7 @@ struct HabitStatsDetailView: View {
                     VStack(alignment: .leading, spacing: DS.spacingM) {
                         HStack {
                             Image(systemName: "calendar")
-                                .foregroundColor(DS.onSurfaceVariant)
+                                .foregroundColor(DS.primary)
                             Text("Yearly Calendar".tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(DS.onSurface)
@@ -116,7 +117,7 @@ struct HabitStatsDetailView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                             .foregroundColor(DS.onSurface)
                             
-                            Text("\(currentYear)\(" Year".tr(appSettings.resolvedLanguage))")
+                            Text("\(String(currentYear))\(" Year".tr(appSettings.resolvedLanguage))")
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(DS.onSurface)
                                 .padding(.horizontal, 8)
@@ -135,21 +136,23 @@ struct HabitStatsDetailView: View {
                         // Empty space instead of Legend
                         Spacer().frame(height: 8)
                         
-                        // Yearly Grid
+                        // Yearly Grid (3 columns for compact, adaptive layout)
                         let months = Array(1...12)
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: DS.spacingL) {
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                             ForEach(months, id: \.self) { month in
                                 NavigationLink(value: HabitMonthRoute(habit: habit, year: currentYear, month: month)) {
                                     MonthMiniGrid(year: currentYear, month: month, checkins: getCheckinsForYear(), habit: habit)
                                         .padding(8)
-                                        .background(Color.black.opacity(0.02))
-                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                        .background(DS.surface)
+                                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(DS.outlineVariant, lineWidth: 1))
+                                        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             }
                         }
                     }
-                    .padding(DS.spacingL)
+                    .padding(16)
                     .background(DS.surface.opacity(0.8))
                     .background(.ultraThinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
@@ -158,7 +161,8 @@ struct HabitStatsDetailView: View {
                     
                     Spacer().frame(height: 40)
                 }
-                .padding(DS.spacingM)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
             }
             
             if showToast {
@@ -178,27 +182,16 @@ struct HabitStatsDetailView: View {
                 .zIndex(100)
             }
         }
-        .navigationTitle("习惯详情")
+        .background(AmbientBackground())
+        .navigationTitle("Habit Details".tr(appSettings.resolvedLanguage))
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(DS.primary)
-                        .padding(8)
-                        .background(DS.surface)
-                        .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.05), radius: 4)
-                }
-            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button(action: { showingEditSheet = true }) {
-                        Label("编辑", systemImage: "pencil")
+                        Label("Edit".tr(appSettings.resolvedLanguage), systemImage: "pencil")
                     }
                     Button(action: {
                         let isArchiving = !habit.isArchived
@@ -220,12 +213,12 @@ struct HabitStatsDetailView: View {
                             }
                         }
                     }) {
-                        Label(habit.isArchived ? "恢复" : "归档", systemImage: habit.isArchived ? "tray.and.arrow.up" : "archivebox")
+                        Label(habit.isArchived ? "Restore".tr(appSettings.resolvedLanguage) : "Archive".tr(appSettings.resolvedLanguage), systemImage: habit.isArchived ? "tray.and.arrow.up" : "archivebox")
                     }
                     Button(role: .destructive, action: {
                         showDeleteAlert = true
                     }) {
-                        Label("删除", systemImage: "trash")
+                        Label("Delete".tr(appSettings.resolvedLanguage), systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -241,10 +234,18 @@ struct HabitStatsDetailView: View {
         .sheet(isPresented: $showingEditSheet) {
             HabitDetailView(habit: habit)
         }
-        .alert("确认删除?", isPresented: $showDeleteAlert) {
-            Button("取消", role: .cancel) { }
-            Button("删除", role: .destructive) {
+        .alert("Delete Habit?".tr(appSettings.resolvedLanguage), isPresented: $showDeleteAlert) {
+            Button("Cancel".tr(appSettings.resolvedLanguage), role: .cancel) { }
+            Button("Delete".tr(appSettings.resolvedLanguage), role: .destructive) {
+                if let checkins = habit.checkins {
+                    for c in checkins { modelContext.delete(c) }
+                }
+                if let moods = habit.moodRecords {
+                    for m in moods { modelContext.delete(m) }
+                }
                 modelContext.delete(habit)
+                try? modelContext.save()
+                WidgetCenter.shared.reloadAllTimelines()
                 dismiss()
             }
         } message: {
@@ -303,19 +304,31 @@ struct MonthMiniGrid: View {
     @EnvironmentObject private var appSettings: AppSettings
     private var calendar: Calendar { appSettings.customCalendar }
     
+    private var monthName: String {
+        let df = DateFormatter()
+        if appSettings.resolvedLanguage == .chinese {
+            df.locale = Locale(identifier: "zh_CN")
+            df.dateFormat = "M月"
+        } else {
+            df.locale = Locale(identifier: "en_US")
+            df.dateFormat = "MMM"
+        }
+        return df.string(from: dateForFirstDayOfMonth())
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("\(month)\(" Month".tr(appSettings.resolvedLanguage))")
-                .font(.system(size: 12, weight: .bold))
+        VStack(alignment: .leading, spacing: 10) {
+            Text(monthName)
+                .font(.system(size: 14, weight: .bold))
                 .foregroundColor(DS.onSurface)
             
             let daysInMonth = calendar.range(of: .day, in: .month, for: dateForFirstDayOfMonth())?.count ?? 30
             let firstWeekday = getFirstWeekday()
             let rows = 6 // Force 6 rows so that the grids are perfectly aligned vertically
             
-            VStack(spacing: 3) {
+            VStack(spacing: 2) {
                 ForEach(0..<rows, id: \.self) { row in
-                    HStack(spacing: 3) {
+                    HStack(spacing: 2) {
                         ForEach(0..<7, id: \.self) { col in
                             let index = row * 7 + col
                             let day = index - firstWeekday + 1
@@ -323,12 +336,12 @@ struct MonthMiniGrid: View {
                             if day > 0 && day <= daysInMonth {
                                 let dateStr = String(format: "%04d-%02d-%02d", year, month, day)
                                 let isCompleted = checkins.contains(where: { $0.dateString == dateStr })
-                                RoundedRectangle(cornerRadius: 2)
-                                    .fill(isCompleted ? Color(hex: "#FF8C8C") : DS.uncheckedPlaceholder)
-                                    .frame(width: 9, height: 9)
+                                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                                    .fill(isCompleted ? Color(hex: habit.color) : DS.uncheckedPlaceholder.opacity(0.6))
+                                    .frame(width: 8, height: 8)
                             } else {
                                 Color.clear
-                                    .frame(width: 9, height: 9)
+                                    .frame(width: 8, height: 8)
                             }
                         }
                     }

@@ -47,14 +47,13 @@ struct Provider: AppIntentTimelineProvider {
     
     init() {
         let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
-        guard let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") else {
-            fatalError("Could not get shared store URL")
-        }
+        let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") ?? URL.temporaryDirectory.appending(path: "widget.store")
         let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
         do {
             modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            let fallbackConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            modelContainer = try! ModelContainer(for: schema, configurations: [fallbackConfig])
         }
     }
     
@@ -90,8 +89,12 @@ struct MultipleHabitsProvider: AppIntentTimelineProvider {
     let modelContainer: ModelContainer
     init() {
         let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
-        let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")!.appendingPathComponent("shared.store")
-        modelContainer = try! ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, url: sharedStoreURL)])
+        let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") ?? URL.temporaryDirectory.appending(path: "widget.store")
+        do {
+            modelContainer = try ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, url: sharedStoreURL)])
+        } catch {
+            modelContainer = try! ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)])
+        }
     }
     
     @MainActor func fetchHabits() -> [Habit] { return (try? modelContainer.mainContext.fetch(FetchDescriptor<Habit>())) ?? [] }

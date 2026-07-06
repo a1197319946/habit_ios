@@ -73,6 +73,50 @@ class DataBackupManager {
         }
     }
     
+    func exportExcelData(modelContext: ModelContext, language: AppLanguage) -> URL? {
+        do {
+            let habits = try modelContext.fetch(FetchDescriptor<Habit>())
+            let checkins = try modelContext.fetch(FetchDescriptor<Checkin>())
+            
+            let isCN = (language == .chinese)
+            
+            var csvString = "\u{FEFF}" // UTF-8 BOM for Microsoft Excel compatibility
+            if isCN {
+                csvString += "习惯名称,颜色编号,图标编号,频率类型,目标类型,打卡日期,打卡数值\n"
+            } else {
+                csvString += "Habit Name,Color Hex,Icon Name,Frequency Type,Goal Type,Check-in Date,Amount\n"
+            }
+            
+            for habit in habits {
+                let habitCheckins = checkins.filter { $0.habit?.id == habit.id }
+                if habitCheckins.isEmpty {
+                    let name = csvEscape(habit.name)
+                    let status = isCN ? "暂无记录" : "No records"
+                    csvString += "\(name),\(habit.color),\(habit.icon),\(habit.frequencyType),\(habit.goalType),\(status),0\n"
+                } else {
+                    for checkin in habitCheckins.sorted(by: { $0.dateString > $1.dateString }) {
+                        let name = csvEscape(habit.name)
+                        csvString += "\(name),\(habit.color),\(habit.icon),\(habit.frequencyType),\(habit.goalType),\(checkin.dateString),\(checkin.amount)\n"
+                    }
+                }
+            }
+            
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("LittleHabit_Excel_Data.csv")
+            try csvString.write(to: url, atomically: true, encoding: .utf8)
+            return url
+        } catch {
+            print("Export Excel error: \(error)")
+            return nil
+        }
+    }
+    
+    private func csvEscape(_ string: String) -> String {
+        if string.contains(",") || string.contains("\"") || string.contains("\n") {
+            return "\"\(string.replacingOccurrences(of: "\"", with: "\"\""))\""
+        }
+        return string
+    }
+    
     func importData(from url: URL, modelContext: ModelContext) {
         guard url.startAccessingSecurityScopedResource() else { return }
         defer { url.stopAccessingSecurityScopedResource() }

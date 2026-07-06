@@ -8,44 +8,54 @@ struct ArchivedHabitsView: View {
     @Query(filter: #Predicate<Habit> { $0.isArchived == true }, sort: \Habit.order) private var habits: [Habit]
     
     var body: some View {
-        ZStack {
-            Color.clear.ignoresSafeArea()
-            
-            ScrollView {
-                if habits.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "archivebox")
-                            .font(.system(size: 48))
-                            .foregroundColor(DS.outline)
-                        Text("No archived habits.".tr(appSettings.resolvedLanguage))
-                            .bodyLg()
-                            .foregroundColor(DS.onSurfaceVariant)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 100)
-                } else {
-                    LazyVStack(spacing: 16) {
-                        ForEach(habits) { habit in
-                            NavigationLink(value: habit) {
-                                ArchivedHabitCard(habit: habit)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                    }
-                    .padding(.horizontal, DS.spacingL)
-                    .padding(.top, DS.spacingM)
+        ScrollView {
+            if habits.isEmpty {
+                VStack(spacing: 16) {
+                    Image(systemName: "archivebox")
+                        .font(.system(size: 48))
+                        .foregroundColor(DS.outline)
+                    Text("No archived habits.".tr(appSettings.resolvedLanguage))
+                        .bodyLg()
+                        .foregroundColor(DS.onSurfaceVariant)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 100)
+            } else {
+                LazyVStack(spacing: 16) {
+                    ForEach(habits) { habit in
+                        NavigationLink(value: habit) {
+                            ArchivedHabitCard(habit: habit)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, DS.spacingM)
             }
         }
         .background(AmbientBackground())
         .navigationTitle("Archived Habits".tr(appSettings.resolvedLanguage))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
     }
 }
 
 struct ArchivedHabitCard: View {
     let habit: Habit
     @EnvironmentObject private var appSettings: AppSettings
+    
+    private var targetText: String {
+        let lang = appSettings.resolvedLanguage
+        let freqStr = habit.frequencyType == "weekly" ? "周".tr(lang) : "月".tr(lang)
+        if habit.goalType == "amount" {
+            let formattedVal = habit.amountValue.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", habit.amountValue) : String(format: "%.1f", habit.amountValue)
+            let unitStr = habit.amountUnit.tr(lang)
+            return "\("目标: ".tr(lang))\(formattedVal) \(unitStr) / \(freqStr)"
+        } else {
+            let targetVal = habit.frequencyType == "weekly" ? habit.weeklyTarget : habit.monthlyTarget
+            return "\("目标: ".tr(lang))\(targetVal) \("次".tr(lang)) / \(freqStr)"
+        }
+    }
     
     var body: some View {
         HStack(spacing: DS.spacingM) {
@@ -62,7 +72,7 @@ struct ArchivedHabitCard: View {
                 Text(habit.name)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(DS.onSurface)
-                Text(habit.frequencyType == "weekly" ? "Weekly".tr(appSettings.resolvedLanguage) : "Monthly".tr(appSettings.resolvedLanguage))
+                Text(targetText)
                     .bodyMd()
                     .foregroundColor(DS.onSurfaceVariant)
             }
@@ -80,5 +90,4 @@ struct ArchivedHabitCard: View {
         )
         .shadow(color: DS.primary.opacity(0.05), radius: 10, x: 0, y: 4)
     }
-}
 }

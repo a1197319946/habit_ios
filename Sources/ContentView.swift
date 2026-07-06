@@ -44,42 +44,37 @@ struct ContentView: View {
         )
         
         AppLockView {
-        NavigationStack {
             TabView(selection: proxySelection) {
                 Tab(AppTab.home.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.home.iconName, value: .home) {
-                    HomeView(selectedTab: proxySelection)
+                    TabNavStack {
+                        HomeView(selectedTab: proxySelection)
+                    }
                 }
                 
                 Tab(AppTab.habits.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.habits.iconName, value: .habits) {
-                    HabitListView()
+                    TabNavStack {
+                        HabitListView()
+                    }
                 }
                 
                 Tab(AppTab.stats.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.stats.iconName, value: .stats) {
-                    StatisticsView()
+                    TabNavStack {
+                        StatisticsView()
+                    }
                 }
                 
                 Tab(AppTab.settings.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.settings.iconName, value: .settings, role: .search) {
                     Color.clear // Placeholder
                 }
             }
-            .tabViewStyle(.sidebarAdaptable)
             .tint(DS.primary)
+            .onAppear {
+                appSettings.applyTheme()
+            }
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
                     .presentationDragIndicator(.visible)
             }
-            .navigationDestination(for: Habit.self) { habit in
-                HabitStatsDetailView(habit: habit)
-            }
-            .navigationDestination(for: HabitMonthRoute.self) { route in
-                HabitMonthDetailView(habit: route.habit, year: route.year, month: route.month)
-            }
-            .navigationDestination(for: String.self) { route in
-                if route == "archived_habits" {
-                    ArchivedHabitsView()
-                }
-            }
-        }
         }
         .sheet(isPresented: $appSettings.showPaywall) {
             PaywallView()
@@ -139,7 +134,7 @@ struct RetentionOfferSheet: View {
                     .foregroundColor(DS.onSurface)
                 
                 VStack(spacing: DS.spacingS) {
-                    Text("15 天免费试用")
+                    Text("15 天免费试用".tr(appSettings.resolvedLanguage))
                         .font(.system(size: 24, weight: .black))
                         .foregroundColor(Color(hex: "D4AF37"))
                     
@@ -187,10 +182,32 @@ struct RetentionOfferSheet: View {
         .background(DS.bgPrimary)
         .cornerRadius(32)
         .shadow(color: Color.black.opacity(0.15), radius: 20, y: 10)
-        .padding(.horizontal, 24)
         .onAppear {
             let generator = UIImpactFeedbackGenerator(style: .medium)
             generator.impactOccurred()
         }
     }
 }
+
+struct TabNavStack<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+    
+    var body: some View {
+        NavigationStack {
+            content()
+                .toolbar(.visible, for: .tabBar)
+                .navigationDestination(for: Habit.self) { habit in
+                    HabitStatsDetailView(habit: habit)
+                }
+                .navigationDestination(for: String.self) { value in
+                    if value == "archived_habits" {
+                        ArchivedHabitsView()
+                    }
+                }
+                .navigationDestination(for: HabitMonthRoute.self) { route in
+                    HabitMonthDetailView(habit: route.habit, year: route.year, month: route.month)
+                }
+        }
+    }
+}
+

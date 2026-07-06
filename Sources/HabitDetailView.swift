@@ -42,7 +42,7 @@ struct HabitDetailView: View {
                     glassCard {
                         VStack(alignment: .leading, spacing: DS.spacingS) {
                             Text("What do you want to build?".tr(appSettings.resolvedLanguage))
-                                .labelMd()
+                                .font(.system(size: 14, weight: .bold))
                                 .foregroundColor(DS.onSurfaceVariant)
                             
                             HStack {
@@ -68,7 +68,7 @@ struct HabitDetailView: View {
                             // Color Picker
                             VStack(alignment: .leading, spacing: DS.spacingS) {
                                 Text("Pick a Theme Color".tr(appSettings.resolvedLanguage))
-                                    .labelMd()
+                                    .font(.system(size: 14, weight: .bold))
                                     .foregroundColor(DS.onSurfaceVariant)
                                 
                                 let colorPages = Constants.allColors.chunked(into: 18)
@@ -109,7 +109,7 @@ struct HabitDetailView: View {
                             // Icon Picker
                             VStack(alignment: .leading, spacing: DS.spacingS) {
                                 Text("Choose an Icon".tr(appSettings.resolvedLanguage))
-                                    .labelMd()
+                                    .font(.system(size: 14, weight: .bold))
                                     .foregroundColor(DS.onSurfaceVariant)
                                 
                                 let iconPages = Constants.allIcons.chunked(into: 18)
@@ -123,7 +123,7 @@ struct HabitDetailView: View {
                                                 }) {
                                                     ZStack {
                                                         Circle()
-                                                            .fill(icon == iconName ? DS.primaryContainer : DS.surfaceContainerLow)
+                                                            .fill(icon == iconName ? Color(hex: colorHex).opacity(0.15) : DS.surfaceContainerLow)
                                                             .frame(width: 36, height: 36)
                                                             .overlay(
                                                                 Circle()
@@ -132,7 +132,7 @@ struct HabitDetailView: View {
                                                         
                                                         Image(systemName: iconName)
                                                             .font(.system(size: 16))
-                                                            .foregroundColor(icon == iconName ? DS.onPrimaryContainer : DS.onSurfaceVariant)
+                                                            .foregroundColor(icon == iconName ? Color(hex: colorHex) : DS.onSurfaceVariant)
                                                     }
                                                 }
                                             }
@@ -153,28 +153,28 @@ struct HabitDetailView: View {
                             
                             VStack(alignment: .leading, spacing: DS.spacingS) {
                                 Text("Goal Type".tr(appSettings.resolvedLanguage))
-                                    .labelMd()
+                                    .font(.system(size: 14, weight: .bold))
                                     .foregroundColor(DS.onSurfaceVariant)
                                 
                                 HStack(spacing: 0) {
                                     Button(action: { withAnimation { goalType = "frequency" } }) {
                                         Text("次数目标".tr(appSettings.resolvedLanguage))
-                                            .labelMd()
+                                            .font(.system(size: 16, weight: .medium))
                                             .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 10)
+                                            .padding(.vertical, 14)
                                             .background(goalType == "frequency" ? DS.surface : Color.clear)
-                                            .foregroundColor(goalType == "frequency" ? DS.primary : DS.onSurfaceVariant)
+                                            .foregroundColor(goalType == "frequency" ? DS.onSurface : DS.onSurfaceVariant)
                                             .cornerRadius(8)
                                             .shadow(color: goalType == "frequency" ? .black.opacity(0.05) : .clear, radius: 2, x: 0, y: 1)
                                     }
                                     
                                     Button(action: { withAnimation { goalType = "amount" } }) {
                                         Text("总量目标".tr(appSettings.resolvedLanguage))
-                                            .labelMd()
+                                            .font(.system(size: 16, weight: .medium))
                                             .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 10)
+                                            .padding(.vertical, 14)
                                             .background(goalType == "amount" ? DS.surface : Color.clear)
-                                            .foregroundColor(goalType == "amount" ? DS.primary : DS.onSurfaceVariant)
+                                            .foregroundColor(goalType == "amount" ? DS.onSurface : DS.onSurfaceVariant)
                                             .cornerRadius(8)
                                             .shadow(color: goalType == "amount" ? .black.opacity(0.05) : .clear, radius: 2, x: 0, y: 1)
                                     }
@@ -186,22 +186,22 @@ struct HabitDetailView: View {
                                 HStack(spacing: 0) {
                                     Button(action: { withAnimation { frequencyType = "weekly" } }) {
                                         Text("Per Week".tr(appSettings.resolvedLanguage))
-                                            .labelMd()
+                                            .font(.system(size: 16, weight: .medium))
                                             .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 10)
+                                            .padding(.vertical, 14)
                                             .background(frequencyType == "weekly" ? DS.surface : Color.clear)
-                                            .foregroundColor(frequencyType == "weekly" ? DS.primary : DS.onSurfaceVariant)
+                                            .foregroundColor(frequencyType == "weekly" ? DS.onSurface : DS.onSurfaceVariant)
                                             .cornerRadius(8)
                                             .shadow(color: frequencyType == "weekly" ? .black.opacity(0.05) : .clear, radius: 2, x: 0, y: 1)
                                     }
                                     
                                     Button(action: { withAnimation { frequencyType = "monthly" } }) {
                                         Text("Per Month".tr(appSettings.resolvedLanguage))
-                                            .labelMd()
+                                            .font(.system(size: 16, weight: .medium))
                                             .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 10)
+                                            .padding(.vertical, 14)
                                             .background(frequencyType == "monthly" ? DS.surface : Color.clear)
-                                            .foregroundColor(frequencyType == "monthly" ? DS.primary : DS.onSurfaceVariant)
+                                            .foregroundColor(frequencyType == "monthly" ? DS.onSurface : DS.onSurfaceVariant)
                                             .cornerRadius(8)
                                             .shadow(color: frequencyType == "monthly" ? .black.opacity(0.05) : .clear, radius: 2, x: 0, y: 1)
                                     }
@@ -215,7 +215,7 @@ struct HabitDetailView: View {
                             VStack(alignment: .leading, spacing: DS.spacingS) {
                                 if goalType == "frequency" {
                                     Text(frequencyType == "weekly" ? "Weekly Target".tr(appSettings.resolvedLanguage) : "Monthly Target".tr(appSettings.resolvedLanguage))
-                                        .labelMd()
+                                        .font(.system(size: 14, weight: .bold))
                                         .foregroundColor(DS.onSurfaceVariant)
                                     
                                     if frequencyType == "weekly" {
@@ -233,7 +233,7 @@ struct HabitDetailView: View {
                                                     .font(.system(size: 24, weight: .bold))
                                                     .foregroundColor(DS.onSurface)
                                                 Text("Times".tr(appSettings.resolvedLanguage))
-                                                    .labelSm()
+                                                    .font(.system(size: 15, weight: .medium))
                                                     .foregroundColor(DS.onSurfaceVariant)
                                             }
                                             Spacer()
@@ -264,7 +264,7 @@ struct HabitDetailView: View {
                                                     .font(.system(size: 24, weight: .bold))
                                                     .foregroundColor(DS.onSurface)
                                                 Text("Times".tr(appSettings.resolvedLanguage))
-                                                    .labelSm()
+                                                    .font(.system(size: 15, weight: .medium))
                                                     .foregroundColor(DS.onSurfaceVariant)
                                             }
                                             Spacer()
@@ -283,7 +283,7 @@ struct HabitDetailView: View {
                                     }
                                 } else {
                                     Text(frequencyType == "weekly" ? "Weekly Target Amount".tr(appSettings.resolvedLanguage) : "Monthly Target Amount".tr(appSettings.resolvedLanguage))
-                                        .labelMd()
+                                        .font(.system(size: 14, weight: .bold))
                                         .foregroundColor(DS.onSurfaceVariant)
                                         
                                     HStack {
@@ -311,7 +311,7 @@ struct HabitDetailView: View {
                     
                     Spacer().frame(height: 100) // Give space for bottom sticky button
                 }
-                .padding(.horizontal, DS.spacingL)
+                .padding(.horizontal, 16)
                 .padding(.top, 12)
             }
             
@@ -426,7 +426,7 @@ struct HabitDetailView: View {
     
     private func glassCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         content()
-            .padding(DS.spacingL)
+            .padding(16)
             .background(
                 DS.surface.opacity(0.7)
             )
@@ -437,48 +437,5 @@ struct HabitDetailView: View {
                     .stroke(DS.outline, lineWidth: 1)
             )
             .shadow(color: DS.primary.opacity(0.08), radius: 20, x: 0, y: 10)
-    }
-}
-
-struct HabitSection<Content: View>: View {
-    let title: String
-    let content: Content
-    
-    init(title: String, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.content = content()
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: DS.spacingS) {
-            Text(title)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(DS.onSurfaceVariant)
-                .padding(.horizontal, DS.spacingL)
-                .padding(.leading, 8)
-            
-            VStack(spacing: DS.spacingS) {
-                content
-            }
-            .padding(DS.spacingL)
-            .background(
-                DS.surface.opacity(0.7)
-            )
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(DS.outlineVariant, lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 5)
-            .padding(.horizontal, DS.spacingL)
-        }
-    }
-}
-                    .stroke(DS.outlineVariant, lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 5)
-            .padding(.horizontal, DS.spacingL)
-        }
     }
 }

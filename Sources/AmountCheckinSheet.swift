@@ -41,8 +41,7 @@ struct AmountCheckinSheet: View {
     }
     
     private var periodTarget: Double {
-        let frequencyTarget = habit.frequencyType == "weekly" ? habit.weeklyTarget : habit.monthlyTarget
-        return Double(frequencyTarget) * habit.amountValue
+        return habit.amountValue
     }
     
     private var isEditing: Bool {
@@ -159,7 +158,7 @@ struct AmountCheckinSheet: View {
         .background(DS.surface)
         .presentationDetents([.height(640)])
         .onAppear {
-            if let initial = initialAmount, initial > 0 {
+            if isEditing, let initial = initialAmount, initial > 0 {
                 amountString = formatDouble(initial)
             } else {
                 amountString = ""

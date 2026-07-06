@@ -56,6 +56,22 @@ class AppSettings: ObservableObject {
         case .dark: return .dark
         }
     }
+    
+    func applyTheme() {
+        DispatchQueue.main.async {
+            for scene in UIApplication.shared.connectedScenes {
+                if let windowScene = scene as? UIWindowScene {
+                    for window in windowScene.windows {
+                        switch self.themeMode {
+                        case .system: window.overrideUserInterfaceStyle = .unspecified
+                        case .light: window.overrideUserInterfaceStyle = .light
+                        case .dark: window.overrideUserInterfaceStyle = .dark
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     var locale: Locale? {
         if language == .system {
@@ -80,7 +96,7 @@ class AppSettings: ObservableObject {
         return language
     }
 }
-
+// 新增多语言的时候务必查询 是否已经有了这个多语言标签，如有则用现有的，没有再新增！
 extension String {
     func tr(_ lang: AppLanguage) -> String {
         let translations: [String: [AppLanguage: String]] = [
@@ -139,6 +155,8 @@ extension String {
             "New Habit": [.chinese: "新增习惯", .english: "New Habit"],
             "Edit Habit": [.chinese: "编辑习惯", .english: "Edit Habit"],
             "Record Mood": [.chinese: "记录心情", .english: "Record Mood"],
+            "记录心情": [.chinese: "记录心情", .english: "Record Mood"],
+            "Track your daily progress": [.chinese: "记录你的每日进步", .english: "Track your daily progress"],
             "Generate Sharing Image": [.chinese: "生成分享图", .english: "Generate Sharing Image"],
             "公里": [.chinese: "公里", .english: "km"],
             "米": [.chinese: "米", .english: "m"],
@@ -148,8 +166,10 @@ extension String {
             "页": [.chinese: "页", .english: "pages"],
             "天": [.chinese: "天", .english: "days"],
             "周": [.chinese: "周", .english: "week"],
-            "本周": [.chinese: "本周", .english: "This week"],
-            "本月": [.chinese: "本月", .english: "This month"],
+            "本周": [.chinese: "本周", .english: "This Week"],
+            "本月": [.chinese: "本月", .english: "This Month"],
+            "周目标": [.chinese: "周目标", .english: "Weekly Target"],
+            "月目标": [.chinese: "月目标", .english: "Monthly Target"],
             "月": [.chinese: "月", .english: "month"],
             "App Locked": [.chinese: "应用已锁定", .english: "App Locked"],
             "Unlock": [.chinese: "解锁", .english: "Unlock"],
@@ -180,6 +200,13 @@ extension String {
 
             "Hide Archived": [.chinese: "隐藏归档", .english: "Hide Archived"],
             "Statistics Overview": [.chinese: "统计概览", .english: "Statistics Overview"],
+            "统计概览": [.chinese: "统计概览", .english: "Statistics Overview"],
+            "15 天免费试用": [.chinese: "15 天免费试用", .english: "15-Day Free Trial"],
+            "习惯名称": [.chinese: "习惯名称", .english: "Habit Name"],
+            "颜色和图标": [.chinese: "颜色和图标", .english: "Color and Icon"],
+            "颜色": [.chinese: "颜色", .english: "Color"],
+            "图标": [.chinese: "图标", .english: "Icon"],
+            "目标规则": [.chinese: "目标规则", .english: "Goal Rules"],
             " Times": [.chinese: "次", .english: " Times"],
             " Month": [.chinese: "月", .english: " Month"],
             " Year": [.chinese: " 年", .english: " Year"],
@@ -210,6 +237,8 @@ extension String {
 
             "Frequency Goal": [.chinese: "次数目标", .english: "Frequency Goal"],
             "Amount Goal": [.chinese: "总量目标", .english: "Amount Goal"],
+            "次数目标": [.chinese: "次数目标", .english: "Frequency Goal"],
+            "总量目标": [.chinese: "总量目标", .english: "Amount Goal"],
 
             "打卡天数": [.chinese: "打卡天数", .english: "Check-in Days"],
             "总数值": [.chinese: "总数值", .english: "Total Amount"],
@@ -259,6 +288,18 @@ extension String {
             "Monthly": [.chinese: "月", .english: "Monthly"],
             "Yearly": [.chinese: "年", .english: "Yearly"],
             "All": [.chinese: "全部", .english: "All"],
+            "Weekly View": [.chinese: "周视图", .english: "Weekly View"],
+            "Monthly View": [.chinese: "月视图", .english: "Monthly View"],
+            "Yearly View": [.chinese: "年视图", .english: "Yearly View"],
+            "All View": [.chinese: "全部视图", .english: "All View"],
+            "times": [.chinese: "次", .english: "times"],
+            "Delete Habit?": [.chinese: "确认删除?", .english: "Delete Habit?"],
+            "Saved to Album": [.chinese: "已保存到相册", .english: "Saved to Album"],
+            "OK": [.chinese: "好的", .english: "OK"],
+            "Tap '+' in top left, search 'Little Habit', and tap 'Add Widget'.": [.chinese: "点击左上角的“+”按钮，搜索“Little Habit”，点击“添加小组件”按钮", .english: "Tap '+' in top left, search 'Little Habit', and tap 'Add Widget'."],
+            "Choose your favorite widget size and place it on your Home Screen.": [.chinese: "选择合适的小组件样式并放置到主屏幕上", .english: "Choose your favorite widget size and place it on your Home Screen."],
+            "Basic Info": [.chinese: "基本信息", .english: "Basic Info"],
+            "Goal Rules": [.chinese: "目标规则", .english: "Goal Rules"],
             "Habit": [.chinese: "习惯", .english: "Habit"],
             "No habits found.": [.chinese: "暂无习惯", .english: "No habits found."],
             "Cumulative Streak": [.chinese: "累计连续打卡", .english: "Cumulative Streak"],
@@ -315,6 +356,9 @@ extension String {
             "iCloud Sync": [.chinese: "iCloud 同步", .english: "iCloud Sync"],
             "Import Data": [.chinese: "导入数据", .english: "Import Data"],
             "Export Data": [.chinese: "导出数据", .english: "Export Data"],
+            "Export Excel Data": [.chinese: "导出数据", .english: "Export Data"],
+            "导出成功！": [.chinese: "导出成功！", .english: "Export Successful!"],
+            "Export Successful!": [.chinese: "导出成功！", .english: "Export Successful!"],
             "Terms of Service": [.chinese: "使用条款", .english: "Terms of Service"],
             "Privacy Policy": [.chinese: "隐私政策", .english: "Privacy Policy"],
             "On": [.chinese: "开启", .english: "On"],
@@ -395,7 +439,21 @@ struct LittleHabitTrackerApp: App {
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            print("Could not create ModelContainer: \(error). Rebuilding store...")
+            let fileManager = FileManager.default
+            try? fileManager.removeItem(at: sharedStoreURL)
+            let shmURL = sharedStoreURL.deletingPathExtension().appendingPathExtension("store-shm")
+            let walURL = sharedStoreURL.deletingPathExtension().appendingPathExtension("store-wal")
+            try? fileManager.removeItem(at: shmURL)
+            try? fileManager.removeItem(at: walURL)
+            
+            do {
+                return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            } catch {
+                print("Failed to rebuild store: \(error). Using in-memory fallback.")
+                let fallbackConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+                return try! ModelContainer(for: schema, configurations: [fallbackConfig])
+            }
         }
     }()
 

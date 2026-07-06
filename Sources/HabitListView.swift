@@ -155,16 +155,16 @@ struct HabitListView: View {
             }
         }
         .background(AmbientBackground())
-        .alert("确认删除?", isPresented: $showDeleteAlert, presenting: habitToDelete) { habit in
-            Button("取消", role: .cancel) {
+        .alert("Delete Habit?".tr(appSettings.resolvedLanguage), isPresented: $showDeleteAlert, presenting: habitToDelete) { habit in
+            Button("Cancel".tr(appSettings.resolvedLanguage), role: .cancel) {
                 habitToDelete = nil
             }
-            Button("删除", role: .destructive) {
+            Button("Delete".tr(appSettings.resolvedLanguage), role: .destructive) {
                 deleteHabit(habit)
                 habitToDelete = nil
             }
         } message: { _ in
-            Text("删除后所有相关打卡数据将无法恢复。")
+            Text("Data irrecoverable after deletion.".tr(appSettings.resolvedLanguage))
         }
     }
     
@@ -172,6 +172,12 @@ struct HabitListView: View {
         withAnimation {
             if let index = localHabits.firstIndex(of: habit) {
                 localHabits.remove(at: index)
+            }
+            if let checkins = habit.checkins {
+                for c in checkins { modelContext.delete(c) }
+            }
+            if let moods = habit.moodRecords {
+                for m in moods { modelContext.delete(m) }
             }
             modelContext.delete(habit)
             try? modelContext.save()
@@ -250,7 +256,7 @@ struct HabitListCard: View {
                 
                 // Right Side: Last 30 Days Count
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(habit.checkinCountLast30Days) \("times".tr(appSettings.resolvedLanguage))")
+                    Text("\(habit.checkinCountLast30Days) \("次".tr(appSettings.resolvedLanguage))")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(habitColor)
                     

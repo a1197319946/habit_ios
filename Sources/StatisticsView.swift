@@ -315,6 +315,16 @@ struct StatisticsView: View {
                         
                         // Weekly Grid Card
                         VStack(alignment: .leading, spacing: DS.spacingM) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "square.grid.2x2.fill")
+                                    .foregroundColor(DS.primary)
+                                    .frame(width: 24)
+                                Text("Weekly View".tr(appSettings.resolvedLanguage))
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(DS.onSurface)
+                                Spacer()
+                            }
+                            
                             if habits.isEmpty {
                                 Text("No habits found.".tr(appSettings.resolvedLanguage))
                                     .foregroundColor(DS.onSurfaceVariant)
@@ -364,7 +374,7 @@ struct StatisticsView: View {
                                 }
                             }
                         }
-                        .padding(DS.spacingL)
+                        .padding(16)
                         .background(DS.surface.opacity(0.8))
                         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                         .padding(.horizontal, 16)
@@ -405,14 +415,12 @@ struct StatisticsView: View {
                                 }
                             }
                             .padding(.horizontal, 16)
-                            .padding(.top, DS.spacingS)
                             
                             DonutChartCard(
                                 habits: habits,
                                 periodCheckins: currentPeriodCheckins,
                                 appSettings: appSettings
                             )
-                            .padding(.top, 8)
                             
                             MonthGridCard(habits: habits, checkins: checkins, appSettings: appSettings, currentMonthDate: $currentMonthDate)
                         } else if selectedTab == "Yearly" {
@@ -451,14 +459,12 @@ struct StatisticsView: View {
                                 }
                             }
                             .padding(.horizontal, 16)
-                            .padding(.top, DS.spacingS)
                             
                             DonutChartCard(
                                 habits: habits,
                                 periodCheckins: currentPeriodCheckins,
                                 appSettings: appSettings
                             )
-                            .padding(.top, 8)
                             
                             YearChartCard(habits: habits, checkins: checkins, appSettings: appSettings, currentYear: $currentYear)
                         } else if selectedTab == "All" {
@@ -467,7 +473,6 @@ struct StatisticsView: View {
                                 periodCheckins: currentPeriodCheckins,
                                 appSettings: appSettings
                             )
-                            .padding(.top, DS.spacingS)
                             
                             AllChartCard(habits: habits, checkins: checkins, appSettings: appSettings)
                         }
@@ -583,7 +588,17 @@ struct MonthGridCard: View {
     }
     
     var body: some View {
-        VStack(spacing: DS.spacingM) {
+        VStack(alignment: .leading, spacing: DS.spacingM) {
+            HStack(spacing: 6) {
+                Image(systemName: "square.grid.2x2.fill")
+                    .foregroundColor(DS.primary)
+                    .frame(width: 24)
+                Text("Monthly View".tr(appSettings.resolvedLanguage))
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(DS.onSurface)
+                Spacer()
+            }
+            
             // Grid
             VStack(spacing: 12) {
                 // Weekday headers
@@ -642,7 +657,7 @@ struct MonthGridCard: View {
                 }
             }
         }
-        .padding(DS.spacingL)
+        .padding(16)
         .background(DS.surface.opacity(0.8))
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
@@ -687,7 +702,17 @@ struct YearChartCard: View {
     }
     
     var body: some View {
-        VStack(spacing: DS.spacingL) {
+        VStack(alignment: .leading, spacing: DS.spacingL) {
+            HStack(spacing: 6) {
+                Image(systemName: "square.grid.2x2.fill")
+                    .foregroundColor(DS.primary)
+                    .frame(width: 24)
+                Text("Yearly View".tr(appSettings.resolvedLanguage))
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(DS.onSurface)
+                Spacer()
+            }
+            
             if chartData.isEmpty {
                 Text("No data".tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurfaceVariant)
@@ -724,10 +749,10 @@ struct YearChartCard: View {
             
 
         }
-        .padding(DS.spacingL)
+        .padding(16)
         .background(DS.surface.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 20)
     }
 }
 
@@ -756,7 +781,17 @@ struct AllChartCard: View {
     }
     
     var body: some View {
-        VStack(spacing: DS.spacingL) {
+        VStack(alignment: .leading, spacing: DS.spacingL) {
+            HStack(spacing: 6) {
+                Image(systemName: "square.grid.2x2.fill")
+                    .foregroundColor(DS.primary)
+                    .frame(width: 24)
+                Text("All View".tr(appSettings.resolvedLanguage))
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(DS.onSurface)
+                Spacer()
+            }
+            
             if chartData.isEmpty {
                 Text("No data".tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurfaceVariant)
@@ -791,10 +826,10 @@ struct AllChartCard: View {
                 .frame(height: 220)
             }
         }
-        .padding(DS.spacingL)
+        .padding(16)
         .background(DS.surface.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 20)
     }
 }
 
@@ -909,6 +944,6 @@ struct DonutChartCard: View {
         .padding(16)
         .background(DS.surface.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 20)
     }
 }
