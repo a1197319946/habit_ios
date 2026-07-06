@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
+import WidgetKit
 
 struct MoodRecorderView: View {
     @Environment(\.modelContext) private var modelContext
@@ -235,6 +236,7 @@ struct MoodRecorderView: View {
         }
         modelContext.insert(record)
         try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
         dismiss()
     }
 }

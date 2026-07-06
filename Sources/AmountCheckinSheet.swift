@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 struct AmountCheckinSheet: View {
     @Environment(\.modelContext) private var modelContext
@@ -191,6 +192,7 @@ struct AmountCheckinSheet: View {
                 modelContext.insert(newCheckin)
             }
             try? modelContext.save()
+            WidgetCenter.shared.reloadAllTimelines()
             isFocused = false
             onComplete()
             dismiss()

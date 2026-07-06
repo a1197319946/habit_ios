@@ -149,6 +149,7 @@ struct HomeView: View {
             }
             try? modelContext.save()
             NotificationManager.shared.updateAllReminders(habits: habits)
+            WidgetCenter.shared.reloadAllTimelines()
         }
         // Overlays & Sheets
         .sheet(isPresented: $showingSuccessModal) {

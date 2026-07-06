@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import WidgetKit
 
 struct BackupData: Codable {
     var habits: [BackupHabit]
@@ -170,6 +171,7 @@ class DataBackupManager {
             }
             
             try modelContext.save()
+            WidgetCenter.shared.reloadAllTimelines()
             
         } catch {
             print("Import error: \(error)")

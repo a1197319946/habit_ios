@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐私政策 - 小习惯 (Little Habit Tracker)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0F172A;
+            --bg-secondary: #1E293B;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --accent: #38BDF8;
+            --accent-gradient: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%);
+            --border: rgba(255, 255, 255, 0.1);
+            --shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            --radius: 20px;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #F8FAFC;
+            --bg-secondary: #F1F5F9;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --accent: #0284C7;
+            --accent-gradient: linear-gradient(135deg, #0284C7 0%, #4F46E5 100%);
+            --border: rgba(0, 0, 0, 0.08);
+            --shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Background Glow */
+        .glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(129, 140, 248, 0) 70%);
+            top: -200px;
+            right: -150px;
+            z-index: -1;
+            pointer-events: none;
+            animation: float 12s infinite alternate ease-in-out;
+        }
+
+        .glow-2 {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(129, 140, 248, 0.12) 0%, rgba(56, 189, 248, 0) 70%);
+            bottom: -150px;
+            left: -100px;
+            z-index: -1;
+            pointer-events: none;
+            animation: float 15s infinite alternate-reverse ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 50px) scale(1.1); }
+        }
+
+        header {
+            padding: 2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+        }
+
+        main {
+            max-width: 900px;
+            margin: 2rem auto 5rem;
+            padding: 0 5%;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .content-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 3rem;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        section {
+            margin-bottom: 2.5rem;
+        }
+
+        section:last-child {
+            margin-bottom: 0;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 24px;
+            background: var(--accent-gradient);
+            border-radius: 4px;
+        }
+
+        p, li {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        ul {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: rgba(56, 189, 248, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 1.2rem;
+            border-radius: 0 12px 12px 0;
+            margin: 1.5rem 0;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 5%;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.2rem; }
+            .content-card { padding: 1.8rem; }
+            header { flex-direction: column; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="glow"></div>
+    <div class="glow-2"></div>
+
+    <header>
+        <a href="support.html" class="logo">
+            <div class="logo-icon">✨</div>
+            Little Habit
+        </a>
+        <div class="controls">
+            <a href="support.html" class="btn">技术支持 (Support)</a>
+            <button class="btn" id="themeToggle">🌓 切换主题</button>
+            <button class="btn" id="langToggle">🌐 EN/CN</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="hero">
+            <h1 id="pageTitle">隐私政策 (Privacy Policy)</h1>
+            <p id="pageSub">生效日期：2026年7月6日 | Effective Date: July 6, 2026</p>
+        </div>
+
+        <div class="content-card" id="contentCN">
+            <div class="highlight-box">
+                我们非常重视您的隐私。小习惯 (Little Habit Tracker) 遵循“本地优先 (Local-First)”的设计理念，您的核心日常习惯与打卡数据默认只储存在您的个人设备中。
+            </div>
+
+            <section>
+                <h2>1. 数据的收集与存储</h2>
+                <p>小习惯（以下简称“本应用”）是一款致力于帮助用户养成良好日常习惯的个人工具类应用。在您使用本应用的过程中，数据存储处理遵循以下原则：</p>
+                <ul>
+                    <li><strong>本地存储（默认）：</strong> 您创建的所有习惯名称、打卡记录、提醒设定及心情日记等数据，均通过 Apple 官方的 SwiftData / SQLite 技术加密存储于您本人的 iOS 设备本地空间。</li>
+                    <li><strong>iCloud 云端同步（可选）：</strong> 当您在应用内开启 iCloud 同步功能后，您的习惯数据将会通过 Apple 官方的 CloudKit 框架加密同步至您本人的 iCloud 私有数据库（Private Database）。开发者及任何第三方均无权、也无法访问或读取您的 iCloud 数据库内容。</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>2. 第三方服务与敏感信息</h2>
+                <p>我们郑重承诺，本应用不会向外部服务器主动收集或上传您的个人身份信息：</p>
+                <ul>
+                    <li><strong>无需注册账号：</strong> 本应用不需要您提供手机号、电子邮箱或真实姓名注册账号，打开即可完整体验。</li>
+                    <li><strong>无第三方广告追踪：</strong> 应用内不包含任何广告追踪 SDK 或用户行为画像分析代码。</li>
+                    <li><strong>内购与订阅交易：</strong> 应用内的会员订阅及买断服务完全通过 Apple StoreKit 2 官方内购系统处理。所有的支付凭证和扣款均由 Apple 掌管，我们不会收集、接触或保存您的任何信用卡或财务信息。</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>3. 通知与系统权限</h2>
+                <p>为了提供完整的打卡体验，应用可能会在您明确同意的前提下申请以下 iOS 系统权限：</p>
+                <ul>
+                    <li><strong>推送通知权限：</strong> 用于在您设定的时间向您发送习惯打卡提醒。所有通知调度均在本地完成，不受远程服务器控制。</li>
+                    <li><strong>相册访问权限（可选）：</strong> 仅当您在记录“心情日记”时选择从相册配图时使用。所选图片仅储存在您的本地设备和个人 iCloud 中，不会上传至任何公开服务器。</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>4. 您的数据控制权</h2>
+                <p>您对自己的所有数据拥有绝对的控制权：</p>
+                <ul>
+                    <li>您随时可以在应用内使用“导出数据 (CSV)”功能将所有打卡记录备份到本地。</li>
+                    <li>当您在设备上删除或卸载本应用时，存储于本地的习惯数据将被系统彻底擦除。如果开启了 iCloud，您也可以随时在 iOS 系统设置中管理或清除 iCloud 中的备份。</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. 隐私政策的更新与联系方式</h2>
+                <p>我们可能会根据产品升级或法律法规的要求适时更新本隐私政策。任何条款的更新都将在应用版本更新提示中加以说明。</p>
+                <p>如果您对本隐私政策有任何疑问、意见或建议，请随时通过邮件与我们取得联系：<br>
+                <strong>联系邮箱：</strong> <a href="mailto:support@littlehabit.app" style="color: var(--accent);">support@littlehabit.app</a></p>
+            </section>
+        </div>
+
+        <div class="content-card" id="contentEN" style="display: none;">
+            <div class="highlight-box">
+                We take your privacy seriously. Little Habit Tracker is built on a "Local-First" architecture. Your habits and check-in records are stored securely on your personal device by default.
+            </div>
+
+            <section>
+                <h2>1. Data Collection & Storage</h2>
+                <p>Little Habit Tracker ("the App") is designed to help you build positive daily habits. When you use the App, your data is handled under the following principles:</p>
+                <ul>
+                    <li><strong>Local Storage (Default):</strong> All habit names, check-in logs, reminder settings, and mood diaries you create are stored locally on your iOS device using Apple's secure SwiftData / SQLite framework.</li>
+                    <li><strong>iCloud Sync (Optional):</strong> If you enable iCloud Sync in the App settings, your data is encrypted and synced across your personal devices via Apple's CloudKit (Private Database). We (the developers) have zero access to your iCloud data.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>2. Third-Party Services & Privacy</h2>
+                <p>We are committed to keeping your personal data strictly private:</p>
+                <ul>
+                    <li><strong>No Account Required:</strong> You do not need to provide a phone number, email address, or real name to use the App.</li>
+                    <li><strong>No Tracking & Ads:</strong> The App does not include third-party advertising SDKs or behavioral tracking codes.</li>
+                    <li><strong>In-App Purchases:</strong> Premium subscriptions and lifetime purchases are processed securely through Apple's official StoreKit 2 system. We do not collect or store any credit card or financial details.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>3. System Permissions</h2>
+                <p>To deliver an optimal experience, the App may request the following iOS permissions with your explicit consent:</p>
+                <ul>
+                    <li><strong>Push Notifications:</strong> Used solely to send daily reminder alerts at your specified times. All reminders are scheduled locally on your device.</li>
+                    <li><strong>Photo Library (Optional):</strong> Only requested when you choose to attach an image to your mood diary. Attached photos remain strictly on your local storage and personal iCloud.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>4. Your Data Rights</h2>
+                <p>You retain full ownership and control over your data:</p>
+                <ul>
+                    <li>You can export your habit logs anytime using the built-in CSV export feature.</li>
+                    <li>Uninstalling the App will erase all local app data from your device. You can also manage or clear your encrypted cloud backups directly in your iOS iCloud settings.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. Contact Us</h2>
+                <p>If you have any questions, feedback, or concerns regarding this Privacy Policy, please do not hesitate to contact our support team:</p>
+                <p><strong>Email:</strong> <a href="mailto:support@littlehabit.app" style="color: var(--accent);">support@littlehabit.app</a></p>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Little Habit Tracker (小习惯). All rights reserved.</p>
+        <p style="margin-top: 5px;"><a href="support.html" style="color: var(--text-secondary); text-decoration: underline;">技术支持 (Support)</a></p>
+    </footer>
+
+    <script>
+        // Theme Switcher
+        const themeToggle = document.getElementById('themeToggle');
+        let isDark = true;
+        
+        themeToggle.addEventListener('click', () => {
+            isDark = !isDark;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeToggle.textContent = isDark ? '🌓 切换主题' : '☀️ 暗黑模式';
+        });
+
+        // Language Switcher
+        const langToggle = document.getElementById('langToggle');
+        const contentCN = document.getElementById('contentCN');
+        const contentEN = document.getElementById('contentEN');
+        const pageTitle = document.getElementById('pageTitle');
+        let isCN = true;
+
+        langToggle.addEventListener('click', () => {
+            isCN = !isCN;
+            if (isCN) {
+                contentCN.style.display = 'block';
+                contentEN.style.display = 'none';
+                pageTitle.textContent = '隐私政策 (Privacy Policy)';
+                langToggle.textContent = '🌐 English';
+            } else {
+                contentCN.style.display = 'none';
+                contentEN.style.display = 'block';
+                pageTitle.textContent = 'Privacy Policy';
+                langToggle.textContent = '🌐 中文';
+            }
+        });
+    </script>
+</body>
+</html>

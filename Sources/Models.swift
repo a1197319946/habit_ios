@@ -46,7 +46,7 @@ final class Checkin {
     
     @Relationship(inverse: \Habit.checkins) var habit: Habit?
     
-    init(dateString: String, amount: Double = 0.0) {
+    init(dateString: String, amount: Double = 1.0) {
         self.dateString = dateString
         self.amount = amount
     }

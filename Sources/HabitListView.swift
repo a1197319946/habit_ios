@@ -74,6 +74,7 @@ struct HabitListView: View {
                                         Button(action: {
                                             habit.isArchived = true
                                             try? modelContext.save()
+                                            WidgetCenter.shared.reloadAllTimelines()
                                         }) {
                                             Label("Archive".tr(appSettings.resolvedLanguage), systemImage: "archivebox")
                                         }
@@ -212,6 +213,7 @@ struct HabitDropDelegate: DropDelegate {
             habit.order = index
         }
         try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
         self.draggedHabit = nil
         return true
     }

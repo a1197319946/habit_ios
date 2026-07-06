@@ -42,31 +42,30 @@ extension String {
 }
 
 // MARK: - Providers
+@MainActor
+let widgetSharedModelContainer: ModelContainer = {
+    let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
+    let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") ?? URL.temporaryDirectory.appending(path: "widget.store")
+    let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
+    return try! ModelContainer(for: schema, configurations: [modelConfiguration])
+}()
+
+@MainActor
+func fetchFreshHabitsAndCheckins() -> ([Habit], [Checkin]) {
+    do {
+        let container = widgetSharedModelContainer
+        let habitDescriptor = FetchDescriptor<Habit>(predicate: #Predicate<Habit> { $0.isArchived == false }, sortBy: [SortDescriptor(\.order)])
+        let checkinDescriptor = FetchDescriptor<Checkin>()
+        let habits = (try? container.mainContext.fetch(habitDescriptor)) ?? []
+        let checkins = (try? container.mainContext.fetch(checkinDescriptor)) ?? []
+        return (habits, checkins)
+    } catch {
+        return ([] , [])
+    }
+}
+
 struct Provider: AppIntentTimelineProvider {
-    let modelContainer: ModelContainer
-    
-    init() {
-        let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
-        let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") ?? URL.temporaryDirectory.appending(path: "widget.store")
-        let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
-        do {
-            modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            let fallbackConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-            modelContainer = try! ModelContainer(for: schema, configurations: [fallbackConfig])
-        }
-    }
-    
-    @MainActor
-    func fetchHabits() -> [Habit] {
-        let descriptor = FetchDescriptor<Habit>(sortBy: [SortDescriptor(\.createdAt)])
-        return (try? modelContainer.mainContext.fetch(descriptor)) ?? []
-    }
-    
-    @MainActor
-    func fetchCheckins() -> [Checkin] {
-        return (try? modelContainer.mainContext.fetch(FetchDescriptor<Checkin>())) ?? []
-    }
+    init() {}
 
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry(date: Date(), configuration: SelectHabitIntent(), habits: [], checkins: [])
@@ -74,40 +73,32 @@ struct Provider: AppIntentTimelineProvider {
 
     @MainActor
     func snapshot(for configuration: SelectHabitIntent, in context: Context) async -> SimpleEntry {
-        SimpleEntry(date: Date(), configuration: configuration, habits: fetchHabits(), checkins: fetchCheckins())
+        let (habits, checkins) = fetchFreshHabitsAndCheckins()
+        return SimpleEntry(date: Date(), configuration: configuration, habits: habits, checkins: checkins)
     }
 
     @MainActor
     func timeline(for configuration: SelectHabitIntent, in context: Context) async -> Timeline<SimpleEntry> {
-        let entry = SimpleEntry(date: Date(), configuration: configuration, habits: fetchHabits(), checkins: fetchCheckins())
+        let (habits, checkins) = fetchFreshHabitsAndCheckins()
+        let entry = SimpleEntry(date: Date(), configuration: configuration, habits: habits, checkins: checkins)
         let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
         return Timeline(entries: [entry], policy: .after(nextUpdate))
     }
 }
 
 struct MultipleHabitsProvider: AppIntentTimelineProvider {
-    let modelContainer: ModelContainer
-    init() {
-        let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
-        let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") ?? URL.temporaryDirectory.appending(path: "widget.store")
-        do {
-            modelContainer = try ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, url: sharedStoreURL)])
-        } catch {
-            modelContainer = try! ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)])
-        }
-    }
-    
-    @MainActor func fetchHabits() -> [Habit] { return (try? modelContainer.mainContext.fetch(FetchDescriptor<Habit>())) ?? [] }
-    @MainActor func fetchCheckins() -> [Checkin] { return (try? modelContainer.mainContext.fetch(FetchDescriptor<Checkin>())) ?? [] }
+    init() {}
 
     func placeholder(in context: Context) -> MultipleHabitsEntry {
         MultipleHabitsEntry(date: Date(), configuration: SelectMultipleHabitsIntent(), habits: [], checkins: [])
     }
     @MainActor func snapshot(for configuration: SelectMultipleHabitsIntent, in context: Context) async -> MultipleHabitsEntry {
-        MultipleHabitsEntry(date: Date(), configuration: configuration, habits: fetchHabits(), checkins: fetchCheckins())
+        let (habits, checkins) = fetchFreshHabitsAndCheckins()
+        return MultipleHabitsEntry(date: Date(), configuration: configuration, habits: habits, checkins: checkins)
     }
     @MainActor func timeline(for configuration: SelectMultipleHabitsIntent, in context: Context) async -> Timeline<MultipleHabitsEntry> {
-        let entry = MultipleHabitsEntry(date: Date(), configuration: configuration, habits: fetchHabits(), checkins: fetchCheckins())
+        let (habits, checkins) = fetchFreshHabitsAndCheckins()
+        let entry = MultipleHabitsEntry(date: Date(), configuration: configuration, habits: habits, checkins: checkins)
         return Timeline(entries: [entry], policy: .after(Calendar.current.date(byAdding: .hour, value: 1, to: Date())!))
     }
 }
@@ -152,12 +143,9 @@ struct HabitEntityQuery: EntityQuery {
 
     @MainActor
     private func fetchAllHabits() -> [HabitEntity] {
-        let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
-        guard let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") else { return [] }
-        let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
         do {
-            let modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
-            let descriptor = FetchDescriptor<Habit>(sortBy: [SortDescriptor(\.createdAt)])
+            let modelContainer = widgetSharedModelContainer
+            let descriptor = FetchDescriptor<Habit>(predicate: #Predicate<Habit> { $0.isArchived == false }, sortBy: [SortDescriptor(\.order)])
             let habits = try modelContainer.mainContext.fetch(descriptor)
             return habits.map { HabitEntity(id: $0.id, name: $0.name, icon: $0.icon, color: $0.color) }
         } catch {
@@ -185,11 +173,8 @@ struct CheckinHabitIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult {
-        let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
-        guard let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") else { return .result() }
-        let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
         do {
-            let modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let modelContainer = widgetSharedModelContainer
             let descriptor = FetchDescriptor<Habit>()
             let habits = try modelContainer.mainContext.fetch(descriptor)
             if let targetHabit = habits.first(where: { $0.id == habitId }) {
@@ -201,10 +186,12 @@ struct CheckinHabitIntent: AppIntent {
                 }()
                 let descriptorCheckins = FetchDescriptor<Checkin>()
                 let allCheckins = try modelContainer.mainContext.fetch(descriptorCheckins)
-                let todays = allCheckins.filter { $0.habit?.id == habitId && $0.dateString == dateString }
+                let hc = targetHabit.checkins ?? []
+                let todaysFromHabit = hc.filter { $0.dateString == dateString }
+                let todaysFromGlobal = allCheckins.filter { $0.habit?.id == habitId && $0.dateString == dateString }
+                let todays = todaysFromHabit.isEmpty ? todaysFromGlobal : todaysFromHabit
                 let fillAmount = targetHabit.goalType == "amount" ? targetHabit.amountValue : 1
-                let totalAmount = todays.reduce(0, { $0 + $1.amount })
-                if totalAmount > 0 {
+                if !todays.isEmpty {
                     // Undo: Delete all checkin records for today to cleanly undo
                     todays.forEach { modelContainer.mainContext.delete($0) }
                 } else {
@@ -268,12 +255,10 @@ func isCheckedIn(habit: Habit, date: Date, checkins: [Checkin]) -> Bool {
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd"
     let dateStr = formatter.string(from: date)
-    let todays = checkins.filter { $0.habit?.id == habit.id && $0.dateString == dateStr }
-    if habit.goalType == "amount" {
-        return todays.reduce(0) { $0 + $1.amount } >= habit.amountValue
-    } else {
-        return todays.reduce(0) { $0 + $1.amount } > 0
+    if let hc = habit.checkins, hc.contains(where: { $0.dateString == dateStr }) {
+        return true
     }
+    return checkins.contains(where: { $0.habit?.id == habit.id && $0.dateString == dateStr })
 }
 
 func getCheckinsForPeriod(habit: Habit, date: Date, checkins: [Checkin]) -> Double {
@@ -300,8 +285,15 @@ func getCheckinsForPeriod(habit: Habit, date: Date, checkins: [Checkin]) -> Doub
     var curr = start
     while curr < end {
         let dateStr = formatter.string(from: curr)
-        let todays = checkins.filter { $0.habit?.id == habit.id && $0.dateString == dateStr }
-        sum += todays.reduce(0) { $0 + $1.amount }
+        let hc = habit.checkins ?? []
+        let todaysFromHabit = hc.filter { $0.dateString == dateStr }
+        let todaysFromGlobal = checkins.filter { $0.habit?.id == habit.id && $0.dateString == dateStr }
+        let todays = todaysFromHabit.isEmpty ? todaysFromGlobal : todaysFromHabit
+        if habit.goalType == "amount" {
+            sum += todays.reduce(0) { $0 + $1.amount }
+        } else {
+            sum += todays.isEmpty ? 0 : 1
+        }
         curr = calendar.date(byAdding: .day, value: 1, to: curr)!
     }
     return sum
@@ -313,7 +305,7 @@ struct MultiHabitCheckinWidgetView: View {
     var entry: MultipleHabitsEntry
     var body: some View {
         let selectedIds = entry.configuration.habits?.map { $0.id } ?? []
-        let selectedHabits = Array(entry.habits.filter { selectedIds.contains($0.id) }.prefix(3))
+        let selectedHabits = selectedIds.isEmpty ? Array(entry.habits.prefix(3)) : Array(entry.habits.filter { selectedIds.contains($0.id) }.prefix(3))
         
         VStack(spacing: 0) {
             if selectedHabits.isEmpty {
@@ -398,8 +390,6 @@ struct MonthCalendarWidgetView: View {
             return f.string(from: date)
         }()
         
-        let todayIsDone = isCheckedIn(habit: habit, date: Date(), checkins: checkins)
-        
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             VStack(spacing: 16) {
                 Text(monthStr).font(.system(size: 14, weight: .heavy)).foregroundColor(Color.primary).lineLimit(1).minimumScaleFactor(0.8).padding(.top, 4)
@@ -461,7 +451,7 @@ struct MultiHabitWeekWidgetView: View {
         let weekdays = lang == "zh" ? weekdaysZh : weekdaysEn
         
         let selectedIds = entry.configuration.habits?.map { $0.id } ?? []
-        let selectedHabits = Array(entry.habits.filter { selectedIds.contains($0.id) }.prefix(4))
+        let selectedHabits = selectedIds.isEmpty ? Array(entry.habits.prefix(4)) : Array(entry.habits.filter { selectedIds.contains($0.id) }.prefix(4))
         
         VStack(spacing: 8) {
             HStack(spacing: 6) {

@@ -72,9 +72,11 @@ struct StatisticsView: View {
     
     // Calculations for the 4 stat cards (based on current week)
     private var currentWeekCheckins: [Checkin] {
-        checkins.filter { checkin in
-            let date = checkin.timestamp
-            return weekDays.contains(where: { calendar.isDate($0, inSameDayAs: date) })
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        let weekDateStrings = Set(weekDays.map { df.string(from: $0) })
+        return checkins.filter { checkin in
+            weekDateStrings.contains(checkin.dateString)
         }
     }
     
@@ -83,16 +85,12 @@ struct StatisticsView: View {
         case "Weekly":
             return currentWeekCheckins
         case "Monthly":
-            let month = calendar.component(.month, from: currentMonthDate)
-            let year = calendar.component(.year, from: currentMonthDate)
-            return checkins.filter {
-                let comp = calendar.dateComponents([.year, .month], from: $0.timestamp)
-                return comp.year == year && comp.month == month
-            }
+            let df = DateFormatter()
+            df.dateFormat = "yyyy-MM"
+            let prefix = df.string(from: currentMonthDate)
+            return checkins.filter { $0.dateString.hasPrefix(prefix) }
         case "Yearly":
-            return checkins.filter {
-                calendar.component(.year, from: $0.timestamp) == currentYear
-            }
+            return checkins.filter { $0.dateString.hasPrefix("\(currentYear)") }
         case "All":
             return checkins
         default:
@@ -176,14 +174,7 @@ struct StatisticsView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         let dateString = formatter.string(from: date)
-        let dayCheckins = checkins.filter { $0.habit?.id == habit.id && $0.dateString == dateString }
-        
-        if habit.goalType == "amount" {
-            let sum = dayCheckins.reduce(0) { $0 + $1.amount }
-            return sum >= habit.amountValue
-        } else {
-            return !dayCheckins.isEmpty
-        }
+        return checkins.contains(where: { $0.habit?.id == habit.id && $0.dateString == dateString })
     }
     
     private func getNarrowDayString(for date: Date) -> String {
@@ -577,12 +568,7 @@ struct MonthGridCard: View {
         
         for habit in habits {
             let hChecks = dayCheckins.filter { $0.habit?.id == habit.id }
-            if habit.goalType == "amount" {
-                let sum = hChecks.reduce(0) { $0 + $1.amount }
-                if sum >= habit.amountValue { completed.append(habit) }
-            } else {
-                if !hChecks.isEmpty { completed.append(habit) }
-            }
+            if !hChecks.isEmpty { completed.append(habit) }
         }
         return completed
     }

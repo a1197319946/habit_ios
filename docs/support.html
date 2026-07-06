@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技术支持与帮助 - 小习惯 (Little Habit Tracker)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0F172A;
+            --bg-secondary: #1E293B;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --accent: #38BDF8;
+            --accent-gradient: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%);
+            --border: rgba(255, 255, 255, 0.1);
+            --shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            --radius: 20px;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #F8FAFC;
+            --bg-secondary: #F1F5F9;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --accent: #0284C7;
+            --accent-gradient: linear-gradient(135deg, #0284C7 0%, #4F46E5 100%);
+            --border: rgba(0, 0, 0, 0.08);
+            --shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(129, 140, 248, 0.15) 0%, rgba(56, 189, 248, 0) 70%);
+            top: -150px;
+            left: -150px;
+            z-index: -1;
+            pointer-events: none;
+            animation: float 14s infinite alternate ease-in-out;
+        }
+
+        .glow-2 {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0) 70%);
+            bottom: -150px;
+            right: -100px;
+            z-index: -1;
+            pointer-events: none;
+            animation: float 16s infinite alternate-reverse ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 50px) scale(1.1); }
+        }
+
+        header {
+            padding: 2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+        }
+
+        main {
+            max-width: 900px;
+            margin: 2rem auto 5rem;
+            padding: 0 5%;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .content-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 3rem;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 24px;
+            background: var(--accent-gradient);
+            border-radius: 4px;
+        }
+
+        /* FAQ Accordion */
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding: 1.2rem 0;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: color 0.3s ease;
+        }
+
+        .faq-question:hover {
+            color: var(--accent);
+        }
+
+        .faq-question::after {
+            content: '+';
+            font-size: 1.5rem;
+            font-weight: 400;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-item.active .faq-question::after {
+            transform: rotate(45deg);
+            color: var(--accent);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            padding-right: 2rem;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            margin-top: 0.8rem;
+        }
+
+        /* Contact Box */
+        .contact-box {
+            text-align: center;
+            padding: 2.5rem;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(129, 140, 248, 0.1) 100%);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .contact-box h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-box p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-btn {
+            display: inline-block;
+            background: var(--accent-gradient);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 10px 20px rgba(56, 189, 248, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(56, 189, 248, 0.4);
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 5%;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.2rem; }
+            .content-card { padding: 1.8rem; }
+            header { flex-direction: column; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="glow"></div>
+    <div class="glow-2"></div>
+
+    <header>
+        <a href="privacy.html" class="logo">
+            <div class="logo-icon">✨</div>
+            Little Habit
+        </a>
+        <div class="controls">
+            <a href="privacy.html" class="btn">隐私政策 (Privacy)</a>
+            <button class="btn" id="themeToggle">🌓 切换主题</button>
+            <button class="btn" id="langToggle">🌐 EN/CN</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="hero">
+            <h1 id="pageTitle">技术支持与常见问题 (Support & FAQ)</h1>
+            <p id="pageSub">小习惯 - 陪伴您的日常自律与成长 | Your Personal Habit & Mood Companion</p>
+        </div>
+
+        <!-- CN Content -->
+        <div id="contentCN">
+            <div class="content-card">
+                <h2>常见问题解答 (FAQ)</h2>
+                
+                <div class="faq-item">
+                    <div class="faq-question">1. 如何在不同设备之间同步我的习惯数据？</div>
+                    <div class="faq-answer">
+                        小习惯支持通过 Apple iCloud 进行云端同步。请确保您的所有 iOS 设备登录了相同的 Apple ID，并在应用底部的“设置”->“iCloud 同步”中开启同步开关。开启后，系统将在后台自动加密同步数据。
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">2. 桌面小组件 (Widget) 为什么未能直接刷新打卡状态？</div>
+                    <div class="faq-answer">
+                        iOS 系统为了保护续航，对小组件的后台刷新频率有限制。如果您在小组件上完成打卡，小组件会立即做出响应。如果在主应用中调整了数据，小组件通常会在数秒到数分钟内同步；您也可以重新打开一次应用，系统会立刻强制全量刷新所有桌面小组件。
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">3. 更换手机或重装应用后，如何恢复已购买的会员？</div>
+                    <div class="faq-answer">
+                        进入应用内的“设置”或“购买会员”页面，点击右上角或底部的“恢复购买 (Restore Purchases)”按钮。只要您的设备当前登录的 Apple ID 是此前购买时使用的账号，系统就会通过 Apple StoreKit 安全验证并直接为您恢复高级会员权益，无需重复购买。
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">4. 如何手动备份我长年累月的打卡记录？</div>
+                    <div class="faq-answer">
+                        请在“设置”页面中点击“导出数据 (CSV)”，您可以在弹出的系统菜单中将所有的打卡记录表格保存到“文件”App、发送到电脑或微信备份，确保您的习惯资产永久留存。
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <h2>联系技术支持团队</h2>
+                <div class="contact-box">
+                    <h3>遇到其他问题或有新功能建议？</h3>
+                    <p>我们的工程与设计团队非常重视每一位用户的体验。通过邮件联系我们，我们将在 24-48 小时内为您排忧解难！</p>
+                    <a href="mailto:support@littlehabit.app" class="contact-btn">✉️ 发送邮件给支持团队</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- EN Content -->
+        <div id="contentEN" style="display: none;">
+            <div class="content-card">
+                <h2>Frequently Asked Questions (FAQ)</h2>
+                
+                <div class="faq-item">
+                    <div class="faq-question">1. How do I sync my habit data across multiple Apple devices?</div>
+                    <div class="faq-answer">
+                        Little Habit Tracker supports seamless cloud sync via Apple iCloud. Ensure that all your iOS devices are signed into the same Apple ID, and enable the "iCloud Sync" toggle in the App's Settings tab. Your data will sync securely in the background.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">2. Why is my Home Screen Widget not updating immediately?</div>
+                    <div class="faq-answer">
+                        To preserve battery life, iOS regulates background widget refresh rates. When you check in directly on the widget, it updates instantly. If you make changes inside the main app, widgets usually refresh within moments; opening the main app will also force an immediate sync of all widgets.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">3. How do I restore my premium subscription or lifetime purchase?</div>
+                    <div class="faq-answer">
+                        Go to the App's Settings or Paywall screen and tap "Restore Purchases". As long as you are logged into the same Apple ID used for the original transaction, Apple StoreKit will securely verify and restore your premium access without double-charging you.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">4. Can I export or backup my habit records locally?</div>
+                    <div class="faq-answer">
+                        Yes! In the Settings tab, tap "Export Data (CSV)". You can save your full check-in history to iOS Files, AirDrop it to your Mac, or send it via email for safe, long-term safekeeping.
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <h2>Contact Support Team</h2>
+                <div class="contact-box">
+                    <h3>Need extra help or have a feature request?</h3>
+                    <p>We love hearing from our users! Send us an email and our engineering team will get back to you within 24-48 hours.</p>
+                    <a href="mailto:support@littlehabit.app" class="contact-btn">✉️ Email Support Team</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Little Habit Tracker (小习惯). All rights reserved.</p>
+        <p style="margin-top: 5px;"><a href="privacy.html" style="color: var(--text-secondary); text-decoration: underline;">隐私政策 (Privacy Policy)</a></p>
+    </footer>
+
+    <script>
+        // Theme Switcher
+        const themeToggle = document.getElementById('themeToggle');
+        let isDark = true;
+        
+        themeToggle.addEventListener('click', () => {
+            isDark = !isDark;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeToggle.textContent = isDark ? '🌓 切换主题' : '☀️ 暗黑模式';
+        });
+
+        // Language Switcher
+        const langToggle = document.getElementById('langToggle');
+        const contentCN = document.getElementById('contentCN');
+        const contentEN = document.getElementById('contentEN');
+        const pageTitle = document.getElementById('pageTitle');
+        let isCN = true;
+
+        langToggle.addEventListener('click', () => {
+            isCN = !isCN;
+            if (isCN) {
+                contentCN.style.display = 'block';
+                contentEN.style.display = 'none';
+                pageTitle.textContent = '技术支持与常见问题 (Support & FAQ)';
+                langToggle.textContent = '🌐 English';
+            } else {
+                contentCN.style.display = 'none';
+                contentEN.style.display = 'block';
+                pageTitle.textContent = 'Support & Help Center';
+                langToggle.textContent = '🌐 中文';
+            }
+        });
+
+        // FAQ Accordion
+        document.querySelectorAll('.faq-question').forEach(item => {
+            item.addEventListener('click', () => {
+                const parent = item.parentElement;
+                parent.classList.toggle('active');
+            });
+        });
+    </script>
+</body>
+</html>
