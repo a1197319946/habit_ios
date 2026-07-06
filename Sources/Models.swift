@@ -22,6 +22,10 @@ final class Habit {
     
     var createdAt: Date = Date()
     
+    var isReminderEnabled: Bool = false
+    var reminderTime: Date = Calendar.current.date(from: DateComponents(hour: 20, minute: 0)) ?? Date()
+    var reminderText: String = ""
+    
     // CloudKit requires relationships to be optional
     @Relationship(deleteRule: .cascade) var checkins: [Checkin]?
     @Relationship(deleteRule: .cascade) var moodRecords: [MoodRecord]?

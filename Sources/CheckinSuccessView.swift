@@ -316,7 +316,7 @@ struct PosterView: View {
     let todayAmount: Double
     let currentTotal: Double
     let unit: String
-    let appSettings: AppSettings
+    @ObservedObject var appSettings: AppSettings
     
     var body: some View {
         ZStack {

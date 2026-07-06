@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var exportURL: URL?
     @State private var showingWidgetGuide = false
     @State private var toastMessage: String? = nil
+    @ObservedObject private var cloudSyncManager = CloudSyncManager.shared
     
     var body: some View {
         NavigationView {
@@ -287,6 +288,36 @@ struct SettingsView: View {
                 } else {
                     withAnimation { appSettings.iCloudSyncEnabled.toggle() }
                 }
+            }
+            
+            if appSettings.iCloudSyncEnabled && appSettings.isPremium {
+                Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("iCloud 状态".tr(appSettings.resolvedLanguage))
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(DS.onSurfaceVariant)
+                        Text(cloudSyncManager.statusMessage.tr(appSettings.resolvedLanguage))
+                            .font(.system(size: 13))
+                            .foregroundColor(cloudSyncManager.accountStatus == .available ? .green : .orange)
+                    }
+                    Spacer()
+                    Button(action: {
+                        cloudSyncManager.statusMessage = "状态检查中..."
+                        cloudSyncManager.checkAccountStatus()
+                    }) {
+                        Text("立即检查同步".tr(appSettings.resolvedLanguage))
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(DS.primary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(DS.surfaceContainerLow)
+                            .cornerRadius(8)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
             }
             
             Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)

@@ -148,6 +148,7 @@ struct HomeView: View {
                 modelContext.delete(c)
             }
             try? modelContext.save()
+            NotificationManager.shared.updateAllReminders(habits: habits)
         }
         // Overlays & Sheets
         .sheet(isPresented: $showingSuccessModal) {
@@ -183,7 +184,10 @@ struct HomeView: View {
                     habit: habit,
                     selectedDate: selectedDate,
                     initialAmount: initialAmountForSheet ?? 0,
-                    onComplete: { triggerSuccessSequence() }
+                    onComplete: {
+                        NotificationManager.shared.scheduleReminder(for: habit)
+                        triggerSuccessSequence()
+                    }
                 )
             }
         }
@@ -245,6 +249,7 @@ struct HomeView: View {
             checkin.habit = habit
             modelContext.insert(checkin)
             try? modelContext.save()
+            NotificationManager.shared.scheduleReminder(for: habit)
         WidgetCenter.shared.reloadAllTimelines()
             triggerSuccessSequence()
         }
@@ -257,6 +262,7 @@ struct HomeView: View {
             modelContext.delete(check)
         }
         try? modelContext.save()
+        NotificationManager.shared.scheduleReminder(for: habit)
         WidgetCenter.shared.reloadAllTimelines()
     }
     
@@ -525,6 +531,7 @@ struct WeeklySlider: View {
                 let isCheckedIn = checkins.contains(where: { $0.dateString == formatDate(date) && $0.habit != nil && $0.habit?.isArchived == false })
                 
                 Button(action: {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     withAnimation { selectedDate = date }
                 }) {
                     VStack(spacing: 8) {

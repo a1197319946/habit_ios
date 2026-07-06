@@ -7,6 +7,7 @@ struct PaywallView: View {
     @State private var isProcessing = false
     @State private var showRetention = false
     @State private var isDismissingFromCloseButton = false
+    @ObservedObject private var storeManager = StoreManager.shared
     
     var body: some View {
         NavigationView {
@@ -46,11 +47,15 @@ struct PaywallView: View {
                         .padding(.horizontal, DS.spacingL)
                         
                         // Pricing Tiers
+                        let monthlyProduct = storeManager.products.first(where: { $0.id == "1005" || $0.id.hasSuffix(".monthly") })
+                        let yearlyProduct = storeManager.products.first(where: { $0.id == "1006" || $0.id.hasSuffix(".yearly") })
+                        let lifetimeProduct = storeManager.products.first(where: { $0.id == "1003" || $0.id.hasSuffix(".lifetime") })
+                        
                         VStack(spacing: DS.spacingM) {
                             PricingCard(
                                 isSelected: selectedTier == 0,
                                 title: "Monthly Card".tr(appSettings.resolvedLanguage),
-                                price: "¥2.9",
+                                price: monthlyProduct?.displayPrice ?? "¥2.9",
                                 originalPrice: "¥6",
                                 subtitle: "Billed monthly".tr(appSettings.resolvedLanguage),
                                 tag: nil
@@ -60,7 +65,7 @@ struct PaywallView: View {
                             PricingCard(
                                 isSelected: selectedTier == 1,
                                 title: "Yearly Card".tr(appSettings.resolvedLanguage),
-                                price: "¥29.9",
+                                price: yearlyProduct?.displayPrice ?? "¥29.9",
                                 originalPrice: "¥38",
                                 subtitle: "Billed yearly".tr(appSettings.resolvedLanguage),
                                 tag: "POPULAR".tr(appSettings.resolvedLanguage)
@@ -70,7 +75,7 @@ struct PaywallView: View {
                             PricingCard(
                                 isSelected: selectedTier == 2,
                                 title: "Lifetime Card".tr(appSettings.resolvedLanguage),
-                                price: "¥39.9",
+                                price: lifetimeProduct?.displayPrice ?? "¥39.9",
                                 originalPrice: "¥78",
                                 subtitle: "One-time payment".tr(appSettings.resolvedLanguage),
                                 tag: "BEST VALUE".tr(appSettings.resolvedLanguage)
@@ -84,7 +89,7 @@ struct PaywallView: View {
                             let premiumGold = Color(hex: "D4AF37")
                             let btnColor = selectedTier == 1 ? premiumGold : DS.primary
                             
-                            Button(action: { simulatePurchase() }) {
+                            Button(action: { executePurchase() }) {
                                 HStack {
                                     Spacer()
                                     if isProcessing {
@@ -133,7 +138,7 @@ struct PaywallView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { simulatePurchase() }) {
+                    Button(action: { executeRestore() }) {
                         Text("Restore Purchase".tr(appSettings.resolvedLanguage))
                             .foregroundColor(DS.primary)
                             .font(.system(size: 16, weight: .medium))
@@ -178,7 +183,7 @@ struct PaywallView: View {
                         },
                         onAccept: {
                             isDismissingFromCloseButton = true
-                            simulatePurchase()
+                            executePurchase()
                         }
                     )
                     .transition(.scale.combined(with: .opacity))
@@ -186,6 +191,63 @@ struct PaywallView: View {
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showRetention)
+    }
+    
+    private func executePurchase() {
+        isProcessing = true
+        let targetID: String
+        switch selectedTier {
+        case 0: targetID = "1005"
+        case 2: targetID = "1003"
+        default: targetID = "1006"
+        }
+        
+        let product = storeManager.products.first(where: {
+            $0.id == targetID || ($0.id.hasSuffix(".monthly") && selectedTier == 0) || ($0.id.hasSuffix(".yearly") && selectedTier == 1) || ($0.id.hasSuffix(".lifetime") && selectedTier == 2)
+        })
+        
+        if let product = product {
+            Task {
+                do {
+                    let success = try await storeManager.purchase(product)
+                    DispatchQueue.main.async {
+                        isProcessing = false
+                        if success {
+                            withAnimation {
+                                appSettings.isPremium = true
+                                dismiss()
+                            }
+                        }
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        isProcessing = false
+                        print("Purchase error: \(error)")
+                    }
+                }
+            }
+        } else {
+            // Fallback to simulation if StoreKit products are not available in current environment
+            simulatePurchase()
+        }
+    }
+    
+    private func executeRestore() {
+        isProcessing = true
+        Task {
+            await storeManager.restorePurchases()
+            DispatchQueue.main.async {
+                isProcessing = false
+                if !storeManager.purchasedProductIDs.isEmpty || appSettings.isPremium {
+                    withAnimation {
+                        appSettings.isPremium = true
+                        dismiss()
+                    }
+                } else {
+                    print("No purchases to restore")
+                }
+            }
+        }
     }
     
     private func simulatePurchase() {

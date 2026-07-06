@@ -95,7 +95,7 @@ struct HabitStatsDetailView: View {
                     .background(DS.surface.opacity(0.8))
                     .background(.ultraThinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.white.opacity(0.3), lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(DS.outline, lineWidth: 1))
                     .shadow(color: Color.black.opacity(0.02), radius: 10, x: 0, y: 4)
                     
                     // Calendar Section
@@ -138,7 +138,7 @@ struct HabitStatsDetailView: View {
                         
                         // Yearly Grid (3 columns for compact, adaptive layout)
                         let months = Array(1...12)
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                        LazyVGrid(columns: [GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6)], spacing: 10) {
                             ForEach(months, id: \.self) { month in
                                 NavigationLink(value: HabitMonthRoute(habit: habit, year: currentYear, month: month)) {
                                     MonthMiniGrid(year: currentYear, month: month, checkins: getCheckinsForYear(), habit: habit)
@@ -156,7 +156,7 @@ struct HabitStatsDetailView: View {
                     .background(DS.surface.opacity(0.8))
                     .background(.ultraThinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.white.opacity(0.3), lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(DS.outline, lineWidth: 1))
                     .shadow(color: Color.black.opacity(0.02), radius: 10, x: 0, y: 4)
                     
                     Spacer().frame(height: 40)
@@ -326,9 +326,9 @@ struct MonthMiniGrid: View {
             let firstWeekday = getFirstWeekday()
             let rows = 6 // Force 6 rows so that the grids are perfectly aligned vertically
             
-            VStack(spacing: 2) {
+            VStack(spacing: 2.5) {
                 ForEach(0..<rows, id: \.self) { row in
-                    HStack(spacing: 2) {
+                    HStack(spacing: 2.5) {
                         ForEach(0..<7, id: \.self) { col in
                             let index = row * 7 + col
                             let day = index - firstWeekday + 1
@@ -336,12 +336,12 @@ struct MonthMiniGrid: View {
                             if day > 0 && day <= daysInMonth {
                                 let dateStr = String(format: "%04d-%02d-%02d", year, month, day)
                                 let isCompleted = checkins.contains(where: { $0.dateString == dateStr })
-                                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                                RoundedRectangle(cornerRadius: 2.5, style: .continuous)
                                     .fill(isCompleted ? Color(hex: habit.color) : DS.uncheckedPlaceholder.opacity(0.6))
-                                    .frame(width: 8, height: 8)
+                                    .frame(width: 10.5, height: 10.5)
                             } else {
                                 Color.clear
-                                    .frame(width: 8, height: 8)
+                                    .frame(width: 10.5, height: 10.5)
                             }
                         }
                     }

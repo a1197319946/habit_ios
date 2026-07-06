@@ -206,6 +206,7 @@ extension String {
             "颜色和图标": [.chinese: "颜色和图标", .english: "Color and Icon"],
             "颜色": [.chinese: "颜色", .english: "Color"],
             "图标": [.chinese: "图标", .english: "Icon"],
+            "选择图标": [.chinese: "选择图标", .english: "Choose an Icon"],
             "目标规则": [.chinese: "目标规则", .english: "Goal Rules"],
             " Times": [.chinese: "次", .english: " Times"],
             " Month": [.chinese: "月", .english: " Month"],
@@ -381,6 +382,36 @@ extension String {
             "Check-in Success": [.chinese: "打卡成功", .english: "Check-in Success"],
             "W:": [.chinese: "周：", .english: "W:"],
             "M:": [.chinese: "月：", .english: "M:"],
+            
+            // Notification & Reminder
+            "打卡提醒": [.chinese: "打卡提醒", .english: "Reminder"],
+            "提醒时间": [.chinese: "提醒时间", .english: "Time"],
+            "自定义文案": [.chinese: "自定义文案", .english: "Custom Message"],
+            "该打卡啦！坚持就是胜利～": [.chinese: "该打卡啦！坚持就是胜利～", .english: "Time to check in! Keep it up~"],
+            "未开启提醒": [.chinese: "未开启提醒", .english: "Reminder Disabled"],
+            
+            // StoreKit & Paywall
+            "恢复购买成功": [.chinese: "恢复购买成功", .english: "Restore Successful"],
+            "没有可恢复的购买项": [.chinese: "没有可恢复的购买项", .english: "No Purchases to Restore"],
+            "获取产品列表失败：": [.chinese: "获取产品列表失败：", .english: "Failed to fetch products: "],
+            "正在购买...": [.chinese: "正在购买...", .english: "Purchasing..."],
+            "恢复中...": [.chinese: "恢复中...", .english: "Restoring..."],
+            "购买成功！": [.chinese: "购买成功！", .english: "Purchase Successful!"],
+            "购买被取消": [.chinese: "购买被取消", .english: "Purchase Cancelled"],
+            "购买失败": [.chinese: "购买失败", .english: "Purchase Failed"],
+            "恢复购买": [.chinese: "恢复购买", .english: "Restore Purchases"],
+            
+            // CloudKit & Sync
+            "iCloud 账号正常连接": [.chinese: "iCloud 账号正常连接", .english: "iCloud Connected"],
+            "未登录，请在系统设置中登录您的 Apple ID": [.chinese: "未登录，请在系统设置中登录您的 Apple ID", .english: "Not logged in. Please sign in to iCloud in Settings."],
+            "iCloud 访问受限": [.chinese: "iCloud 访问受限", .english: "iCloud Access Restricted"],
+            "无法确定 iCloud 状态": [.chinese: "无法确定 iCloud 状态", .english: "Could Not Determine iCloud Status"],
+            "iCloud 服务暂不可用": [.chinese: "iCloud 服务暂不可用", .english: "iCloud Temporarily Unavailable"],
+            "未知状态": [.chinese: "未知状态", .english: "Unknown Status"],
+            "iCloud 状态": [.chinese: "iCloud 状态", .english: "iCloud Status"],
+            "立即检查同步": [.chinese: "立即检查同步", .english: "Check Sync Now"],
+            "状态检查中...": [.chinese: "状态检查中...", .english: "Checking Status..."],
+            "数据已完全保存在本地数据库，支持极速离线读取与打卡。开启 iCloud 仅在后台同步备份，关闭不会丢失任何本地已有记录，重新连接后自动增量双向合并。": [.chinese: "数据已完全保存在本地数据库，支持极速离线读取与打卡。开启 iCloud 仅在后台同步备份，关闭不会丢失任何本地已有记录，重新连接后自动增量双向合并。", .english: "Data is fully stored locally for instant offline access. Enabling iCloud backs up in background; disabling preserves all local records. Reconnecting merges offline updates automatically."],
         ]
         
         if let entry = translations[self] {

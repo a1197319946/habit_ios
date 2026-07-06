@@ -622,8 +622,13 @@ extension View {
 }
 
 struct MyWidgetBackground: View {
+    @Environment(\.colorScheme) var colorScheme
     var body: some View {
-        AmbientBackground()
+        if colorScheme == .dark {
+            Color(hex: "#1C1C1E")
+        } else {
+            Color(hex: "#F9FAFC")
+        }
     }
 }
 

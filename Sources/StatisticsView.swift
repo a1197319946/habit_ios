@@ -520,7 +520,7 @@ struct StatSmallCard: View {
 struct MonthGridCard: View {
     let habits: [Habit]
     let checkins: [Checkin]
-    let appSettings: AppSettings
+    @ObservedObject var appSettings: AppSettings
     @Binding var currentMonthDate: Date
     
     private var calendar: Calendar { appSettings.customCalendar }
@@ -661,7 +661,7 @@ struct MonthGridCard: View {
         .background(DS.surface.opacity(0.8))
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.white.opacity(0.3), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(DS.outline, lineWidth: 1))
         .padding(.horizontal, 16)
     }
 }
@@ -677,7 +677,7 @@ struct ChartDataPoint: Identifiable {
 struct YearChartCard: View {
     let habits: [Habit]
     let checkins: [Checkin]
-    let appSettings: AppSettings
+    @ObservedObject var appSettings: AppSettings
     @Binding var currentYear: Int
     
     private var chartData: [ChartDataPoint] {
@@ -759,7 +759,7 @@ struct YearChartCard: View {
 struct AllChartCard: View {
     let habits: [Habit]
     let checkins: [Checkin]
-    let appSettings: AppSettings
+    @ObservedObject var appSettings: AppSettings
     
     private var chartData: [ChartDataPoint] {
         var points: [ChartDataPoint] = []
@@ -851,7 +851,7 @@ struct HabitCountItem: Identifiable {
 struct DonutChartCard: View {
     let habits: [Habit]
     let periodCheckins: [Checkin]
-    let appSettings: AppSettings
+    @ObservedObject var appSettings: AppSettings
     
     private var chartData: [HabitCountItem] {
         habits.compactMap { habit in
