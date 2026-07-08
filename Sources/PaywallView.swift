@@ -7,6 +7,8 @@ struct PaywallView: View {
     @State private var isProcessing = false
     @State private var showRetention = false
     @State private var isDismissingFromCloseButton = false
+    @State private var showStoreErrorAlert = false
+    @State private var storeErrorMessage = ""
     @ObservedObject private var storeManager = StoreManager.shared
     
     var body: some View {
@@ -34,6 +36,31 @@ struct PaywallView: View {
                         }
                         .padding(.top, DS.spacingM)
                         
+                        if appSettings.isPremium {
+                            HStack(spacing: 12) {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.system(size: 28))
+                                    .foregroundColor(Color(hex: "D4AF37"))
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("您已是尊享会员".tr(appSettings.resolvedLanguage))
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(DS.onSurface)
+                                    Text(StoreManager.shared.expirationDateFormatted(in: appSettings.resolvedLanguage))
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(DS.onSurfaceVariant)
+                                }
+                                Spacer()
+                            }
+                            .padding(DS.spacingM)
+                            .background(Color(hex: "D4AF37").opacity(0.15))
+                            .cornerRadius(DS.cornerM)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: DS.cornerM)
+                                    .stroke(Color(hex: "D4AF37"), lineWidth: 1)
+                            )
+                            .padding(.horizontal, DS.spacingL)
+                        }
+                        
                         // Features List
                         VStack(alignment: .leading, spacing: DS.spacingM) {
                             FeatureRow(icon: "nosign", color: .yellow, title: "Ad-Free Experience".tr(appSettings.resolvedLanguage), subtitle: "Reduce the resistance to your daily habits.".tr(appSettings.resolvedLanguage))
@@ -46,38 +73,59 @@ struct PaywallView: View {
                         }
                         .padding(.horizontal, DS.spacingL)
                         
+                        if storeManager.products.isEmpty && !storeManager.isLoading {
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.orange)
+                                    .font(.system(size: 14))
+                                Text(storeManager.errorMessage ?? "无法从苹果后台获取订阅价格，当前显示默认参考价。请检查：1) 苹果后台内购项目状态不为“缺少元数据”；2) App Store Connect 付费协议已生效；3) 产品 ID 匹配。".tr(appSettings.resolvedLanguage))
+                                    .font(.system(size: 12))
+                                    .foregroundColor(DS.onSurfaceVariant)
+                            }
+                            .padding(DS.spacingM)
+                            .background(Color.orange.opacity(0.12))
+                            .cornerRadius(DS.cornerS)
+                            .padding(.horizontal, DS.spacingL)
+                        }
+                        
                         // Pricing Tiers
-                        let monthlyProduct = storeManager.products.first(where: { $0.id == "1005" || $0.id.hasSuffix(".monthly") })
-                        let yearlyProduct = storeManager.products.first(where: { $0.id == "1006" || $0.id.hasSuffix(".yearly") })
-                        let lifetimeProduct = storeManager.products.first(where: { $0.id == "1003" || $0.id.hasSuffix(".lifetime") })
+                        let monthlyProduct = storeManager.products.first(where: {
+                            $0.id == "1005" || $0.id.contains("month") || ($0.subscription?.subscriptionPeriod.unit == .month && $0.subscription?.subscriptionPeriod.value == 1)
+                        })
+                        let yearlyProduct = storeManager.products.first(where: {
+                            $0.id == "1006" || $0.id.contains("year") || ($0.subscription?.subscriptionPeriod.unit == .year && $0.subscription?.subscriptionPeriod.value == 1)
+                        })
+                        let lifetimeProduct = storeManager.products.first(where: {
+                            $0.id == "1003" || $0.id.contains("lifetime") || $0.id.contains("vip") || $0.id.contains("pro") || $0.type == .nonConsumable
+                        })
                         
                         VStack(spacing: DS.spacingM) {
                             PricingCard(
                                 isSelected: selectedTier == 0,
-                                title: "Monthly Card".tr(appSettings.resolvedLanguage),
+                                title: !((monthlyProduct?.displayName ?? "").isEmpty) ? (monthlyProduct?.displayName)! : "Monthly Card".tr(appSettings.resolvedLanguage),
                                 price: monthlyProduct?.displayPrice ?? "¥2.9",
                                 originalPrice: "¥6",
-                                subtitle: "Billed monthly".tr(appSettings.resolvedLanguage),
+                                subtitle: !((monthlyProduct?.description ?? "").isEmpty) ? (monthlyProduct?.description)! : "按月扣费".tr(appSettings.resolvedLanguage),
                                 tag: nil
                             )
                             .onTapGesture { withAnimation { selectedTier = 0 } }
                             
                             PricingCard(
                                 isSelected: selectedTier == 1,
-                                title: "Yearly Card".tr(appSettings.resolvedLanguage),
+                                title: !((yearlyProduct?.displayName ?? "").isEmpty) ? (yearlyProduct?.displayName)! : "Yearly Card".tr(appSettings.resolvedLanguage),
                                 price: yearlyProduct?.displayPrice ?? "¥29.9",
                                 originalPrice: "¥38",
-                                subtitle: "Billed yearly".tr(appSettings.resolvedLanguage),
+                                subtitle: !((yearlyProduct?.description ?? "").isEmpty) ? (yearlyProduct?.description)! : "按年扣费".tr(appSettings.resolvedLanguage),
                                 tag: "POPULAR".tr(appSettings.resolvedLanguage)
                             )
                             .onTapGesture { withAnimation { selectedTier = 1 } }
                             
                             PricingCard(
                                 isSelected: selectedTier == 2,
-                                title: "Lifetime Card".tr(appSettings.resolvedLanguage),
+                                title: !((lifetimeProduct?.displayName ?? "").isEmpty) ? (lifetimeProduct?.displayName)! : "Lifetime Card".tr(appSettings.resolvedLanguage),
                                 price: lifetimeProduct?.displayPrice ?? "¥39.9",
                                 originalPrice: "¥78",
-                                subtitle: "One-time payment".tr(appSettings.resolvedLanguage),
+                                subtitle: !((lifetimeProduct?.description ?? "").isEmpty) ? (lifetimeProduct?.description)! : "一次性付费".tr(appSettings.resolvedLanguage),
                                 tag: "BEST VALUE".tr(appSettings.resolvedLanguage)
                             )
                             .onTapGesture { withAnimation { selectedTier = 2 } }
@@ -108,11 +156,21 @@ struct PaywallView: View {
                             }
                             .disabled(isProcessing)
                             
-                            if selectedTier == 1 {
-                                Text("15 天免费试用，结束后按 ¥29.9/年收费".tr(appSettings.resolvedLanguage))
+                            if selectedTier == 0 {
+                                let monthPrice = monthlyProduct?.displayPrice ?? "¥2.9"
+                                Text(appSettings.resolvedLanguage == .chinese ? "自动续期，\(monthPrice)/月，可随时取消" : "Auto-renewable, \(monthPrice)/month, cancel anytime")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(DS.onSurfaceVariant)
+                            } else if selectedTier == 1 {
+                                let yearPrice = yearlyProduct?.displayPrice ?? "¥29.9"
+                                Text(appSettings.resolvedLanguage == .chinese ? "15 天免费试用，结束后按 \(yearPrice)/年收费" : "15-day free trial, then \(yearPrice)/year")
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
                                 Text("试用期间可以随时取消，不扣费".tr(appSettings.resolvedLanguage))
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(DS.onSurfaceVariant)
+                            } else if selectedTier == 2 {
+                                Text(appSettings.resolvedLanguage == .chinese ? "一次性付费，永久解锁全部尊享权益" : "One-time payment, lifetime access to all features")
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
                             }
@@ -120,17 +178,34 @@ struct PaywallView: View {
                         .padding(.horizontal, DS.spacingL)
                         .padding(.top, DS.spacingM)
                         
-                        // Terms
-                        VStack(spacing: 4) {
+                        // Terms & Privacy Links (Required by Apple App Store Review Guideline 3.1.2)
+                        VStack(spacing: 6) {
                             Text("By continuing, you agree to our".tr(appSettings.resolvedLanguage))
-                            HStack(spacing: 4) {
-                                Text("Terms of Service".tr(appSettings.resolvedLanguage)).underline()
+                            HStack(spacing: 8) {
+                                Button {
+                                    if let url = URL(string: "https://a1197319946.github.io/habit_ios/support.html") {
+                                        UIApplication.shared.open(url)
+                                    }
+                                } label: {
+                                    Text("Terms of Service".tr(appSettings.resolvedLanguage))
+                                        .underline()
+                                }
+                                
                                 Text("and".tr(appSettings.resolvedLanguage))
-                                Text("Privacy Policy".tr(appSettings.resolvedLanguage)).underline()
+                                
+                                Button {
+                                    if let url = URL(string: "https://a1197319946.github.io/habit_ios/privacy.html") {
+                                        UIApplication.shared.open(url)
+                                    }
+                                } label: {
+                                    Text("Privacy Policy".tr(appSettings.resolvedLanguage))
+                                        .underline()
+                                }
                             }
+                            .foregroundColor(DS.primary)
                         }
                         .font(.system(size: 12))
-                        .foregroundColor(DS.onSurfaceVariant.opacity(0.6))
+                        .foregroundColor(DS.onSurfaceVariant.opacity(0.8))
                         .padding(.bottom, DS.spacingXL)
                     }
                 }
@@ -191,6 +266,18 @@ struct PaywallView: View {
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showRetention)
+        .onAppear {
+            if storeManager.products.isEmpty {
+                Task {
+                    await storeManager.loadProducts()
+                }
+            }
+        }
+        .alert("提示".tr(appSettings.resolvedLanguage), isPresented: $showStoreErrorAlert) {
+            Button("确定".tr(appSettings.resolvedLanguage), role: .cancel) { }
+        } message: {
+            Text(storeErrorMessage)
+        }
     }
     
     private func executePurchase() {
@@ -203,7 +290,10 @@ struct PaywallView: View {
         }
         
         let product = storeManager.products.first(where: {
-            $0.id == targetID || ($0.id.hasSuffix(".monthly") && selectedTier == 0) || ($0.id.hasSuffix(".yearly") && selectedTier == 1) || ($0.id.hasSuffix(".lifetime") && selectedTier == 2)
+            $0.id == targetID ||
+            (selectedTier == 0 && ($0.id.contains("month") || ($0.subscription?.subscriptionPeriod.unit == .month && $0.subscription?.subscriptionPeriod.value == 1))) ||
+            (selectedTier == 1 && ($0.id.contains("year") || ($0.subscription?.subscriptionPeriod.unit == .year && $0.subscription?.subscriptionPeriod.value == 1))) ||
+            (selectedTier == 2 && ($0.id.contains("lifetime") || $0.id.contains("vip") || $0.id.contains("pro") || $0.type == .nonConsumable))
         })
         
         if let product = product {
@@ -222,13 +312,21 @@ struct PaywallView: View {
                 } catch {
                     DispatchQueue.main.async {
                         isProcessing = false
+                        storeErrorMessage = "购买失败：\(error.localizedDescription)"
+                        showStoreErrorAlert = true
                         print("Purchase error: \(error)")
                     }
                 }
             }
         } else {
-            // Fallback to simulation if StoreKit products are not available in current environment
+            #if DEBUG
+            // In Xcode Debug mode without a StoreKit config attached, allow simulation
             simulatePurchase()
+            #else
+            isProcessing = false
+            storeErrorMessage = "无法从 App Store 获取产品价格与配置，请检查网络连接或确认苹果后台产品已生效。".tr(appSettings.resolvedLanguage)
+            showStoreErrorAlert = true
+            #endif
         }
     }
     
@@ -244,7 +342,8 @@ struct PaywallView: View {
                         dismiss()
                     }
                 } else {
-                    print("No purchases to restore")
+                    storeErrorMessage = "没有可恢复的购买项".tr(appSettings.resolvedLanguage)
+                    showStoreErrorAlert = true
                 }
             }
         }

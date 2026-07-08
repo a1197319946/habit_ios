@@ -71,6 +71,32 @@ final class MoodRecord {
 import Foundation
 import SwiftData
 
+struct SharedFormatters {
+    private static let _yyyyMMdd: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        return df
+    }()
+    
+    private static let _yyyyMM: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM"
+        return df
+    }()
+    
+    static func dateString(from date: Date) -> String {
+        return _yyyyMMdd.string(from: date)
+    }
+    
+    static func date(from string: String) -> Date? {
+        return _yyyyMMdd.date(from: string)
+    }
+    
+    static func yearMonthString(from date: Date) -> String {
+        return _yyyyMM.string(from: date)
+    }
+}
+
 extension Habit {
     var checkinDates: Set<String> {
         Set((checkins ?? []).map { $0.dateString })
@@ -81,18 +107,16 @@ extension Habit {
     }
     
     var checkinCountLast30Days: Int {
-                var calendar = Calendar.current
+        var calendar = Calendar.current
         calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
         let today = Date()
         var count = 0
         let dates = checkinDates
-        
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
+        if dates.isEmpty { return 0 }
         
         for i in 0..<30 {
             if let date = calendar.date(byAdding: .day, value: -i, to: today) {
-                let dateStr = formatter.string(from: date)
+                let dateStr = SharedFormatters.dateString(from: date)
                 if dates.contains(dateStr) {
                     count += 1
                 }
@@ -102,24 +126,22 @@ extension Habit {
     }
     
     var currentStreak: Int {
-                var calendar = Calendar.current
+        var calendar = Calendar.current
         calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
         let today = Date()
         let dates = checkinDates
-        
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
+        if dates.isEmpty { return 0 }
         
         var streak = 0
         var i = 0
         
         // Check today
-        let todayStr = formatter.string(from: today)
+        let todayStr = SharedFormatters.dateString(from: today)
         let hasToday = dates.contains(todayStr)
         
         // Check yesterday
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
-        let yesterdayStr = formatter.string(from: yesterday)
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: today) else { return 0 }
+        let yesterdayStr = SharedFormatters.dateString(from: yesterday)
         let hasYesterday = dates.contains(yesterdayStr)
         
         if !hasToday && !hasYesterday {
@@ -130,13 +152,12 @@ extension Habit {
             streak += 1
             i = 1
         } else if hasYesterday {
-            // start counting from yesterday
             i = 1
         }
         
         while true {
             if let date = calendar.date(byAdding: .day, value: -i, to: today) {
-                let dateStr = formatter.string(from: date)
+                let dateStr = SharedFormatters.dateString(from: date)
                 if dates.contains(dateStr) {
                     streak += 1
                     i += 1
@@ -155,15 +176,13 @@ extension Habit {
         let dates = checkinDates
         if dates.isEmpty { return 0 }
         
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        
-        let sortedDates = dates.compactMap { formatter.date(from: $0) }.sorted()
+        let sortedDates = dates.compactMap { SharedFormatters.date(from: $0) }.sorted()
+        if sortedDates.isEmpty { return 0 }
         
         var maxStreak = 1
         var currentStreak = 1
         
-                var calendar = Calendar.current
+        var calendar = Calendar.current
         calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
         for i in 1..<sortedDates.count {
             let diff = calendar.dateComponents([.day], from: calendar.startOfDay(for: sortedDates[i-1]), to: calendar.startOfDay(for: sortedDates[i])).day ?? 0
@@ -179,45 +198,36 @@ extension Habit {
         return maxStreak
     }
     
-    // Returns array of booleans for the last 154 days (22 weeks).
-    // Index 0 is 153 days ago, Index 153 is today.
     var last154DaysCheckins: [Bool] {
-                var calendar = Calendar.current
+        var calendar = Calendar.current
         calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
         let today = Date()
         let dates = checkinDates
-        
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
+        if dates.isEmpty { return [Bool](repeating: false, count: 154) }
         
         var result = [Bool](repeating: false, count: 154)
         for i in 0..<154 {
-            // we want result[153] to be today, result[0] to be 153 days ago
             let daysAgo = 153 - i
             if let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) {
-                let dateStr = formatter.string(from: date)
+                let dateStr = SharedFormatters.dateString(from: date)
                 result[i] = dates.contains(dateStr)
             }
         }
         return result
     }
     
-    // Returns array of booleans for the last 182 days (26 weeks).
-    // Index 0 is 181 days ago, Index 181 is today.
     var last182DaysCheckins: [Bool] {
-                var calendar = Calendar.current
+        var calendar = Calendar.current
         calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
         let today = Date()
         let dates = checkinDates
-        
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
+        if dates.isEmpty { return [Bool](repeating: false, count: 182) }
         
         var result = [Bool](repeating: false, count: 182)
         for i in 0..<182 {
             let daysAgo = 181 - i
             if let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) {
-                let dateStr = formatter.string(from: date)
+                let dateStr = SharedFormatters.dateString(from: date)
                 result[i] = dates.contains(dateStr)
             }
         }

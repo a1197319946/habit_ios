@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		0BEA439F62B14E35DECED32F /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = E338DD15B0AFDF7E621A8A09 /* Constants.swift */; };
+		112233445566778899001122 /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112233445566778899001121 /* WidgetIntents.swift */; };
+		112233445566778899001123 /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112233445566778899001121 /* WidgetIntents.swift */; };
 		156592AAAF0C26FD5B5418C8 /* HabitListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FBD7612B05474238D48F79 /* HabitListView.swift */; };
 		1A3849A4A43B2EE97A0201C1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E77E954A696E8CA6AB330BAC /* Foundation.framework */; };
 		1DF1298501ACC23DA8D2D975 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E32D4DA98A3BEBF1FB0FDCC /* DesignSystem.swift */; };
@@ -100,6 +102,7 @@
 		E505F21C8BE7EC7D595AFF6B /* LittleHabitTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LittleHabitTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E77E954A696E8CA6AB330BAC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		EA1498A56C4D9176F58C006F /* AttemptToDismissModifier.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AttemptToDismissModifier.swift; sourceTree = "<group>"; };
+		112233445566778899001121 /* WidgetIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetIntents.swift; sourceTree = "<group>"; };
 		EA9E6C16B85EA1CD528B0006 /* LittleHabitWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LittleHabitWidget.swift; sourceTree = "<group>"; };
 		F400E30A32862BC66A030359 /* HabitStatsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitStatsDetailView.swift; sourceTree = "<group>"; };
 		F4A57B29DD7206AFA589C8EE /* StatisticsExtViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsExtViews.swift; sourceTree = "<group>"; };
@@ -182,6 +185,7 @@
 				F4A57B29DD7206AFA589C8EE /* StatisticsExtViews.swift */,
 				64C1C23158D8D65B0E699D19 /* StatisticsView.swift */,
 				2F5C2D91F49A083900F34828 /* LittleHabitWidget */,
+				112233445566778899001121 /* WidgetIntents.swift */,
 				F80E2428D210ED72FC6E7B33 /* LittleHabitTracker.entitlements */,
 				C88F406ECA6FB7B11F3047AF /* PaywallView.swift */,
 				2DB21F5B9B3A4858A7076262 /* DataBackupManager.swift */,
@@ -333,6 +337,7 @@
 				601CC4B56743A580DD1B2F70 /* NotificationManager.swift in Sources */,
 				BE637617ABBD659D363E3FA5 /* StoreManager.swift in Sources */,
 				C0425E3917BCC32788BF0F85 /* CloudSyncManager.swift in Sources */,
+				112233445566778899001122 /* WidgetIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -344,6 +349,7 @@
 				84BD0C8729734E348C746C0D /* Models.swift in Sources */,
 				1DF1298501ACC23DA8D2D975 /* DesignSystem.swift in Sources */,
 				4974909CD789281144CD4332 /* Constants.swift in Sources */,
+				112233445566778899001123 /* WidgetIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -451,7 +457,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.xiaodao.LittleHabitTracker;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -485,7 +491,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.xiaodao.LittleHabitTracker;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};

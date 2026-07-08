@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 
 enum AppTab: Int, CaseIterable {
     case home = 0
@@ -27,8 +28,10 @@ enum AppTab: Int, CaseIterable {
 
 struct ContentView: View {
     @EnvironmentObject private var appSettings: AppSettings
+    @Environment(\.scenePhase) private var scenePhase
     @State private var selection: AppTab = .home
     @State private var showingSettings = false
+    @State private var showLaunchScreen = true
     @Namespace private var animation
     
     var body: some View {
@@ -44,36 +47,44 @@ struct ContentView: View {
         )
         
         AppLockView {
-            TabView(selection: proxySelection) {
-                Tab(AppTab.home.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.home.iconName, value: .home) {
-                    TabNavStack {
-                        HomeView(selectedTab: proxySelection)
+            ZStack {
+                TabView(selection: proxySelection) {
+                    Tab(AppTab.home.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.home.iconName, value: .home) {
+                        TabNavStack {
+                            HomeView(selectedTab: proxySelection)
+                        }
+                    }
+                    
+                    Tab(AppTab.habits.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.habits.iconName, value: .habits) {
+                        TabNavStack {
+                            HabitListView()
+                        }
+                    }
+                    
+                    Tab(AppTab.stats.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.stats.iconName, value: .stats) {
+                        TabNavStack {
+                            StatisticsView()
+                        }
+                    }
+                    
+                    Tab(AppTab.settings.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.settings.iconName, value: .settings, role: .search) {
+                        Color.clear // Placeholder
                     }
                 }
-                
-                Tab(AppTab.habits.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.habits.iconName, value: .habits) {
-                    TabNavStack {
-                        HabitListView()
-                    }
+                .tint(DS.primary)
+                .onAppear {
+                    appSettings.applyTheme()
+                }
+                .sheet(isPresented: $showingSettings) {
+                    SettingsView()
+                        .presentationDragIndicator(.visible)
                 }
                 
-                Tab(AppTab.stats.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.stats.iconName, value: .stats) {
-                    TabNavStack {
-                        StatisticsView()
-                    }
+                if showLaunchScreen {
+                    LaunchScreenView(isPresented: $showLaunchScreen)
+                        .transition(.opacity.combined(with: .scale(scale: 1.05)))
+                        .zIndex(1000)
                 }
-                
-                Tab(AppTab.settings.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.settings.iconName, value: .settings, role: .search) {
-                    Color.clear // Placeholder
-                }
-            }
-            .tint(DS.primary)
-            .onAppear {
-                appSettings.applyTheme()
-            }
-            .sheet(isPresented: $showingSettings) {
-                SettingsView()
-                    .presentationDragIndicator(.visible)
             }
         }
         .sheet(isPresented: $appSettings.showPaywall) {
@@ -95,6 +106,12 @@ struct ContentView: View {
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appSettings.showRetentionOffer)
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+            if newPhase == .active {
+                getAppGroupModelContainer().mainContext.rollback()
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
     }
 }
 
@@ -207,6 +224,109 @@ struct TabNavStack<Content: View>: View {
                 .navigationDestination(for: HabitMonthRoute.self) { route in
                     HabitMonthDetailView(habit: route.habit, year: route.year, month: route.month)
                 }
+        }
+    }
+}
+
+struct LaunchScreenView: View {
+    @Binding var isPresented: Bool
+    @State private var bgScale: CGFloat = 1.0
+    @State private var logoScale: CGFloat = 1.0
+    @State private var logoOpacity: Double = 1.0
+    @State private var logoOffset: CGFloat = 0
+    @State private var sloganOpacity: Double = 1.0
+    @State private var sloganOffset: CGFloat = 0
+    @State private var loadingProgress: CGFloat = 0.05
+    @State private var contentBlur: CGFloat = 0.0
+    
+    var body: some View {
+        ZStack {
+            Image("launch_bg")
+            // Or use native_launch if preferred, but separate overlay allows clean staggered floating out
+                .resizable()
+                .scaledToFill()
+                .scaleEffect(bgScale)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 16) {
+                Spacer()
+                
+                // Brand Logo & Identifier with dynamic breathing animation
+                VStack(spacing: 14) {
+                    Image("app_logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 88, height: 88)
+                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                        .shadow(color: Color.black.opacity(0.14), radius: 18, x: 0, y: 8)
+                    
+                    Text("TickDay小习惯打卡")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(Color(hex: "2D3142"))
+                }
+                .scaleEffect(logoScale)
+                .opacity(logoOpacity)
+                .offset(y: logoOffset)
+                
+                // Slogan
+                Text("小小坚持，大大改变")
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(Color(hex: "5A5E73").opacity(0.88))
+                    .tracking(3.5)
+                    .opacity(sloganOpacity)
+                    .offset(y: sloganOffset)
+                
+                Spacer()
+                
+                // Premium dynamic loading indicator
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color(hex: "2D3142").opacity(0.08))
+                        .frame(width: 120, height: 3.5)
+                    Capsule()
+                        .fill(LinearGradient(colors: [Color(hex: "9F7AEA"), Color(hex: "ED64A6")], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: 120 * loadingProgress, height: 3.5)
+                }
+                .padding(.bottom, 54)
+                .opacity(sloganOpacity)
+                .offset(y: sloganOffset)
+            }
+            .blur(radius: contentBlur)
+        }
+        .onAppear {
+            // 1. Subtle breathing zoom and silky loading bar fill
+            withAnimation(.easeInOut(duration: 1.1)) {
+                bgScale = 1.03
+            }
+            withAnimation(.easeInOut(duration: 0.35)) {
+                logoScale = 1.03
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    logoScale = 1.0
+                }
+            }
+            withAnimation(.easeInOut(duration: 0.7)) {
+                loadingProgress = 1.0
+            }
+            
+            // 2. Elegant upward float and dissolve out animation
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) {
+                withAnimation(.easeInOut(duration: 0.38)) {
+                    logoOffset = -22
+                    sloganOffset = -22
+                    logoOpacity = 0.0
+                    sloganOpacity = 0.0
+                    contentBlur = 4.0
+                }
+            }
+            
+            // 3. Smooth exit into Home screen
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.95) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isPresented = false
+                }
+            }
         }
     }
 }

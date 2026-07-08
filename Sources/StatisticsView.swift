@@ -152,29 +152,12 @@ struct StatisticsView: View {
     }
     
     private func calculateStreak(for habit: Habit) -> Int {
-        var streak = 0
-        var currentDate = Date()
-        
-        while true {
-            if isHabitChecked(habit: habit, date: currentDate) {
-                streak += 1
-                currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate)!
-            } else {
-                if calendar.isDateInToday(currentDate) {
-                    currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate)!
-                } else {
-                    break
-                }
-            }
-        }
-        return streak
+        return habit.currentStreak
     }
     
     private func isHabitChecked(habit: Habit, date: Date) -> Bool {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dateString = formatter.string(from: date)
-        return checkins.contains(where: { $0.habit?.id == habit.id && $0.dateString == dateString })
+        let dateString = SharedFormatters.dateString(from: date)
+        return habit.checkinDates.contains(dateString)
     }
     
     private func getNarrowDayString(for date: Date) -> String {
@@ -513,6 +496,7 @@ struct MonthGridCard: View {
     let checkins: [Checkin]
     @ObservedObject var appSettings: AppSettings
     @Binding var currentMonthDate: Date
+    @State private var selectedDay: Int? = nil
     
     private var calendar: Calendar { appSettings.customCalendar }
     
@@ -559,18 +543,125 @@ struct MonthGridCard: View {
         components.day = day
         guard let date = calendar.date(from: components) else { return [] }
         
-        let df = DateFormatter()
-        df.dateFormat = "yyyy-MM-dd"
-        let dateString = df.string(from: date)
+        let dateString = SharedFormatters.dateString(from: date)
         
         var completed: [Habit] = []
-        let dayCheckins = checkins.filter { $0.dateString == dateString }
-        
         for habit in habits {
-            let hChecks = dayCheckins.filter { $0.habit?.id == habit.id }
-            if !hChecks.isEmpty { completed.append(habit) }
+            if habit.checkinDates.contains(dateString) {
+                completed.append(habit)
+            }
         }
         return completed
+    }
+    
+    private func checkinFor(habit: Habit, onDate dateString: String) -> Checkin? {
+        for item in checkins {
+            if item.dateString == dateString {
+                if let hid = item.habit?.id, hid == habit.id {
+                    return item
+                }
+                if let hChecks = habit.checkins {
+                    for hc in hChecks {
+                        if hc.id == item.id {
+                            return item
+                        }
+                    }
+                }
+            }
+        }
+        if let hChecks = habit.checkins {
+            for hc in hChecks {
+                if hc.dateString == dateString {
+                    return hc
+                }
+            }
+        }
+        return nil
+    }
+    
+    @ViewBuilder
+    private func habitRowView(habit: Habit, dateString: String) -> some View {
+        let checkin: Checkin? = checkinFor(habit: habit, onDate: dateString)
+        let timeText: String = {
+            if let c = checkin {
+                let tf = DateFormatter()
+                tf.dateFormat = "HH:mm"
+                return tf.string(from: c.timestamp)
+            } else {
+                return "已打卡".tr(appSettings.resolvedLanguage)
+            }
+        }()
+        
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color(hex: habit.color).opacity(0.15))
+                    .frame(width: 32, height: 32)
+                Image(systemName: habit.icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color(hex: habit.color))
+            }
+            
+            Text(habit.name)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(DS.onSurface)
+            
+            Spacer()
+            
+            HStack(spacing: 4) {
+                Image(systemName: "clock")
+                    .font(.system(size: 11, weight: .semibold))
+                Text(timeText)
+                    .font(.system(size: 13, weight: .bold))
+            }
+            .foregroundColor(Color(hex: habit.color))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Color(hex: habit.color).opacity(0.12))
+            .clipShape(Capsule())
+        }
+        .padding(10)
+        .background(DS.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+    
+    @ViewBuilder
+    private func dayCellView(day: Int, completedHabits: [Habit], isSelected: Bool) -> some View {
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                selectedDay = isSelected ? nil : day
+            }
+        }) {
+            VStack(spacing: 4) {
+                Text("\(day)")
+                    .font(.system(size: 14, weight: isSelected ? .bold : .medium))
+                    .foregroundColor(isSelected ? .white : DS.onSurface)
+                
+                HStack(spacing: 3) {
+                    ForEach(completedHabits.prefix(3)) { h in
+                        Circle()
+                            .fill(isSelected ? .white : Color(hex: h.color))
+                            .frame(width: 4, height: 4)
+                    }
+                }
+                .frame(height: 4)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .background(
+                ZStack {
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(DS.primary)
+                    } else if !completedHabits.isEmpty {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(DS.primaryContainer.opacity(0.4))
+                    }
+                }
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
     
     var body: some View {
@@ -598,49 +689,74 @@ struct MonthGridCard: View {
                 }
                 
                 // Days
-                let totalCells = daysInMonth.count + firstWeekday
-                let rows = Int(ceil(Double(totalCells) / 7.0))
+                let days = daysInMonth
+                let offset = firstWeekday
+                let totalSlots = days.count + offset
+                let rows = Int(ceil(Double(totalSlots) / 7.0))
                 
                 ForEach(0..<rows, id: \.self) { row in
                     HStack(spacing: 0) {
                         ForEach(0..<7, id: \.self) { col in
-                            let index = row * 7 + col
-                            let day = index - firstWeekday + 1
-                            
-                            VStack(spacing: 2) {
-                                if day > 0 && day <= daysInMonth.count {
-                                    let isToday = calendar.isDateInToday(calendar.date(bySetting: .day, value: day, of: currentMonthDate) ?? Date())
-                                    Text("\(day)")
-                                        .font(.system(size: 15, weight: isToday ? .bold : .medium))
-                                        .foregroundColor(isToday ? .white : DS.onSurface)
-                                        .frame(width: 24, height: 24)
-                                        .background(isToday ? DS.primary : Color.clear)
-                                        .clipShape(Circle())
-                                    
-                                    // Dots
-                                    let habitsDone = habitsOn(day: day)
-                                    HStack(spacing: 2) {
-                                        ForEach(habitsDone.prefix(4)) { h in
-                                            Circle()
-                                                .fill(Color(hex: h.color))
-                                                .frame(width: 4, height: 4)
-                                        }
-                                        if habitsDone.count > 4 {
-                                            Circle()
-                                                .fill(Color.gray)
-                                                .frame(width: 4, height: 4)
-                                        }
-                                    }
-                                    .frame(height: 4)
-                                } else {
-                                    Text("").frame(width: 24, height: 24)
-                                    Spacer().frame(height: 4)
-                                }
+                            let slot = row * 7 + col
+                            if slot >= offset && (slot - offset) < days.count {
+                                let day = days[slot - offset]
+                                let completedHabits = habitsOn(day: day)
+                                let isSelected = (selectedDay == day)
+                                
+                                dayCellView(day: day, completedHabits: completedHabits, isSelected: isSelected)
+                            } else {
+                                Color.clear
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
                             }
-                            .frame(maxWidth: .infinity, minHeight: 40)
                         }
                     }
                 }
+            }
+            
+            // Selected Day Details
+            if let day = selectedDay {
+                VStack(alignment: .leading, spacing: 12) {
+                    Divider()
+                    let selectedDateText: String = {
+                        if appSettings.resolvedLanguage == .chinese {
+                            return "\(monthYearString)\(day)日"
+                        } else {
+                            let df = DateFormatter()
+                            df.locale = Locale(identifier: "en_US")
+                            df.dateFormat = "MMMM"
+                            let mName = df.string(from: currentMonthDate)
+                            let yComp = calendar.component(.year, from: currentMonthDate)
+                            return "\(mName) \(day), \(yComp)"
+                        }
+                    }()
+                    
+                    Text(selectedDateText)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(DS.onSurface)
+                    
+                    let completed = habitsOn(day: day)
+                    if completed.isEmpty {
+                        Text("No check-ins on this day".tr(appSettings.resolvedLanguage))
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(DS.onSurfaceVariant)
+                            .padding(.vertical, 8)
+                    } else {
+                        let targetDateString: String = {
+                            var components = calendar.dateComponents([.year, .month], from: currentMonthDate)
+                            components.day = day
+                            guard let date = calendar.date(from: components) else { return "" }
+                            return SharedFormatters.dateString(from: date)
+                        }()
+                        
+                        VStack(spacing: 8) {
+                            ForEach(completed) { h in
+                                habitRowView(habit: h, dateString: targetDateString)
+                            }
+                        }
+                    }
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .padding(16)
@@ -668,17 +784,17 @@ struct YearChartCard: View {
     
     private var chartData: [ChartDataPoint] {
         var points: [ChartDataPoint] = []
+        let habitSets = habits.map { ($0, $0.checkinDates) }
         
         for m in 1...12 {
             let monthLabel = "\(m)月"
             let prefix = String(format: "%04d-%02d", currentYear, m)
-            let monthCheckins = checkins.filter { $0.dateString.hasPrefix(prefix) }
             
-            for habit in habits {
-                let hChecks = monthCheckins.filter { $0.habit?.id == habit.id }
-                if hChecks.isEmpty { continue }
-                
-                let uniqueDays = Set(hChecks.map { $0.dateString }).count
+            for (habit, dates) in habitSets {
+                var uniqueDays = 0
+                for d in dates {
+                    if d.hasPrefix(prefix) { uniqueDays += 1 }
+                }
                 if uniqueDays > 0 {
                     points.append(ChartDataPoint(group: monthLabel, habitName: habit.name, color: Color(hex: habit.color), count: uniqueDays))
                 }
@@ -749,15 +865,22 @@ struct AllChartCard: View {
     
     private var chartData: [ChartDataPoint] {
         var points: [ChartDataPoint] = []
-        let years = Array(Set(checkins.compactMap { String($0.dateString.prefix(4)) })).sorted()
+        let habitSets = habits.map { ($0, $0.checkinDates) }
+        
+        var allYearsSet = Set<String>()
+        for (_, dates) in habitSets {
+            for d in dates {
+                allYearsSet.insert(String(d.prefix(4)))
+            }
+        }
+        let years = Array(allYearsSet).sorted()
         
         for y in years {
-            let yearCheckins = checkins.filter { $0.dateString.hasPrefix(y) }
-            for habit in habits {
-                let hChecks = yearCheckins.filter { $0.habit?.id == habit.id }
-                if hChecks.isEmpty { continue }
-                
-                let uniqueDays = Set(hChecks.map { $0.dateString }).count
+            for (habit, dates) in habitSets {
+                var uniqueDays = 0
+                for d in dates {
+                    if d.hasPrefix(y) { uniqueDays += 1 }
+                }
                 if uniqueDays > 0 {
                     points.append(ChartDataPoint(group: y, habitName: habit.name, color: Color(hex: habit.color), count: uniqueDays))
                 }

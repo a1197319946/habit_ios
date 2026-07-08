@@ -220,6 +220,7 @@ extension String {
             "Check-in Amount": [.chinese: "打卡数量", .english: "Check-in Amount"],
             "Check-in Records": [.chinese: "打卡记录", .english: "Check-in Records"],
             "No check-in records": [.chinese: "暂无打卡记录", .english: "No check-in records"],
+            "No check-ins on this day": [.chinese: "当日无打卡记录", .english: "No check-ins on this day"],
             "No data": [.chinese: "暂无数据", .english: "No data"],
             "No data for this week.": [.chinese: "本周暂无数据", .english: "No data for this week."],
             "美好的改变，从今天开始": [.chinese: "美好的改变，从今天开始", .english: "Beautiful changes begin today"],
@@ -243,7 +244,11 @@ extension String {
 
             "打卡天数": [.chinese: "打卡天数", .english: "Check-in Days"],
             "总数值": [.chinese: "总数值", .english: "Total Amount"],
-            "习惯详情": [.chinese: "习惯详情", .english: "Habit Details"],
+            "Monthly Trend": [.chinese: "月度趋势", .english: "Monthly Trend"],
+            "Monthly Details": [.chinese: "月度详情", .english: "Monthly Details"],
+            "Check-in Days Trend": [.chinese: "打卡次数趋势", .english: "Check-in Days Trend"],
+            "Total Amount Trend": [.chinese: "打卡总量趋势", .english: "Total Amount Trend"],
+            "Total Days": [.chinese: "累计打卡", .english: "Total Days"],
 
             "System": [.chinese: "系统", .english: "System"],
             "Light": [.chinese: "浅色", .english: "Light"],
@@ -266,7 +271,8 @@ extension String {
             "Generating...": [.chinese: "生成中...", .english: "Generating..."],
             "Today": [.chinese: "今日", .english: "Today"],
             "Total": [.chinese: "累计", .english: "Total"],
-            "Little Habit Tracker": [.chinese: "TickDay 小习惯打卡", .english: "TickDay Habit Tracker"],
+            "Little Habit Tracker": [.chinese: "TickDay", .english: "TickDay"],
+            "TickDay": [.chinese: "TickDay", .english: "TickDay"],
             "Today,": [.chinese: "今天，", .english: "Today,"],
             "Yesterday,": [.chinese: "昨天，", .english: "Yesterday,"],
             "excited": [.chinese: "激动", .english: "Excited"],
@@ -400,6 +406,21 @@ extension String {
             "购买被取消": [.chinese: "购买被取消", .english: "Purchase Cancelled"],
             "购买失败": [.chinese: "购买失败", .english: "Purchase Failed"],
             "恢复购买": [.chinese: "恢复购买", .english: "Restore Purchases"],
+            "TickDay 尊享会员": [.chinese: "TickDay 尊享会员", .english: "TickDay Premium Member"],
+            "您已是尊享会员": [.chinese: "您已是尊享会员", .english: "You are a Premium Member"],
+            "到期时间：永久有效 (终身会员)": [.chinese: "到期时间：永久有效 (终身会员)", .english: "Valid until: Lifetime Access"],
+            "状态：已激活尊享会员": [.chinese: "状态：已激活尊享会员", .english: "Status: Active Premium"],
+            "到期时间：": [.chinese: "到期时间：", .english: "Valid until: "],
+            "无法从 App Store 获取产品价格与配置，请检查网络连接或确认苹果后台产品已生效。": [.chinese: "无法从 App Store 获取产品价格与配置，请检查网络连接或确认苹果后台产品已生效。", .english: "Unable to fetch product pricing from App Store. Please check network or App Store Connect status."],
+            "按月扣费": [.chinese: "按月扣费", .english: "Billed monthly"],
+            "按年扣费": [.chinese: "按年扣费", .english: "Billed yearly"],
+            "一次性付费": [.chinese: "一次性付费", .english: "One-time payment"],
+            "提示": [.chinese: "提示", .english: "Notice"],
+            "确定": [.chinese: "确定", .english: "OK"],
+            "无法从苹果后台获取订阅价格，当前显示默认参考价。请检查：1) 苹果后台内购项目状态不为“缺少元数据”；2) App Store Connect 付费协议已生效；3) 产品 ID 匹配。": [.chinese: "无法从苹果后台获取订阅价格，当前显示默认参考价。请检查：1) 苹果后台内购项目状态不为“缺少元数据”；2) App Store Connect 付费协议已生效；3) 产品 ID 匹配。", .english: "Unable to fetch subscription pricing from App Store Connect. Showing default reference prices. Please check: 1) In-App Purchase status is not 'Missing Metadata'; 2) Paid Applications Agreement is Active; 3) Product IDs match exactly."],
+            "一键生成今年模拟打卡数据": [.chinese: "一键生成今年模拟打卡数据", .english: "Generate Mock Data for This Year"],
+            "为现有习惯随机填充今年打卡与情绪记录": [.chinese: "为现有习惯随机填充今年打卡与情绪记录", .english: "Populate realistic 2026 check-ins and mood records"],
+            "已为所有习惯成功生成今年全套模拟打卡与情绪数据！": [.chinese: "已为所有习惯成功生成今年全套模拟打卡与情绪数据！", .english: "Successfully generated mock check-ins & mood records for this year!"],
             
             // CloudKit & Sync
             "iCloud 账号正常连接": [.chinese: "iCloud 账号正常连接", .english: "iCloud Connected"],
@@ -464,28 +485,8 @@ struct LittleHabitTrackerApp: App {
                 print("Migration failed: \(error)")
             }
         }
-        
-        let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            print("Could not create ModelContainer: \(error). Rebuilding store...")
-            let fileManager = FileManager.default
-            try? fileManager.removeItem(at: sharedStoreURL)
-            let shmURL = sharedStoreURL.deletingPathExtension().appendingPathExtension("store-shm")
-            let walURL = sharedStoreURL.deletingPathExtension().appendingPathExtension("store-wal")
-            try? fileManager.removeItem(at: shmURL)
-            try? fileManager.removeItem(at: walURL)
-            
-            do {
-                return try ModelContainer(for: schema, configurations: [modelConfiguration])
-            } catch {
-                print("Failed to rebuild store: \(error). Using in-memory fallback.")
-                let fallbackConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-                return try! ModelContainer(for: schema, configurations: [fallbackConfig])
-            }
-        }
+        let sharedModelContainer = getAppGroupModelContainer()
+        return sharedModelContainer
     }()
 
     @StateObject private var appSettings = AppSettings()

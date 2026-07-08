@@ -123,7 +123,6 @@ struct HabitMonthDetailView: View {
                         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(DS.outlineVariant, lineWidth: 1))
                         .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
                         
-                        // Total card or Total All Time card
                         if habit.goalType == "amount" {
                             VStack(spacing: 4) {
                                 Text("\(String(format: "%.1f", totalAmount).replacingOccurrences(of: ".0", with: ""))")
@@ -132,25 +131,6 @@ struct HabitMonthDetailView: View {
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.5)
                                 Text("Check-in Amount".tr(appSettings.resolvedLanguage))
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(DS.onSurfaceVariant)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.8)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(DS.surface)
-                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(DS.outlineVariant, lineWidth: 1))
-                            .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
-                        } else {
-                            VStack(spacing: 4) {
-                                Text("\(allCheckinDays)")
-                                    .font(.system(size: 24, weight: .bold))
-                                    .foregroundColor(DS.onSurface)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.5)
-                                Text("累计打卡".tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
                                     .lineLimit(1)

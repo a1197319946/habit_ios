@@ -1,9 +1,17 @@
 import SwiftUI
 import WidgetKit
 import SwiftData
+import Charts
 
 struct HabitEditRoute: Hashable {
     let habit: Habit
+}
+
+struct MonthlyTrendDataPoint: Identifiable {
+    let id = UUID()
+    let monthLabel: String
+    let daysCount: Int
+    let totalAmount: Double
 }
 
 struct HabitStatsDetailView: View {
@@ -20,6 +28,32 @@ struct HabitStatsDetailView: View {
     @State private var showingEditSheet = false
     
     private var calendar: Calendar { appSettings.customCalendar }
+    
+    private var monthlyTrendData: [MonthlyTrendDataPoint] {
+        var points: [MonthlyTrendDataPoint] = []
+        let yearCheckins = getCheckinsForYear()
+        let now = Date()
+        let thisYear = calendar.component(.year, from: now)
+        let maxMonth: Int
+        if currentYear < thisYear {
+            maxMonth = 12
+        } else if currentYear == thisYear {
+            maxMonth = calendar.component(.month, from: now)
+        } else {
+            maxMonth = 0
+        }
+        guard maxMonth >= 1 else { return points }
+        
+        for m in 1...maxMonth {
+            let prefix = String(format: "%04d-%02d", currentYear, m)
+            let mChecks = yearCheckins.filter { $0.dateString.hasPrefix(prefix) }
+            let days = Set(mChecks.map { $0.dateString }).count
+            let amount = mChecks.reduce(0.0) { $0 + $1.amount }
+            let label = appSettings.resolvedLanguage == .chinese ? "\(m)月" : "\(m)"
+            points.append(MonthlyTrendDataPoint(monthLabel: label, daysCount: days, totalAmount: amount))
+        }
+        return points
+    }
     
     var body: some View {
         ZStack {
@@ -82,12 +116,14 @@ struct HabitStatsDetailView: View {
                         let totalAmount = yearCheckins.reduce(0) { $0 + $1.amount }
                         let allCheckinDays = Set(checkins.filter { $0.habit?.id == habit.id }.map { $0.dateString }).count
                         
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.spacingM) {
-                            statBox(icon: "checkmark.circle.fill", iconColor: Color(hex: habit.color), value: "\(completedDays)", unit: "天".tr(appSettings.resolvedLanguage), label: "打卡天数".tr(appSettings.resolvedLanguage))
-                            if habit.goalType == "amount" {
+                        if habit.goalType == "amount" {
+                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.spacingM) {
+                                statBox(icon: "checkmark.circle.fill", iconColor: Color(hex: habit.color), value: "\(completedDays)", unit: "天".tr(appSettings.resolvedLanguage), label: "打卡天数".tr(appSettings.resolvedLanguage))
                                 statBox(icon: "number.circle.fill", iconColor: Color.yellow, value: "\(Int(totalAmount))", unit: habit.amountUnit.tr(appSettings.resolvedLanguage), label: "总数值".tr(appSettings.resolvedLanguage))
-                            } else {
-                                statBox(icon: "flame.fill", iconColor: Color.orange, value: "\(allCheckinDays)", unit: "天".tr(appSettings.resolvedLanguage), label: "累计打卡".tr(appSettings.resolvedLanguage))
+                            }
+                        } else {
+                            LazyVGrid(columns: [GridItem(.flexible())], spacing: DS.spacingM) {
+                                statBox(icon: "checkmark.circle.fill", iconColor: Color(hex: habit.color), value: "\(completedDays)", unit: "天".tr(appSettings.resolvedLanguage), label: "打卡天数".tr(appSettings.resolvedLanguage))
                             }
                         }
                     }
@@ -98,7 +134,7 @@ struct HabitStatsDetailView: View {
                     .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(DS.outline, lineWidth: 1))
                     .shadow(color: Color.black.opacity(0.02), radius: 10, x: 0, y: 4)
                     
-                    // Calendar Section
+                    // Unified Yearly Calendar and Monthly Trend/Details Card
                     VStack(alignment: .leading, spacing: DS.spacingM) {
                         HStack {
                             Image(systemName: "calendar")
@@ -108,6 +144,7 @@ struct HabitStatsDetailView: View {
                                 .foregroundColor(DS.onSurface)
                         }
                         
+                        // Year Selector
                         HStack {
                             Button(action: { withAnimation { currentYear -= 1 } }) {
                                 Image(systemName: "chevron.left")
@@ -133,8 +170,86 @@ struct HabitStatsDetailView: View {
                             Spacer()
                         }
                         
-                        // Empty space instead of Legend
-                        Spacer().frame(height: 8)
+                        // Sub-header 1: Monthly Trend (`月度趋势`)
+                        HStack {
+                            Text("Monthly Trend".tr(appSettings.resolvedLanguage))
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(DS.onSurfaceVariant)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(DS.uncheckedPlaceholder)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                            Spacer()
+                        }
+                        .padding(.top, 4)
+                        
+                        let trendData = monthlyTrendData
+                        let isAmount = habit.goalType == "amount"
+                        
+                        if !trendData.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Chart(trendData) { point in
+                                    let yValue = isAmount ? point.totalAmount : Double(point.daysCount)
+                                    AreaMark(
+                                        x: .value("Month", point.monthLabel),
+                                        y: .value("Value", yValue)
+                                    )
+                                    .foregroundStyle(LinearGradient(colors: [Color(hex: habit.color).opacity(0.4), Color(hex: habit.color).opacity(0.05)], startPoint: .top, endPoint: .bottom))
+                                    .interpolationMethod(.catmullRom)
+                                    
+                                    LineMark(
+                                        x: .value("Month", point.monthLabel),
+                                        y: .value("Value", yValue)
+                                    )
+                                    .foregroundStyle(Color(hex: habit.color))
+                                    .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                                    .interpolationMethod(.catmullRom)
+                                    
+                                    PointMark(
+                                        x: .value("Month", point.monthLabel),
+                                        y: .value("Value", yValue)
+                                    )
+                                    .foregroundStyle(Color(hex: habit.color))
+                                }
+                                .chartLegend(.hidden)
+                                .chartXAxis {
+                                    AxisMarks { _ in
+                                        AxisValueLabel()
+                                            .foregroundStyle(DS.onSurfaceVariant)
+                                            .font(.system(size: 11, weight: .medium))
+                                    }
+                                }
+                                .chartYAxis {
+                                    AxisMarks(position: .leading) { _ in
+                                        AxisGridLine(stroke: StrokeStyle(lineWidth: 1, dash: [4]))
+                                            .foregroundStyle(DS.outlineVariant.opacity(0.5))
+                                        AxisValueLabel()
+                                            .foregroundStyle(DS.onSurfaceVariant)
+                                            .font(.system(size: 11, weight: .medium))
+                                    }
+                                }
+                                .frame(height: 160)
+                            }
+                        } else {
+                            Text("No Data".tr(appSettings.resolvedLanguage))
+                                .font(.system(size: 13))
+                                .foregroundColor(DS.onSurfaceVariant)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .frame(height: 80)
+                        }
+                        
+                        // Sub-header 2: Monthly Details (`月度详情`)
+                        HStack {
+                            Text("Monthly Details".tr(appSettings.resolvedLanguage))
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(DS.onSurfaceVariant)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(DS.uncheckedPlaceholder)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                            Spacer()
+                        }
+                        .padding(.top, 10)
                         
                         // Yearly Grid (3 columns for compact, adaptive layout)
                         let months = Array(1...12)

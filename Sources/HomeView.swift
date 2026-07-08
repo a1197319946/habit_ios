@@ -211,17 +211,13 @@ struct HomeView: View {
     
     // MARK: - Actions
     private func isHabitChecked(habit: Habit) -> Bool {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dateString = formatter.string(from: selectedDate)
-        return checkins.contains(where: { $0.habit?.id == habit.id && $0.dateString == dateString })
+        let dateString = SharedFormatters.dateString(from: selectedDate)
+        return habit.checkinDates.contains(dateString)
     }
     
     private func handleCheckinTap(habit: Habit) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dateString = formatter.string(from: selectedDate)
-        let isChecked = checkins.contains(where: { $0.habit?.id == habit.id && $0.dateString == dateString })
+        let dateString = SharedFormatters.dateString(from: selectedDate)
+        let isChecked = habit.checkinDates.contains(dateString)
         
         selectedHabit = habit
         
@@ -251,7 +247,7 @@ struct HomeView: View {
             modelContext.insert(checkin)
             try? modelContext.save()
             NotificationManager.shared.scheduleReminder(for: habit)
-        WidgetCenter.shared.reloadAllTimelines()
+            WidgetCenter.shared.reloadAllTimelines()
             triggerSuccessSequence()
         }
     }
@@ -263,7 +259,6 @@ struct HomeView: View {
             modelContext.delete(check)
         }
         try? modelContext.save()
-        NotificationManager.shared.scheduleReminder(for: habit)
         WidgetCenter.shared.reloadAllTimelines()
     }
     
@@ -284,9 +279,7 @@ struct HomeView: View {
     }
     
     private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
+        return SharedFormatters.dateString(from: date)
     }
     
     private func monthString(for date: Date) -> String {
@@ -312,10 +305,8 @@ struct ListHabitCard: View {
     let onTapCard: () -> Void
     
     var isChecked: Bool {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dateString = formatter.string(from: selectedDate)
-        return checkins.contains(where: { $0.habit?.id == habit.id && $0.dateString == dateString })
+        let dateString = SharedFormatters.dateString(from: selectedDate)
+        return habit.checkinDates.contains(dateString)
     }
     
     var periodValidCheckins: [Checkin] {
@@ -324,15 +315,10 @@ struct ListHabitCard: View {
         let interval = calendar.dateInterval(of: targetComponent, for: selectedDate)
         
         guard let start = interval?.start, let end = interval?.end else { return [] }
-        
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        
-        return checkins.filter {
-            guard $0.habit?.id == habit.id else { return false }
-            guard let date = formatter.date(from: $0.dateString) else { return false }
-            return date >= start && date < end
-        }
+        let startStr = SharedFormatters.dateString(from: start)
+        let endStr = SharedFormatters.dateString(from: end)
+        let hc = habit.checkins ?? []
+        return hc.filter { $0.dateString >= startStr && $0.dateString < endStr }
     }
     
     var periodCompletedCount: Int {
@@ -477,6 +463,16 @@ struct WeeklySlider: View {
     private var calendar: Calendar { appSettings.customCalendar }
     private let weekRange = -50...50
     
+    private var activeCheckinDates: Set<String> {
+        var set = Set<String>()
+        for c in checkins {
+            if let h = c.habit, !h.isArchived {
+                set.insert(c.dateString)
+            }
+        }
+        return set
+    }
+    
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 0) {
@@ -523,13 +519,14 @@ struct WeeklySlider: View {
             }
         }
         
+        let activeSet = activeCheckinDates
         return HStack(spacing: 8) {
             ForEach(days, id: \.self) { date in
                 let isSelected = calendar.isDate(date, inSameDayAs: selectedDate)
                 let isToday = calendar.isDateInToday(date)
                 let dayStr = shortDayString(for: date)
                 let dayNum = calendar.component(.day, from: date)
-                let isCheckedIn = checkins.contains(where: { $0.dateString == formatDate(date) && $0.habit != nil && $0.habit?.isArchived == false })
+                let isCheckedIn = activeSet.contains(SharedFormatters.dateString(from: date))
                 
                 Button(action: {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()

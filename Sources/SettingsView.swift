@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import WidgetKit
 import UniformTypeIdentifiers
 
@@ -14,6 +15,7 @@ struct SettingsView: View {
     @State private var showingWidgetGuide = false
     @State private var toastMessage: String? = nil
     @ObservedObject private var cloudSyncManager = CloudSyncManager.shared
+    @ObservedObject private var storeManager = StoreManager.shared
     
     var body: some View {
         NavigationView {
@@ -124,12 +126,12 @@ struct SettingsView: View {
         } else {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Premium Member".tr(appSettings.resolvedLanguage))
+                    Text("TickDay 尊享会员".tr(appSettings.resolvedLanguage))
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(DS.onSurface)
-                    Text("All features unlocked".tr(appSettings.resolvedLanguage))
+                    Text(storeManager.expirationDateFormatted(in: appSettings.resolvedLanguage))
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(DS.onSurfaceVariant)
+                        .foregroundColor(Color(hex: "D4AF37"))
                 }
                 Spacer()
                 Image(systemName: "crown.fill")
@@ -348,21 +350,52 @@ struct SettingsView: View {
             } label: {
                 SettingsRowLabel(icon: "arrow.up.doc", color: .pink, title: "Export Data".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: true, isPremiumUser: appSettings.isPremium)
             }
+            
+            Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)
+            
+            Button {
+                mockYearlyData()
+            } label: {
+                HStack {
+                    Image(systemName: "wand.and.stars")
+                        .foregroundColor(.purple)
+                        .font(.system(size: 18))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("一键生成今年模拟打卡数据".tr(appSettings.resolvedLanguage))
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(DS.onSurface)
+                        Text("为现有习惯随机填充今年打卡与情绪记录".tr(appSettings.resolvedLanguage))
+                            .font(.system(size: 12))
+                            .foregroundColor(DS.onSurfaceVariant)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(DS.onSurfaceVariant)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+            }
+            .buttonStyle(.plain)
         }
     }
     
     @ViewBuilder private var aboutSection: some View {
         SettingsSection(title: "About".tr(appSettings.resolvedLanguage)) {
             Button {
-                // Dummy Action
+                if let url = URL(string: "https://a1197319946.github.io/habit_ios/support.html") {
+                    UIApplication.shared.open(url)
+                }
             } label: {
-                SettingsRowLabel(icon: "doc.text", color: .gray, title: "Terms of Service".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
+                SettingsRowLabel(icon: "questionmark.circle", color: .orange, title: "Help & Support".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
             }
             
             Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)
             
             Button {
-                // Dummy Action
+                if let url = URL(string: "https://a1197319946.github.io/habit_ios/privacy.html") {
+                    UIApplication.shared.open(url)
+                }
             } label: {
                 SettingsRowLabel(icon: "hand.raised", color: .gray, title: "Privacy Policy".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
             }
@@ -379,7 +412,137 @@ struct SettingsView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             .tint(DS.primary)
+            
+            Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)
+            
+            Button {
+                mockYearlyData()
+            } label: {
+                HStack {
+                    Image(systemName: "wand.and.stars")
+                        .foregroundColor(.purple)
+                        .font(.system(size: 18))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("一键生成今年模拟打卡数据".tr(appSettings.resolvedLanguage))
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(DS.onSurface)
+                        Text("为现有习惯随机填充今年打卡与情绪记录".tr(appSettings.resolvedLanguage))
+                            .font(.system(size: 12))
+                            .foregroundColor(DS.onSurfaceVariant)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(DS.onSurfaceVariant)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+            }
+            .buttonStyle(.plain)
         }
+    }
+    
+    private func mockYearlyData() {
+        let descriptor = FetchDescriptor<Habit>()
+        guard let habits = try? modelContext.fetch(descriptor) else { return }
+        
+        var targetHabits = habits
+        if targetHabits.isEmpty {
+            let h1 = Habit(name: "早起喝水", color: "#3B82F6", icon: "drop.fill")
+            h1.goalType = "amount"
+            h1.amountValue = 2000
+            h1.amountUnit = "ml"
+            h1.frequencyType = "daily"
+            h1.order = 0
+            
+            let h2 = Habit(name: "阅读30分钟", color: "#8B5CF6", icon: "book.fill")
+            h2.goalType = "frequency"
+            h2.frequencyType = "weekly"
+            h2.weeklyTarget = 5
+            h2.order = 1
+            
+            let h3 = Habit(name: "慢跑锻炼", color: "#10B981", icon: "figure.run")
+            h3.goalType = "amount"
+            h3.amountValue = 5.0
+            h3.amountUnit = "km"
+            h3.frequencyType = "weekly"
+            h3.weeklyTarget = 3
+            h3.order = 2
+            
+            let h4 = Habit(name: "冥想放松", color: "#F59E0B", icon: "wind")
+            h4.goalType = "frequency"
+            h4.frequencyType = "weekly"
+            h4.weeklyTarget = 4
+            h4.order = 3
+            
+            modelContext.insert(h1)
+            modelContext.insert(h2)
+            modelContext.insert(h3)
+            modelContext.insert(h4)
+            targetHabits = [h1, h2, h3, h4]
+        }
+        
+        let calendar = Calendar.current
+        let today = Date()
+        let currentYear = calendar.component(.year, from: today)
+        
+        var components = DateComponents()
+        components.year = currentYear
+        components.month = 1
+        components.day = 1
+        guard let startDate = calendar.date(from: components) else { return }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        let moodTypes = ["excited", "happy", "normal", "down", "happy", "excited"]
+        let moodTexts = [
+            "今天状态超棒，轻松完成打卡！",
+            "坚持小习惯，生活更规律了～",
+            "略微疲惫，但依然完成了目标。",
+            "精力充沛，为自己点赞！",
+            "平淡真实又充实的一天。"
+        ]
+        
+        for habit in targetHabits {
+            let existingDates = habit.checkinDates
+            var currentDate = startDate
+            
+            while currentDate <= today {
+                let dateStr = formatter.string(from: currentDate)
+                
+                if !existingDates.contains(dateStr) {
+                    let prob = 0.76 + (Double(habit.order % 3) * 0.06)
+                    if Double.random(in: 0...1) < prob {
+                        var amt = 1.0
+                        if habit.goalType == "amount" && habit.amountValue > 0 {
+                            let factor = Double.random(in: 0.7...1.3)
+                            amt = (habit.amountValue * factor * 10).rounded() / 10.0
+                        }
+                        let checkin = Checkin(dateString: dateStr, amount: amt)
+                        checkin.timestamp = currentDate
+                        checkin.habit = habit
+                        modelContext.insert(checkin)
+                        
+                        if Double.random(in: 0...1) < 0.18 {
+                            let moodType = moodTypes.randomElement() ?? "happy"
+                            let moodText = moodTexts.randomElement() ?? ""
+                            let mood = MoodRecord(type: moodType, text: moodText)
+                            mood.timestamp = currentDate
+                            mood.habit = habit
+                            modelContext.insert(mood)
+                        }
+                    }
+                }
+                
+                currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? today.addingTimeInterval(86400)
+            }
+        }
+        
+        try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
+        
+        toastMessage = "已为所有习惯成功生成今年全套模拟打卡与情绪数据！".tr(appSettings.resolvedLanguage)
     }
 }
 

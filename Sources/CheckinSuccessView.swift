@@ -421,7 +421,7 @@ struct PosterView: View {
                     // Bottom branding
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Little Habit Tracker".tr(appSettings.resolvedLanguage))
+                            Text("TickDay".tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 18, weight: .bold, design: .rounded))
                                 .foregroundColor(Color(hex: "#4A4C4E"))
                             Text("Track your daily progress".tr(appSettings.resolvedLanguage))

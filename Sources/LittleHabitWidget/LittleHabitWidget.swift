@@ -22,6 +22,7 @@ extension String {
         let dict: [String: [String: String]] = [
             "No Habit": ["zh": "暂无习惯", "en": "No Habit"],
             "Select Habits": ["zh": "请选择习惯", "en": "Select Habits"],
+            "请长按编辑选择习惯": ["zh": "请长按编辑选择习惯", "en": "Please long press to edit & select habit"],
             "本周": ["zh": "本周", "en": "This week"],
             "本月": ["zh": "本月", "en": "This month"],
             "次": ["zh": "次", "en": "times"],
@@ -31,8 +32,9 @@ extension String {
             "小时": ["zh": "小时", "en": "hours"],
             "页": ["zh": "页", "en": "pages"],
             "天": ["zh": "天", "en": "days"],
-            "周": ["zh": "周", "en": "week"],
-            "月": ["zh": "月", "en": "month"]
+            "周": ["zh": "周", "en": "Week"],
+            "月": ["zh": "月", "en": "Month"],
+            "年": ["zh": "年", "en": "Year"]
         ]
         if let trans = dict[self] {
             return trans[lang] ?? self
@@ -43,24 +45,30 @@ extension String {
 
 // MARK: - Providers
 @MainActor
-let widgetSharedModelContainer: ModelContainer = {
-    let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
-    let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") ?? URL.temporaryDirectory.appending(path: "widget.store")
-    let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
-    return try! ModelContainer(for: schema, configurations: [modelConfiguration])
-}()
-
-@MainActor
 func fetchFreshHabitsAndCheckins() -> ([Habit], [Checkin]) {
     do {
-        let container = widgetSharedModelContainer
-        let habitDescriptor = FetchDescriptor<Habit>(predicate: #Predicate<Habit> { $0.isArchived == false }, sortBy: [SortDescriptor(\.order)])
-        let checkinDescriptor = FetchDescriptor<Checkin>()
-        let habits = (try? container.mainContext.fetch(habitDescriptor)) ?? []
-        let checkins = (try? container.mainContext.fetch(checkinDescriptor)) ?? []
+        let context = SharedModelContainerManager.mainContext
+        var habitDescriptor = FetchDescriptor<Habit>(predicate: #Predicate<Habit> { $0.isArchived == false }, sortBy: [SortDescriptor(\.order)])
+        habitDescriptor.relationshipKeyPathsForPrefetching = [\.checkins]
+        habitDescriptor.includePendingChanges = true
+        var checkinDescriptor = FetchDescriptor<Checkin>()
+        checkinDescriptor.relationshipKeyPathsForPrefetching = [\.habit]
+        checkinDescriptor.includePendingChanges = true
+        let habits = (try? context.fetch(habitDescriptor)) ?? []
+        let checkins = (try? context.fetch(checkinDescriptor)) ?? []
+        
+        for h in habits {
+            _ = h.checkins?.count
+            if let hc = h.checkins {
+                for c in hc { _ = c.dateString }
+            }
+        }
+        for c in checkins {
+            _ = c.habit?.id
+        }
         return (habits, checkins)
     } catch {
-        return ([] , [])
+        return ([], [])
     }
 }
 
@@ -103,6 +111,40 @@ struct MultipleHabitsProvider: AppIntentTimelineProvider {
     }
 }
 
+struct MonthProvider: AppIntentTimelineProvider {
+    init() {}
+
+    func placeholder(in context: Context) -> MonthEntry {
+        MonthEntry(date: Date(), configuration: SelectMonthHabitIntent(), habits: [], checkins: [])
+    }
+    @MainActor func snapshot(for configuration: SelectMonthHabitIntent, in context: Context) async -> MonthEntry {
+        let (habits, checkins) = fetchFreshHabitsAndCheckins()
+        return MonthEntry(date: Date(), configuration: configuration, habits: habits, checkins: checkins)
+    }
+    @MainActor func timeline(for configuration: SelectMonthHabitIntent, in context: Context) async -> Timeline<MonthEntry> {
+        let (habits, checkins) = fetchFreshHabitsAndCheckins()
+        let entry = MonthEntry(date: Date(), configuration: configuration, habits: habits, checkins: checkins)
+        return Timeline(entries: [entry], policy: .after(Calendar.current.date(byAdding: .hour, value: 1, to: Date())!))
+    }
+}
+
+struct YearlyProvider: AppIntentTimelineProvider {
+    init() {}
+
+    func placeholder(in context: Context) -> YearlyEntry {
+        YearlyEntry(date: Date(), configuration: SelectYearlyHabitIntent(), habits: [], checkins: [])
+    }
+    @MainActor func snapshot(for configuration: SelectYearlyHabitIntent, in context: Context) async -> YearlyEntry {
+        let (habits, checkins) = fetchFreshHabitsAndCheckins()
+        return YearlyEntry(date: Date(), configuration: configuration, habits: habits, checkins: checkins)
+    }
+    @MainActor func timeline(for configuration: SelectYearlyHabitIntent, in context: Context) async -> Timeline<YearlyEntry> {
+        let (habits, checkins) = fetchFreshHabitsAndCheckins()
+        let entry = YearlyEntry(date: Date(), configuration: configuration, habits: habits, checkins: checkins)
+        return Timeline(entries: [entry], policy: .after(Calendar.current.date(byAdding: .hour, value: 1, to: Date())!))
+    }
+}
+
 struct SimpleEntry: TimelineEntry {
     let date: Date
     let configuration: SelectHabitIntent
@@ -117,96 +159,18 @@ struct MultipleHabitsEntry: TimelineEntry {
     let checkins: [Checkin]
 }
 
-// MARK: - App Intents
-struct HabitEntity: AppEntity {
-    var id: String
-    var name: String
-    var icon: String
-    var color: String
-
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Habit"
-    static var defaultQuery = HabitEntityQuery()
-
-    var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(name)")
-    }
+struct MonthEntry: TimelineEntry {
+    let date: Date
+    let configuration: SelectMonthHabitIntent
+    let habits: [Habit]
+    let checkins: [Checkin]
 }
 
-struct HabitEntityQuery: EntityQuery {
-    func entities(for identifiers: [String]) async throws -> [HabitEntity] {
-        let allHabits = await fetchAllHabits()
-        return allHabits.filter { identifiers.contains($0.id) }
-    }
-
-    func suggestedEntities() async throws -> [HabitEntity] { return await fetchAllHabits() }
-    func defaultResult() async -> HabitEntity? { return try? await suggestedEntities().first }
-
-    @MainActor
-    private func fetchAllHabits() -> [HabitEntity] {
-        do {
-            let modelContainer = widgetSharedModelContainer
-            let descriptor = FetchDescriptor<Habit>(predicate: #Predicate<Habit> { $0.isArchived == false }, sortBy: [SortDescriptor(\.order)])
-            let habits = try modelContainer.mainContext.fetch(descriptor)
-            return habits.map { HabitEntity(id: $0.id, name: $0.name, icon: $0.icon, color: $0.color) }
-        } catch {
-            return []
-        }
-    }
-}
-
-struct SelectHabitIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Select Habit"
-    @Parameter(title: "Habit") var selectedHabit: HabitEntity?
-}
-
-struct SelectMultipleHabitsIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Select Multiple Habits"
-    @Parameter(title: "Habits") var habits: [HabitEntity]?
-}
-
-struct CheckinHabitIntent: AppIntent {
-    static var title: LocalizedStringResource = "Check in Habit"
-    @Parameter(title: "Habit ID") var habitId: String
-
-    init() {}
-    init(habitId: String) { self.habitId = habitId }
-
-    @MainActor
-    func perform() async throws -> some IntentResult {
-        do {
-            let modelContainer = widgetSharedModelContainer
-            let descriptor = FetchDescriptor<Habit>()
-            let habits = try modelContainer.mainContext.fetch(descriptor)
-            if let targetHabit = habits.first(where: { $0.id == habitId }) {
-                let today = Date()
-                let dateString = {
-                    let formatter = DateFormatter()
-                    formatter.dateFormat = "yyyy-MM-dd"
-                    return formatter.string(from: today)
-                }()
-                let descriptorCheckins = FetchDescriptor<Checkin>()
-                let allCheckins = try modelContainer.mainContext.fetch(descriptorCheckins)
-                let hc = targetHabit.checkins ?? []
-                let todaysFromHabit = hc.filter { $0.dateString == dateString }
-                let todaysFromGlobal = allCheckins.filter { $0.habit?.id == habitId && $0.dateString == dateString }
-                let todays = todaysFromHabit.isEmpty ? todaysFromGlobal : todaysFromHabit
-                let fillAmount = targetHabit.goalType == "amount" ? targetHabit.amountValue : 1
-                if !todays.isEmpty {
-                    // Undo: Delete all checkin records for today to cleanly undo
-                    todays.forEach { modelContainer.mainContext.delete($0) }
-                } else {
-                    // Checkin
-                    let newCheckin = Checkin(dateString: dateString, amount: fillAmount)
-                    modelContainer.mainContext.insert(newCheckin)
-                    newCheckin.habit = targetHabit
-                    newCheckin.timestamp = today
-                }
-                try modelContainer.mainContext.save()
-            }
-        } catch {}
-        WidgetCenter.shared.reloadAllTimelines()
-        return .result()
-    }
+struct YearlyEntry: TimelineEntry {
+    let date: Date
+    let configuration: SelectYearlyHabitIntent
+    let habits: [Habit]
+    let checkins: [Checkin]
 }
 
 // MARK: - Widget Helpers
@@ -301,15 +265,32 @@ func getCheckinsForPeriod(habit: Habit, date: Date, checkins: [Checkin]) -> Doub
 
 // MARK: - Views
 
+struct UnselectedHabitWidgetView: View {
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: "hand.tap.fill")
+                .font(.system(size: 24))
+                .foregroundColor(DS.primary)
+            Text("请长按编辑选择习惯".wTr())
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(DS.onSurfaceVariant)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(12)
+    }
+}
+
 struct MultiHabitCheckinWidgetView: View {
     var entry: MultipleHabitsEntry
     var body: some View {
         let selectedIds = entry.configuration.habits?.map { $0.id } ?? []
-        let selectedHabits = selectedIds.isEmpty ? Array(entry.habits.prefix(3)) : Array(entry.habits.filter { selectedIds.contains($0.id) }.prefix(3))
+        let configured = entry.habits.filter { selectedIds.contains($0.id) && !$0.isArchived }
+        let selectedHabits = configured.isEmpty ? Array(entry.habits.filter { !$0.isArchived }.prefix(3)) : Array(configured.prefix(3))
         
         VStack(spacing: 0) {
             if selectedHabits.isEmpty {
-                Text("Select Habits".wTr()).foregroundColor(Color.secondary)
+                UnselectedHabitWidgetView()
             } else {
                 ForEach(selectedHabits) { habit in
                     let isDone = isCheckedIn(habit: habit, date: entry.date, checkins: entry.checkins)
@@ -318,12 +299,12 @@ struct MultiHabitCheckinWidgetView: View {
                             Circle().fill(Color(hex: habit.color).opacity(0.15)).frame(width: 28, height: 28)
                             Image(systemName: habit.icon).font(.system(size: 14)).foregroundColor(Color(hex: habit.color))
                         }
-                        Text(habit.name).font(.system(size: 14, weight: .bold)).lineLimit(1)
-                        Spacer()
+                        Text(habit.name).font(.system(size: 14, weight: .bold)).lineLimit(1).truncationMode(.tail)
+                        Spacer(minLength: 0)
                         Button(intent: CheckinHabitIntent(habitId: habit.id)) {
                             ZStack {
                                 if isDone {
-                                    Image(systemName: "checkmark.circle.fill").font(.system(size: 24)).foregroundColor(.green)
+                                    Image(systemName: "checkmark.circle.fill").font(.system(size: 24)).foregroundColor(Color(hex: habit.color))
                                 } else {
                                     Circle().stroke(Color(hex: habit.color), lineWidth: 2).frame(width: 22, height: 22)
                                 }
@@ -342,14 +323,14 @@ struct MultiHabitCheckinWidgetView: View {
 struct NewSingleHabitWidgetView: View {
     var entry: SimpleEntry
     var body: some View {
-        let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id }) } ?? entry.habits.first
+        let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id && !$0.isArchived }) } ?? entry.habits.first(where: { !$0.isArchived })
         VStack(spacing: 8) {
             if let habit = habit {
                 let isDone = isCheckedIn(habit: habit, date: entry.date, checkins: entry.checkins)
                 Button(intent: CheckinHabitIntent(habitId: habit.id)) {
                     ZStack {
                         if isDone {
-                            Image(systemName: "checkmark.circle.fill").resizable().foregroundColor(.green).frame(width: 56, height: 56)
+                            Image(systemName: "checkmark.circle.fill").resizable().foregroundColor(Color(hex: habit.color)).frame(width: 56, height: 56)
                         } else {
                             Circle().stroke(Color(hex: habit.color), lineWidth: 2).frame(width: 56, height: 56)
                             Image(systemName: habit.icon).font(.system(size: 24)).foregroundColor(Color(hex: habit.color))
@@ -357,7 +338,7 @@ struct NewSingleHabitWidgetView: View {
                     }
                 }.buttonStyle(.plain)
                 
-                Text(habit.name).font(.system(size: 14, weight: .bold)).lineLimit(1)
+                Text(habit.name).font(.system(size: 15, weight: .bold)).lineLimit(1).truncationMode(.tail)
                 
                 let label = habit.frequencyType == "weekly" ? "本周".wTr() : "本月".wTr()
                 let suffix = habit.goalType == "amount" ? habit.amountUnit.wTr() : "次".wTr()
@@ -366,7 +347,7 @@ struct NewSingleHabitWidgetView: View {
                 
                 Text("\(label): \(count)/\(target)\(suffix)").font(.system(size: 10, weight: .medium)).foregroundColor(Color.secondary)
             } else {
-                Text("No Habit".wTr()).foregroundColor(Color.secondary)
+                UnselectedHabitWidgetView()
             }
         }
     }
@@ -390,18 +371,51 @@ struct MonthCalendarWidgetView: View {
             return f.string(from: date)
         }()
         
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            VStack(spacing: 16) {
-                Text(monthStr).font(.system(size: 14, weight: .heavy)).foregroundColor(Color.primary).lineLimit(1).minimumScaleFactor(0.8).padding(.top, 4)
-                
-                ZStack {
-                    Circle().fill(Color(hex: habit.color).opacity(0.15)).frame(width: 52, height: 52)
-                    Image(systemName: habit.icon).font(.system(size: 24)).foregroundColor(Color(hex: habit.color))
+        HStack(alignment: .top, spacing: 14) {
+            VStack(alignment: .leading, spacing: 10) {
+                // Top: Enlarged icon + Habit Name (moved up and enlarged!)
+                HStack(spacing: 8) {
+                    ZStack {
+                        Circle().fill(Color(hex: habit.color).opacity(0.18)).frame(width: 38, height: 38)
+                        Image(systemName: habit.icon).font(.system(size: 19, weight: .bold)).foregroundColor(Color(hex: habit.color))
+                    }
+                    Text(habit.name)
+                        .font(.system(size: 16, weight: .bold))
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                        .foregroundColor(Color.primary)
                 }
                 
-                Text(habit.name).font(.system(size: 16, weight: .bold)).lineLimit(1).foregroundColor(Color.primary)
+                // Check-in Count Badge (enlarged and moved up!)
+                let statText = {
+                    let periodVal = getCheckinsForPeriod(habit: habit, date: date, checkins: checkins)
+                    if habit.goalType == "amount" {
+                        let amountFormatted = periodVal.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", periodVal) : String(format: "%.1f", periodVal)
+                        return "\(amountFormatted) \(habit.amountUnit.wTr())"
+                    } else {
+                        return "\(Int(periodVal)) \("天".wTr())"
+                    }
+                }()
+                
+                Text(statText)
+                    .font(.system(size: 14, weight: .heavy))
+                    .foregroundColor(Color(hex: habit.color))
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(Color(hex: habit.color).opacity(0.15))
+                    .clipShape(Capsule())
+                
+                Spacer(minLength: 2)
+                
+                // Subtext: Month label moved below
+                HStack(spacing: 4) {
+                    Image(systemName: "calendar")
+                    Text("\(monthStr)")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .foregroundColor(Color.secondary)
             }
-            .frame(width: 90)
+            .frame(maxWidth: .infinity, alignment: .leading)
             
             Spacer(minLength: 0)
             
@@ -420,7 +434,7 @@ struct MonthCalendarWidgetView: View {
                                     let isDone = isCheckedIn(habit: habit, date: dayDate, checkins: checkins)
                                     let dayStr = "\(Calendar.current.component(.day, from: dayDate))"
                                     ZStack {
-                                        RoundedRectangle(cornerRadius: 6)
+                                        RoundedRectangle(cornerRadius: 5)
                                             .fill(isDone ? Color(hex: habit.color) : Color(UIColor.tertiarySystemFill))
                                             .frame(width: 20, height: 20)
                                         Text(dayStr)
@@ -436,12 +450,12 @@ struct MonthCalendarWidgetView: View {
                 }
             }
         }
-        .padding(.top, 20)
     }
 }
 
 struct MultiHabitWeekWidgetView: View {
     var entry: MultipleHabitsEntry
+    var selectedHabits: [Habit]
     var body: some View {
         let lang = getWidgetLanguage()
         let days = getDaysForWeek(date: entry.date)
@@ -450,36 +464,70 @@ struct MultiHabitWeekWidgetView: View {
         let weekdaysZh = sunFirst ? ["日", "一", "二", "三", "四", "五", "六"] : ["一", "二", "三", "四", "五", "六", "日"]
         let weekdays = lang == "zh" ? weekdaysZh : weekdaysEn
         
-        let selectedIds = entry.configuration.habits?.map { $0.id } ?? []
-        let selectedHabits = selectedIds.isEmpty ? Array(entry.habits.prefix(4)) : Array(entry.habits.filter { selectedIds.contains($0.id) }.prefix(4))
+        let weekRangeStr = {
+            guard let first = days.first, let last = days.last else { return "" }
+            let f = DateFormatter()
+            if lang == "zh" {
+                f.locale = Locale(identifier: "zh_CN")
+                f.dateFormat = "M月d日"
+            } else {
+                f.locale = Locale(identifier: "en_US")
+                f.dateFormat = "MMM d"
+            }
+            return "\(f.string(from: first)) - \(f.string(from: last))"
+        }()
         
         VStack(spacing: 8) {
-            HStack(spacing: 6) {
-                Spacer().frame(width: 84)
+            HStack(alignment: .bottom, spacing: 14) {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "calendar")
+                        Text("周".wTr())
+                            .font(.system(size: 11, weight: .bold))
+                    }
+                    .foregroundColor(DS.primary)
+                    
+                    Text(weekRangeStr)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(Color.secondary)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.7)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
                 Spacer(minLength: 0)
-                ForEach(weekdays, id: \.self) { day in
-                    Text(day).font(.system(size: 10, weight: .bold)).foregroundColor(Color.secondary)
-                        .frame(width: 20)
+                
+                HStack(spacing: 4) {
+                    ForEach(weekdays, id: \.self) { day in
+                        Text(day).font(.system(size: 11, weight: .bold)).foregroundColor(Color.secondary)
+                            .frame(width: 20)
+                    }
                 }
             }
             
             ForEach(selectedHabits) { habit in
-                HStack(spacing: 6) {
-                    HStack(spacing: 4) {
+                HStack(spacing: 14) {
+                    HStack(spacing: 6) {
                         ZStack {
-                            Circle().fill(Color(hex: habit.color).opacity(0.15)).frame(width: 20, height: 20)
-                            Image(systemName: habit.icon).font(.system(size: 10)).foregroundColor(Color(hex: habit.color))
+                            Circle().fill(Color(hex: habit.color).opacity(0.15)).frame(width: 22, height: 22)
+                            Image(systemName: habit.icon).font(.system(size: 11)).foregroundColor(Color(hex: habit.color))
                         }
-                        Text(habit.name).font(.system(size: 12, weight: .bold)).lineLimit(1)
-                        Spacer()
+                        Text(habit.name).font(.system(size: 13, weight: .bold)).lineLimit(1).truncationMode(.tail)
+                        Spacer(minLength: 0)
                     }
-                    .frame(width: 84, alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
                     Spacer(minLength: 0)
-                    ForEach(days, id: \.self) { day in
-                        let isDone = isCheckedIn(habit: habit, date: day, checkins: entry.checkins)
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(isDone ? Color(hex: habit.color) : Color(UIColor.tertiarySystemFill))
-                            .frame(width: 20, height: 20)
+                    
+                    HStack(spacing: 4) {
+                        ForEach(days, id: \.self) { day in
+                            let isDone = isCheckedIn(habit: habit, date: day, checkins: entry.checkins)
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 5)
+                                    .fill(isDone ? Color(hex: habit.color) : Color(UIColor.tertiarySystemFill))
+                                    .frame(width: 20, height: 20)
+                            }
+                        }
                     }
                 }
             }
@@ -491,56 +539,151 @@ struct YearlyHeatmapWidgetView: View {
     var habit: Habit
     var checkins: [Checkin]
     var date: Date
+    @Environment(\.widgetFamily) var family
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                ZStack {
-                    Circle().fill(Color(hex: habit.color).opacity(0.15)).frame(width: 20, height: 20)
-                    Image(systemName: habit.icon).font(.system(size: 10)).foregroundColor(Color(hex: habit.color))
+        let lang = getWidgetLanguage()
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: date)
+        let yearStr = lang == "zh" ? "\(currentYear)年" : "\(currentYear)"
+        let yearPrefix = String(format: "%04d-", currentYear)
+        
+        let hc = habit.checkins ?? []
+        let globalHc = checkins.filter { $0.habit?.id == habit.id }
+        let checkedDateStrings = Set(hc.map { $0.dateString } + globalHc.map { $0.dateString })
+        
+        let thisYearCheckins = hc.filter { $0.dateString.hasPrefix(yearPrefix) } + globalHc.filter { $0.dateString.hasPrefix(yearPrefix) }
+        let thisYearDays = Set(thisYearCheckins.map { $0.dateString }).count
+        let thisYearAmount = thisYearCheckins.reduce(0.0) { $0 + $1.amount }
+        
+        let statStr = {
+            if habit.goalType == "amount" {
+                let amountFormatted = thisYearAmount.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", thisYearAmount) : String(format: "%.1f", thisYearAmount)
+                return "\(amountFormatted) \(habit.amountUnit.wTr())"
+            } else {
+                return "\(thisYearDays) \("次".wTr())"
+            }
+        }()
+        
+        let isLarge = (family == .systemLarge)
+        let cols = 52
+        let cellWidth: CGFloat = 4.3
+        let cellSpacing: CGFloat = 1.5
+        let cellHeight: CGFloat = isLarge ? 14 : 4.3
+        
+        let startOfToday = calendar.startOfDay(for: date)
+        let gridData: [Bool] = {
+            let df = DateFormatter()
+            df.dateFormat = "yyyy-MM-dd"
+            return (0..<(cols*7)).map { offset in
+                if let d = calendar.date(byAdding: .day, value: -(cols*7 - 1) + offset, to: startOfToday) {
+                    let dStr = df.string(from: d)
+                    return checkedDateStrings.contains(dStr)
                 }
-                Text(habit.name).font(.system(size: 12, weight: .bold))
-                Spacer()
+                return false
+            }
+        }()
+        
+        VStack(alignment: .leading, spacing: isLarge ? 14 : 8) {
+            HStack(alignment: .center, spacing: 14) {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "calendar")
+                        Text("年".wTr())
+                            .font(.system(size: 11, weight: .bold))
+                    }
+                    .foregroundColor(Color(hex: habit.color))
+                    
+                    Text(yearStr)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(Color.secondary)
+                }
+                .frame(minWidth: 50, alignment: .leading)
+                
+                Spacer(minLength: 0)
+                
+                HStack(spacing: 6) {
+                    ZStack {
+                        Circle().fill(Color(hex: habit.color).opacity(0.15)).frame(width: 22, height: 22)
+                        Image(systemName: habit.icon).font(.system(size: 11)).foregroundColor(Color(hex: habit.color))
+                    }
+                    Text(habit.name).font(.system(size: 13, weight: .bold)).lineLimit(1).truncationMode(.tail).foregroundColor(Color.primary)
+                }
+                
+                Spacer(minLength: 0)
+                
+                Text(statStr)
+                    .font(.system(size: 11, weight: .heavy))
+                    .foregroundColor(Color(hex: habit.color))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color(hex: habit.color).opacity(0.12))
+                    .clipShape(Capsule())
             }
             
-            let cols = 52
-            let calendar = Calendar.current
-            let startOfToday = calendar.startOfDay(for: date)
-            // Generate last 52*7 = 364 days.
-            let daysArray = (0..<(cols*7)).compactMap { offset in 
-                calendar.date(byAdding: .day, value: -(cols*7 - 1) + offset, to: startOfToday)
-            }
+            Spacer(minLength: 0)
             
-            HStack(spacing: 2) {
+            HStack(spacing: cellSpacing) {
                 ForEach(0..<cols, id: \.self) { col in
-                    VStack(spacing: 2) {
+                    VStack(spacing: cellSpacing) {
                         ForEach(0..<7, id: \.self) { row in
                             let index = col * 7 + row
-                            if index < daysArray.count {
-                                let isDone = isCheckedIn(habit: habit, date: daysArray[index], checkins: checkins)
-                                RoundedRectangle(cornerRadius: 2)
+                            if index < gridData.count {
+                                let isDone = gridData[index]
+                                RoundedRectangle(cornerRadius: isLarge ? 1.5 : 1)
                                     .fill(isDone ? Color(hex: habit.color) : Color(UIColor.tertiarySystemFill))
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .frame(width: cellWidth, height: cellHeight)
                             } else {
-                                Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity)
+                                Color.clear.frame(width: cellWidth, height: cellHeight)
                             }
                         }
                     }
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .center)
+            
+            Spacer(minLength: 0)
         }
+        .padding(.vertical, isLarge ? 16 : 8)
     }
 }
 
 struct SingleYearlyWidgetView: View {
-    var entry: SimpleEntry
+    var entry: YearlyEntry
     var body: some View {
-        let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id }) } ?? entry.habits.first
+        let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id && !$0.isArchived }) } ?? entry.habits.first(where: { !$0.isArchived })
         VStack {
             if let habit = habit { 
                 YearlyHeatmapWidgetView(habit: habit, checkins: entry.checkins, date: entry.date)
             } else {
-                Text("No Habit".wTr()).foregroundColor(Color.secondary)
+                UnselectedHabitWidgetView()
             }
+        }
+    }
+}
+
+struct SingleMonthWidgetView: View {
+    var entry: MonthEntry
+    var body: some View {
+        let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id && !$0.isArchived }) } ?? entry.habits.first(where: { !$0.isArchived })
+        if let habit = habit {
+            MonthCalendarWidgetView(habit: habit, checkins: entry.checkins, date: entry.date)
+        } else {
+            UnselectedHabitWidgetView()
+        }
+    }
+}
+
+struct MultiHabitWeekWidgetContainerView: View {
+    var entry: MultipleHabitsEntry
+    var body: some View {
+        let selectedIds = entry.configuration.habits?.map { $0.id } ?? []
+        let configured = entry.habits.filter { selectedIds.contains($0.id) && !$0.isArchived }
+        let selectedHabits = configured.isEmpty ? Array(entry.habits.filter { !$0.isArchived }.prefix(4)) : Array(configured.prefix(4))
+        if selectedHabits.isEmpty {
+            UnselectedHabitWidgetView()
+        } else {
+            MultiHabitWeekWidgetView(entry: entry, selectedHabits: selectedHabits)
         }
     }
 }
@@ -564,9 +707,8 @@ struct NewSingleHabitWidget: Widget {
 
 struct SingleMonthWidget: Widget {
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: "SingleMonthWidget", intent: SelectHabitIntent.self, provider: Provider()) { entry in
-            let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id }) } ?? entry.habits.first
-            VStack { if let habit = habit { MonthCalendarWidgetView(habit: habit, checkins: entry.checkins, date: entry.date) } }.forceAppTheme().containerBackground(for: .widget) { MyWidgetBackground().forceAppTheme() }
+        AppIntentConfiguration(kind: "SingleMonthWidget", intent: SelectMonthHabitIntent.self, provider: MonthProvider()) { entry in
+            SingleMonthWidgetView(entry: entry).forceAppTheme().containerBackground(for: .widget) { MyWidgetBackground().forceAppTheme() }
         }.configurationDisplayName("Single Habit Month").description("Monthly calendar view for a habit.").supportedFamilies([.systemMedium])
     }
 }
@@ -574,16 +716,16 @@ struct SingleMonthWidget: Widget {
 struct MultiMonthWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "MultiMonthWidget", intent: SelectMultipleHabitsIntent.self, provider: MultipleHabitsProvider()) { entry in
-            MultiHabitWeekWidgetView(entry: entry).forceAppTheme().containerBackground(for: .widget) { MyWidgetBackground().forceAppTheme() }
+            MultiHabitWeekWidgetContainerView(entry: entry).forceAppTheme().containerBackground(for: .widget) { MyWidgetBackground().forceAppTheme() }
         }.configurationDisplayName("Multi Habit Weekly").description("Compare multiple habits weekly.").supportedFamilies([.systemMedium])
     }
 }
 
 struct SingleYearlyWidget: Widget {
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: "SingleYearlyWidget", intent: SelectHabitIntent.self, provider: Provider()) { entry in
+        AppIntentConfiguration(kind: "SingleYearlyWidget", intent: SelectYearlyHabitIntent.self, provider: YearlyProvider()) { entry in
             SingleYearlyWidgetView(entry: entry).forceAppTheme().containerBackground(for: .widget) { MyWidgetBackground().forceAppTheme() }
-        }.configurationDisplayName("Single Habit Yearly").description("Yearly heatmap for a habit.").supportedFamilies([.systemMedium])
+        }.configurationDisplayName("Single Habit Yearly").description("Yearly heatmap for a habit.").supportedFamilies([.systemMedium, .systemLarge])
     }
 }
 
