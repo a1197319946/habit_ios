@@ -174,7 +174,7 @@ struct StatisticsView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             let _ = appSettings.firstWeekday // Force dependency
-            VStack(spacing: DS.spacingM) {
+            VStack(spacing: 10) {
                     
                     // Title
                     HStack(alignment: .bottom) {
@@ -288,7 +288,7 @@ struct StatisticsView: View {
                         )
                         
                         // Weekly Grid Card
-                        VStack(alignment: .leading, spacing: DS.spacingM) {
+                        VStack(alignment: .leading, spacing: 10) {
                             HStack(spacing: 6) {
                                 Image(systemName: "square.grid.2x2.fill")
                                     .foregroundColor(DS.primary)
@@ -665,7 +665,7 @@ struct MonthGridCard: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.spacingM) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
                 Image(systemName: "square.grid.2x2.fill")
                     .foregroundColor(DS.primary)
@@ -981,7 +981,7 @@ struct DonutChartCard: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.spacingM) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
                 Image(systemName: "chart.pie.fill")
                     .foregroundColor(DS.primary)

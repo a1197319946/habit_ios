@@ -256,6 +256,9 @@ extension String {
             "Help & Support": [.chinese: "帮助与反馈", .english: "Help & Support"],
             "Habit Details": [.chinese: "习惯详情", .english: "Habit Details"],
             "Redeem Offer Code": [.chinese: "使用兑换码", .english: "Redeem Offer Code"],
+            "需要通知权限": [.chinese: "需要通知权限", .english: "Notification Permission Required"],
+            "您已拒绝通知权限。如需打卡提醒，请前往设置中开启。": [.chinese: "您已拒绝通知权限。如需打卡提醒，请前往设置中开启。", .english: "You have denied notification permissions. To receive check-in reminders, please enable them in Settings."],
+            "去设置": [.chinese: "去设置", .english: "Go to Settings"],
             
             "Features": [.chinese: "功能", .english: "Features"],
             "Widgets": [.chinese: "小组件", .english: "Widgets"],

@@ -58,10 +58,10 @@ struct HabitStatsDetailView: View {
     var body: some View {
         ZStack {
             ScrollView(showsIndicators: false) {
-                VStack(spacing: DS.spacingM) {
+                VStack(spacing: 10) {
                     
                     // Header Card (Icon and Name)
-                    HStack(spacing: DS.spacingM) {
+                    HStack(spacing: 10) {
                         ZStack {
                             Circle()
                                 .fill(DS.primary.opacity(0.15))
@@ -101,7 +101,7 @@ struct HabitStatsDetailView: View {
                     .shadow(color: Color.black.opacity(0.02), radius: 10, x: 0, y: 4)
                     
                     // Stats Section
-                    VStack(alignment: .leading, spacing: DS.spacingM) {
+                    VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             Image(systemName: "chart.bar.fill")
                                 .foregroundColor(DS.primary)
@@ -117,12 +117,12 @@ struct HabitStatsDetailView: View {
                         let allCheckinDays = Set(checkins.filter { $0.habit?.id == habit.id }.map { $0.dateString }).count
                         
                         if habit.goalType == "amount" {
-                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.spacingM) {
+                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                                 statBox(icon: "checkmark.circle.fill", iconColor: Color(hex: habit.color), value: "\(completedDays)", unit: "天".tr(appSettings.resolvedLanguage), label: "打卡天数".tr(appSettings.resolvedLanguage))
                                 statBox(icon: "number.circle.fill", iconColor: Color.yellow, value: "\(Int(totalAmount))", unit: habit.amountUnit.tr(appSettings.resolvedLanguage), label: "总数值".tr(appSettings.resolvedLanguage))
                             }
                         } else {
-                            LazyVGrid(columns: [GridItem(.flexible())], spacing: DS.spacingM) {
+                            LazyVGrid(columns: [GridItem(.flexible())], spacing: 10) {
                                 statBox(icon: "checkmark.circle.fill", iconColor: Color(hex: habit.color), value: "\(completedDays)", unit: "天".tr(appSettings.resolvedLanguage), label: "打卡天数".tr(appSettings.resolvedLanguage))
                             }
                         }
@@ -135,7 +135,7 @@ struct HabitStatsDetailView: View {
                     .shadow(color: Color.black.opacity(0.02), radius: 10, x: 0, y: 4)
                     
                     // Unified Yearly Calendar and Monthly Trend/Details Card
-                    VStack(alignment: .leading, spacing: DS.spacingM) {
+                    VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             Image(systemName: "calendar")
                                 .foregroundColor(DS.primary)
