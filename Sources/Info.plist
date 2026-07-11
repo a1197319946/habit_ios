@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
-	<string>3</string>
+	<string>11</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
 	<key>UISupportedInterfaceOrientations</key>
@@ -32,11 +32,8 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
-	<key>UILaunchScreen</key>
-	<dict>
-		<key>UIImageName</key>
-		<string>native_launch</string>
-	</dict>
+	<key>UILaunchStoryboardName</key>
+	<string>NativeLaunchScreen</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>我们需要保存心情卡片图片到您的相册 (We need access to save mood images to your photo library)</string>
 	<key>NSFaceIDUsageDescription</key>

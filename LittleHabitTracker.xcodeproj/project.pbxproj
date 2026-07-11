@@ -10,6 +10,7 @@
 		0BEA439F62B14E35DECED32F /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = E338DD15B0AFDF7E621A8A09 /* Constants.swift */; };
 		112233445566778899001122 /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112233445566778899001121 /* WidgetIntents.swift */; };
 		112233445566778899001123 /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112233445566778899001121 /* WidgetIntents.swift */; };
+		C1A2B3C4D5E6F70809101112 /* WidgetConfigurationIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3C4D5E6F70809101111 /* WidgetConfigurationIntents.swift */; };
 		156592AAAF0C26FD5B5418C8 /* HabitListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FBD7612B05474238D48F79 /* HabitListView.swift */; };
 		1A3849A4A43B2EE97A0201C1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E77E954A696E8CA6AB330BAC /* Foundation.framework */; };
 		1DF1298501ACC23DA8D2D975 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E32D4DA98A3BEBF1FB0FDCC /* DesignSystem.swift */; };
@@ -30,9 +31,10 @@
 		7BFAD94EADE35B6D0EC8E2FE /* CheckinSuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9EB032F7D0436067ADBB5E /* CheckinSuccessView.swift */; };
 		84BD0C8729734E348C746C0D /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481A84F251ED310038917041 /* Models.swift */; };
 		8E225413CDE55A247DA82F59 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6716C97A09EA31F66D20C6E5 /* WidgetKit.framework */; };
+		91C957E677979F8BAAA6B39E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9C04FE6875637B83EC49C71D /* Assets.xcassets */; };
 		91C957E677979F8BAAA6B39F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9C04FE6875637B83EC49C71D /* Assets.xcassets */; };
+		9A7B8C6D5E4F321001234567 /* NativeLaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9A7B8C6D5E4F321001234566 /* NativeLaunchScreen.storyboard */; };
 		A2691EA3AF19D0709FC896F0 /* AmountCheckinSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D34E69D2ED238F93EA2FB9CB /* AmountCheckinSheet.swift */; };
-		B496B50D01DDC687F0B47C36 /* AttemptToDismissModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA1498A56C4D9176F58C006F /* AttemptToDismissModifier.swift */; };
 		BA5147AB6FBFF403AE498217 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481A84F251ED310038917041 /* Models.swift */; };
 		BE637617ABBD659D363E3FA5 /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209F0B18ADE06507E69B114 /* StoreManager.swift */; };
 		C0425E3917BCC32788BF0F85 /* CloudSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D4656F1150590B4BBCD5746 /* CloudSyncManager.swift */; };
@@ -41,7 +43,7 @@
 		D21079AE56EF1FEA6A8BEFC6 /* HabitDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B8FC675A13D85D862613F7A /* HabitDetailView.swift */; };
 		DB076AC915433F7CE88000EE /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C88F406ECA6FB7B11F3047AF /* PaywallView.swift */; };
 		E1ACA329951A3D341534A3E3 /* HabitMonthDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDA790B71A18BA2236DC270 /* HabitMonthDetailView.swift */; };
-		EA8586A4D257AEC29369C01C /* LittleHabitWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = B5F827B8AB0C0C73EAB97E52 /* LittleHabitWidget.appex */; };
+		EA8586A4D257AEC29369C01C /* LittleHabitWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = B5F827B8AB0C0C73EAB97E52 /* LittleHabitWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FBB4BBDED5615E1630468F5E /* StatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64C1C23158D8D65B0E699D19 /* StatisticsView.swift */; };
 /* End PBXBuildFile section */
 
@@ -92,6 +94,7 @@
 		8FBD6DAF80144FB88CDD5F09 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/SwiftUI.framework; sourceTree = DEVELOPER_DIR; };
 		963CE0C1E02D7769989BD182 /* NotificationManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		9C04FE6875637B83EC49C71D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9A7B8C6D5E4F321001234566 /* NativeLaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = NativeLaunchScreen.storyboard; sourceTree = "<group>"; };
 		B0BED2952BB57235A86E4CA9 /* ArchivedHabitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchivedHabitsView.swift; sourceTree = "<group>"; };
 		B5F827B8AB0C0C73EAB97E52 /* LittleHabitWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LittleHabitWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2FBD7612B05474238D48F79 /* HabitListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListView.swift; sourceTree = "<group>"; };
@@ -103,6 +106,7 @@
 		E77E954A696E8CA6AB330BAC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		EA1498A56C4D9176F58C006F /* AttemptToDismissModifier.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AttemptToDismissModifier.swift; sourceTree = "<group>"; };
 		112233445566778899001121 /* WidgetIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetIntents.swift; sourceTree = "<group>"; };
+		C1A2B3C4D5E6F70809101111 /* WidgetConfigurationIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetConfigurationIntents.swift; sourceTree = "<group>"; };
 		EA9E6C16B85EA1CD528B0006 /* LittleHabitWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LittleHabitWidget.swift; sourceTree = "<group>"; };
 		F400E30A32862BC66A030359 /* HabitStatsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitStatsDetailView.swift; sourceTree = "<group>"; };
 		F4A57B29DD7206AFA589C8EE /* StatisticsExtViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsExtViews.swift; sourceTree = "<group>"; };
@@ -146,6 +150,7 @@
 			isa = PBXGroup;
 			children = (
 				EA9E6C16B85EA1CD528B0006 /* LittleHabitWidget.swift */,
+				C1A2B3C4D5E6F70809101111 /* WidgetConfigurationIntents.swift */,
 				5634F5D835A25713AFA8D740 /* LittleHabitWidget.entitlements */,
 				7B0B7F541434E8CB94CEB17E /* Info.plist */,
 			);
@@ -178,6 +183,7 @@
 				F400E30A32862BC66A030359 /* HabitStatsDetailView.swift */,
 				49A3DCF9CA59FA167E27A6E1 /* HomeView.swift */,
 				29BD75FE888FD7347C53AA52 /* Info.plist */,
+				9A7B8C6D5E4F321001234566 /* NativeLaunchScreen.storyboard */,
 				733B06F96043BCDFC9FF5CB8 /* LittleHabitTrackerApp.swift */,
 				481A84F251ED310038917041 /* Models.swift */,
 				D6F3FD8046594E7D6C1A2F6E /* MoodRecorderView.swift */,
@@ -268,6 +274,16 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					F7A5E95E402DEBEAAEECE6F5 = {
+						CreatedOnToolsVersion = 14.3;
+						ProvisioningStyle = Automatic;
+					};
+					DF803DD58A6B988DF666A08D = {
+						CreatedOnToolsVersion = 14.3;
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = 74372347BBF6DEF21D94AF83 /* Build configuration list for PBXProject "LittleHabitTracker" */;
 			developmentRegion = en;
@@ -294,6 +310,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				91C957E677979F8BAAA6B39E /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -302,6 +319,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				91C957E677979F8BAAA6B39F /* Assets.xcassets in Resources */,
+				9A7B8C6D5E4F321001234567 /* NativeLaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -333,7 +351,6 @@
 				4D6488225F1D6CF4D5563188 /* DataBackupManager.swift in Sources */,
 				2CA6F3245F3FFBC273163689 /* AppLockView.swift in Sources */,
 				6EDBE85E40E23AB9445F228F /* AttemptToDismissModifier.swift in Sources */,
-				B496B50D01DDC687F0B47C36 /* AttemptToDismissModifier.swift in Sources */,
 				601CC4B56743A580DD1B2F70 /* NotificationManager.swift in Sources */,
 				BE637617ABBD659D363E3FA5 /* StoreManager.swift in Sources */,
 				C0425E3917BCC32788BF0F85 /* CloudSyncManager.swift in Sources */,
@@ -350,6 +367,7 @@
 				1DF1298501ACC23DA8D2D975 /* DesignSystem.swift in Sources */,
 				4974909CD789281144CD4332 /* Constants.swift in Sources */,
 				112233445566778899001123 /* WidgetIntents.swift in Sources */,
+				C1A2B3C4D5E6F70809101112 /* WidgetConfigurationIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -368,13 +386,28 @@
 		46C4EE9AB6CC0B754E28CC0C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = Sources/LittleHabitWidget/LittleHabitWidget.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = G6G686R2TD;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_TESTABILITY = NO;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/LittleHabitWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.xiaodao.LittleHabitTracker.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -431,7 +464,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -440,6 +473,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -449,8 +483,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/LittleHabitTracker.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = G6G686R2TD;
 				INFOPLIST_FILE = Sources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -464,13 +500,25 @@
 		BBC9B5087AF1CE68EC008E61 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = Sources/LittleHabitWidget/LittleHabitWidget.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = G6G686R2TD;
+				ENABLE_DEBUG_DYLIB = NO;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/LittleHabitWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.xiaodao.LittleHabitTracker.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				VALIDATE_PRODUCT = YES;
@@ -483,8 +531,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/LittleHabitTracker.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = G6G686R2TD;
 				INFOPLIST_FILE = Sources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -540,7 +590,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -3,30 +3,32 @@ import SwiftData
 import AppIntents
 import WidgetKit
 
+enum LittleHabitWidgetKind {
+    static let multiCheckin = "LittleHabitWidget"
+    static let singleCheckin = "NewSingleHabitWidget"
+    static let singleMonth = "SingleMonthWidget"
+    static let multiWeek = "MultiMonthWidget"
+    static let singleYearly = "SingleYearlyWidget"
+
+    static let all = [multiCheckin, singleCheckin, singleMonth, multiWeek, singleYearly]
+}
+
+func reloadLittleHabitWidgets() {
+    WidgetCenter.shared.reloadAllTimelines()
+    for kind in LittleHabitWidgetKind.all {
+        WidgetCenter.shared.reloadTimelines(ofKind: kind)
+    }
+}
+
 final class SharedModelContainerManager {
     static let shared: ModelContainer = {
         let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
-        let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") ?? URL.temporaryDirectory.appending(path: "widget.store")
-        
-        let defaultURL = URL.applicationSupportDirectory.appending(path: "default.store")
-        let fileManager = FileManager.default
-        let hasMigrated = UserDefaults.standard.bool(forKey: "didMigrateToAppGroup2")
-        if !hasMigrated && fileManager.fileExists(atPath: defaultURL.path) {
-            do {
-                if fileManager.fileExists(atPath: sharedStoreURL.path) { try fileManager.removeItem(at: sharedStoreURL) }
-                try fileManager.copyItem(at: defaultURL, to: sharedStoreURL)
-                let defaultShmURL = URL.applicationSupportDirectory.appending(path: "default.store-shm")
-                let sharedShmURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")!.appendingPathComponent("shared.store-shm")
-                if fileManager.fileExists(atPath: sharedShmURL.path) { try fileManager.removeItem(at: sharedShmURL) }
-                if fileManager.fileExists(atPath: defaultShmURL.path) { try fileManager.copyItem(at: defaultShmURL, to: sharedShmURL) }
-                let defaultWalURL = URL.applicationSupportDirectory.appending(path: "default.store-wal")
-                let sharedWalURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")!.appendingPathComponent("shared.store-wal")
-                if fileManager.fileExists(atPath: sharedWalURL.path) { try fileManager.removeItem(at: sharedWalURL) }
-                if fileManager.fileExists(atPath: defaultWalURL.path) { try fileManager.copyItem(at: defaultWalURL, to: sharedWalURL) }
-                UserDefaults.standard.set(true, forKey: "didMigrateToAppGroup2")
-            } catch {}
+        guard let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker") else {
+            print("SharedModelContainerManager: App Group container URL is nil! Using fallback.")
+            let fallbackConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            return try! ModelContainer(for: schema, configurations: [fallbackConfig])
         }
-        
+        let sharedStoreURL = groupURL.appendingPathComponent("shared.store")
         let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -47,92 +49,11 @@ func getAppGroupModelContainer() -> ModelContainer {
     return SharedModelContainerManager.shared
 }
 
-struct HabitEntity: AppEntity {
-    var id: String
-    var name: String
-    var icon: String
-    var color: String
-
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Habit"
-    static var defaultQuery = HabitEntityQuery()
-
-    var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(name)")
-    }
-}
-
-struct HabitEntityQuery: EntityQuery {
-    func entities(for identifiers: [String]) async throws -> [HabitEntity] {
-        let allHabits = await fetchAllHabits()
-        return allHabits.filter { identifiers.contains($0.id) }
-    }
-
-    func suggestedEntities() async throws -> [HabitEntity] {
-        return await fetchAllHabits()
-    }
-
-    func defaultResult() async -> HabitEntity? {
-        return await fetchAllHabits().first
-    }
-
-    @MainActor
-    private func fetchAllHabits() -> [HabitEntity] {
-        do {
-            let context = SharedModelContainerManager.mainContext
-            var descriptor = FetchDescriptor<Habit>(predicate: #Predicate<Habit> { $0.isArchived == false }, sortBy: [SortDescriptor(\.order)])
-            descriptor.includePendingChanges = true
-            let habits = try context.fetch(descriptor)
-            return habits.filter { !$0.isArchived }.map { HabitEntity(id: $0.id, name: $0.name, icon: $0.icon, color: $0.color) }
-        } catch {
-            return []
-        }
-    }
-}
-
-struct SelectHabitIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Select Habit"
-    @Parameter(title: "Habit") var selectedHabit: HabitEntity?
-
-    init() {}
-    init(selectedHabit: HabitEntity? = nil) {
-        self.selectedHabit = selectedHabit
-    }
-}
-
-struct SelectMonthHabitIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Select Habit"
-    @Parameter(title: "Habit") var selectedHabit: HabitEntity?
-
-    init() {}
-    init(selectedHabit: HabitEntity? = nil) {
-        self.selectedHabit = selectedHabit
-    }
-}
-
-struct SelectYearlyHabitIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Select Habit"
-    @Parameter(title: "Habit") var selectedHabit: HabitEntity?
-
-    init() {}
-    init(selectedHabit: HabitEntity? = nil) {
-        self.selectedHabit = selectedHabit
-    }
-}
-
-struct SelectMultipleHabitsIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Select Multiple Habits"
-    @Parameter(title: "Habits") var habits: [HabitEntity]?
-
-    init() {}
-    init(habits: [HabitEntity]? = nil) {
-        self.habits = habits
-    }
-}
-
 struct CheckinHabitIntent: AppIntent {
-    static var title: LocalizedStringResource = "Check in Habit"
+    static var title: LocalizedStringResource = "打卡习惯"
+    static var description = IntentDescription("完成指定习惯的一次快捷打卡")
     static var openAppWhenRun: Bool = false
-    @Parameter(title: "Habit ID") var habitId: String?
+    @Parameter(title: "习惯 ID") var habitId: String?
 
     init() {}
     init(habitId: String) { self.habitId = habitId }
@@ -145,11 +66,15 @@ struct CheckinHabitIntent: AppIntent {
         }
         do {
             let context = SharedModelContainerManager.mainContext
+            context.processPendingChanges()
             var descriptor = FetchDescriptor<Habit>()
             descriptor.relationshipKeyPathsForPrefetching = [\.checkins]
             descriptor.includePendingChanges = true
             let habits = try context.fetch(descriptor)
             if let targetHabit = habits.first(where: { $0.id == habitId }) {
+                if targetHabit.goalType == "amount" {
+                    return .result(opensIntent: OpenURLIntent(URL(string: "littlehabit://checkin?habitId=\(habitId)")!))
+                }
                 let today = Date()
                 let dateString = {
                     let formatter = DateFormatter()
@@ -185,12 +110,18 @@ struct CheckinHabitIntent: AppIntent {
                     }
                 }
                 try context.save()
-                UserDefaults(suiteName: "group.com.littlehabit.tracker")?.set(Date().timeIntervalSince1970, forKey: "lastWidgetCheckin")
+                let defaults = UserDefaults(suiteName: "group.com.littlehabit.tracker")
+                defaults?.set(Date().timeIntervalSince1970, forKey: "lastWidgetCheckin")
+                defaults?.synchronize()
             }
         } catch {
             print("CheckinHabitIntent error: \(error)")
         }
-        WidgetCenter.shared.reloadAllTimelines()
+        reloadLittleHabitWidgets()
+        Task {
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            reloadLittleHabitWidgets()
+        }
         return .result()
     }
 }

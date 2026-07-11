@@ -322,6 +322,11 @@ struct HabitStatsDetailView: View {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                 let h = habit
                                 h.isArchived.toggle()
+                                if h.isArchived {
+                                    NotificationManager.shared.cancelReminder(for: h)
+                                } else {
+                                    NotificationManager.shared.scheduleReminder(for: h)
+                                }
                                 try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
                                 dismiss()
@@ -352,6 +357,7 @@ struct HabitStatsDetailView: View {
         .alert("Delete Habit?".tr(appSettings.resolvedLanguage), isPresented: $showDeleteAlert) {
             Button("Cancel".tr(appSettings.resolvedLanguage), role: .cancel) { }
             Button("Delete".tr(appSettings.resolvedLanguage), role: .destructive) {
+                NotificationManager.shared.cancelReminder(for: habit)
                 if let checkins = habit.checkins {
                     for c in checkins { modelContext.delete(c) }
                 }

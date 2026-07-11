@@ -128,6 +128,7 @@ class DataBackupManager {
             let backup = try decoder.decode(BackupData.self, from: data)
             
             // Delete existing
+            NotificationManager.shared.cancelAllHabitReminders()
             try modelContext.delete(model: Habit.self)
             try modelContext.delete(model: Checkin.self)
             try modelContext.delete(model: MoodRecord.self)

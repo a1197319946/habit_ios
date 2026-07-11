@@ -41,6 +41,7 @@ class AppSettings: ObservableObject {
     @Published var showPaywall: Bool = false
     @Published var showPaywallFromSettings: Bool = false
     @Published var showRetentionOffer: Bool = false
+    @Published var openCheckinHabitId: String? = nil
     @AppStorage("hasSeenRetentionOffer", store: UserDefaults(suiteName: "group.com.littlehabit.tracker")) var hasSeenRetentionOffer: Bool = false
 
     @AppStorage("appLanguage", store: UserDefaults(suiteName: "group.com.littlehabit.tracker")) var language: AppLanguage = .system
@@ -452,7 +453,11 @@ struct LittleHabitTrackerApp: App {
             Checkin.self,
             MoodRecord.self
         ])
-        let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")!.appendingPathComponent("shared.store")
+        guard let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker") else {
+            print("LittleHabitTrackerApp: App Group container URL is nil! Using fallback.")
+            return getAppGroupModelContainer()
+        }
+        let sharedStoreURL = groupURL.appendingPathComponent("shared.store")
         
         // Data Migration: move from old default.store to shared App Group store
         let defaultURL = URL.applicationSupportDirectory.appending(path: "default.store")
@@ -467,14 +472,14 @@ struct LittleHabitTrackerApp: App {
                 try fileManager.copyItem(at: defaultURL, to: sharedStoreURL)
                 
                 let defaultShmURL = URL.applicationSupportDirectory.appending(path: "default.store-shm")
-                let sharedShmURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")!.appendingPathComponent("shared.store-shm")
+                let sharedShmURL = groupURL.appendingPathComponent("shared.store-shm")
                 if fileManager.fileExists(atPath: sharedShmURL.path) { try fileManager.removeItem(at: sharedShmURL) }
                 if fileManager.fileExists(atPath: defaultShmURL.path) {
                     try fileManager.copyItem(at: defaultShmURL, to: sharedShmURL)
                 }
                 
                 let defaultWalURL = URL.applicationSupportDirectory.appending(path: "default.store-wal")
-                let sharedWalURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")!.appendingPathComponent("shared.store-wal")
+                let sharedWalURL = groupURL.appendingPathComponent("shared.store-wal")
                 if fileManager.fileExists(atPath: sharedWalURL.path) { try fileManager.removeItem(at: sharedWalURL) }
                 if fileManager.fileExists(atPath: defaultWalURL.path) {
                     try fileManager.copyItem(at: defaultWalURL, to: sharedWalURL)
@@ -485,8 +490,7 @@ struct LittleHabitTrackerApp: App {
                 print("Migration failed: \(error)")
             }
         }
-        let sharedModelContainer = getAppGroupModelContainer()
-        return sharedModelContainer
+        return getAppGroupModelContainer()
     }()
 
     @StateObject private var appSettings = AppSettings()
@@ -501,5 +505,20 @@ struct LittleHabitTrackerApp: App {
                 
         }
         .modelContainer(sharedModelContainer)
+    }
+}
+
+import AppIntents
+
+struct LittleHabitAppShortcuts: AppShortcutsProvider {
+    static var appShortcuts: [AppShortcut] {
+        return [
+            AppShortcut(
+                intent: CheckinHabitIntent(habitId: ""),
+                phrases: ["Check in habit in \(.applicationName)"],
+                shortTitle: "Check in Habit",
+                systemImageName: "checkmark.circle.fill"
+            )
+        ]
     }
 }

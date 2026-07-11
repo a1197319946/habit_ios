@@ -72,6 +72,7 @@ struct HabitListView: View {
                                         Label("Edit".tr(appSettings.resolvedLanguage), systemImage: "pencil")
                                     }
                                         Button(action: {
+                                            NotificationManager.shared.cancelReminder(for: habit)
                                             habit.isArchived = true
                                             try? modelContext.save()
                                             WidgetCenter.shared.reloadAllTimelines()
@@ -171,6 +172,7 @@ struct HabitListView: View {
     
     private func deleteHabit(_ habit: Habit) {
         withAnimation {
+            NotificationManager.shared.cancelReminder(for: habit)
             if let index = localHabits.firstIndex(of: habit) {
                 localHabits.remove(at: index)
             }

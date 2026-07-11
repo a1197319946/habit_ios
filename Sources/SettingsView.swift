@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var showingImport = false
     @State private var exportURL: URL?
     @State private var showingWidgetGuide = false
+    @State private var showingWidgetDiagnostic = false
     @State private var toastMessage: String? = nil
     @ObservedObject private var cloudSyncManager = CloudSyncManager.shared
     @ObservedObject private var storeManager = StoreManager.shared
@@ -91,6 +92,10 @@ struct SettingsView: View {
                 .presentationDetents([.fraction(0.55), .medium])
                 .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showingWidgetDiagnostic) {
+            WidgetDiagnosticSheet()
+                .presentationDragIndicator(.visible)
+        }
         .preferredColorScheme(appSettings.colorScheme)
     }
     
@@ -151,6 +156,12 @@ struct SettingsView: View {
     
     @ViewBuilder private var featuresSection: some View {
         SettingsSection(title: "Features".tr(appSettings.resolvedLanguage)) {
+            Button {
+                showingWidgetDiagnostic = true
+            } label: {
+                SettingsRowLabel(icon: "stethoscope", color: .red, title: "小组件深度诊断与排查".tr(appSettings.resolvedLanguage), value: "点击检查不显示原因".tr(appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
+            }
+            Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)
             Button {
                 showingWidgetGuide = true
             } label: {
@@ -748,6 +759,190 @@ struct WidgetGuideStepRow: View {
                 .padding(.top, 2)
             
             Spacer()
+        }
+    }
+}
+
+struct WidgetDiagnosticSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var plugInsFound: [String] = []
+    @State private var appGroupStatus: String = "检查中..."
+    @State private var widgetConfigsCount: String = "读取中..."
+    @State private var rawLogs: [String] = []
+    @State private var isReloading = false
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("由于 iOS 18 系统缓存或签名策略限制，如果桌面长按添加菜单中搜索不到「TickDay」小组件，请根据下方真机实测诊断信息进行排查：")
+                        .font(.system(size: 14))
+                        .foregroundColor(DS.onSurfaceVariant)
+                        .padding(.horizontal)
+                    
+                    // Status Cards
+                    VStack(spacing: 12) {
+                        diagnosticCard(title: "1. 扩展插件打包检测 (PlugIns)", status: plugInsFound.isEmpty ? "❌ 未检测到 .appex (请在 Xcode Clean 后重新构建)" : "✅ 已嵌入: \(plugInsFound.joined(separator: ", "))", color: plugInsFound.isEmpty ? .red : .green)
+                        
+                        diagnosticCard(title: "2. App Group 容器沙盒权限", status: appGroupStatus, color: appGroupStatus.contains("✅") ? .green : .red)
+                        
+                        diagnosticCard(title: "3. 当前桌面已添加小组件数量", status: widgetConfigsCount, color: widgetConfigsCount.contains("0 个") || widgetConfigsCount.contains("读取异常") || widgetConfigsCount.contains("读取中") ? .blue : .green)
+                    }
+                    .padding(.horizontal)
+                    
+                    // Actions & Instructions
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("排查与修复指南：")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(DS.onSurface)
+                        
+                        if widgetConfigsCount.contains("0 个") || widgetConfigsCount.contains("读取中") || widgetConfigsCount.contains("异常") {
+                            Text("ℹ️ **特别释疑 (为什么这里显示 0 个？)**：\nApple 系统的 API (`getCurrentConfigurations`) 返回的是**「您目前已经挂在手机桌面/锁屏上的小组件实例数量」**。当您还没往桌面上添加任何 TickDay 小组件时，这里一定会显示为 0 个，**这是完全正常的现象，绝对不是 Bug！**\n\n👉 **为什么长按「+」号依然搜不到小组件？如何排查？**\n对于 iOS 18 系统，如果通过 Xcode 安装后搜不到小组件，核心原因是系统守护进程 (`chronod`) 没有刷新对当前 App 包 `PlugIns/LittleHabitWidget.appex` 的组件索引。\n\n💡 **请严格按以下步序强制 iOS 系统重新识别：**\n1. 点击下方 **「强制通知系统刷新小组件库」** 按钮；\n2. **关键一步**：请将 iPhone 完全**关机后重启**（iOS 18 在开机启动阶段会强制 `chronod` 扫描所有以开发证书签署的扩展包并重建索引）；\n3. 重启解锁后，打开 App 停留 3 秒，再返回 iPhone 桌面长按空白处 -> 点击左上角「+」-> 搜索 **TickDay** 即可看到！")
+                                .font(.system(size: 14))
+                                .foregroundColor(DS.onSurface)
+                                .lineSpacing(4)
+                        } else {
+                            Text("🎉 **您的手机桌面上已经成功添加了活跃小组件！**\n您可以在桌面上直接体验习惯打卡与日历功能！")
+                                .font(.system(size: 14))
+                                .foregroundColor(DS.onSurface)
+                                .lineSpacing(4)
+                        }
+                        
+                        Button {
+                            isReloading = true
+                            WidgetCenter.shared.reloadAllTimelines()
+                            for kind in ["LittleHabitWidget", "NewSingleHabitWidget", "SingleMonthWidget", "MultiMonthWidget", "SingleYearlyWidget"] {
+                                WidgetCenter.shared.reloadTimelines(ofKind: kind)
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                                isReloading = false
+                                runDiagnostics()
+                            }
+                        } label: {
+                            HStack {
+                                if isReloading {
+                                    ProgressView().tint(.white)
+                                } else {
+                                    Image(systemName: "arrow.clockwise")
+                                }
+                                Text(isReloading ? "正在强制通知 iOS 系统..." : "强制通知系统刷新小组件库")
+                                    .font(.system(size: 16, weight: .bold))
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(DS.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
+                        .padding(.top, 8)
+                    }
+                    .padding()
+                    .background(DS.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .padding(.horizontal)
+                    
+                    // Raw Logs
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("系统底层诊断日志 (Diagnostics Log):")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(DS.onSurfaceVariant)
+                        
+                        ScrollView(.horizontal, showsIndicators: true) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                ForEach(rawLogs, id: \.self) { log in
+                                    Text(log)
+                                        .font(.system(.caption, design: .monospaced))
+                                        .foregroundColor(DS.onSurface)
+                                }
+                            }
+                        }
+                        .padding(10)
+                        .background(Color.black.opacity(0.04))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .padding(.horizontal)
+                    
+                    Spacer(minLength: 30)
+                }
+                .padding(.top)
+            }
+            .navigationTitle("小组件真机自检报告")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("关闭") { dismiss() }
+                }
+            }
+            .onAppear {
+                runDiagnostics()
+            }
+        }
+    }
+    
+    private func diagnosticCard(title: String, status: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(DS.onSurfaceVariant)
+            Text(status)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(color)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(color.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+    
+    private func runDiagnostics() {
+        rawLogs.removeAll()
+        rawLogs.append("[Start] Diagnostic checks at \(Date())")
+        
+        // 1. Check PlugIns folder
+        if let plugInsPath = Bundle.main.builtInPlugInsURL?.path {
+            rawLogs.append("[PlugIns] Path: \(plugInsPath)")
+            do {
+                let files = try FileManager.default.contentsOfDirectory(atPath: plugInsPath)
+                rawLogs.append("[PlugIns] Found items: \(files)")
+                let appexes = files.filter { $0.hasSuffix(".appex") }
+                self.plugInsFound = appexes
+            } catch {
+                rawLogs.append("[PlugIns] Error reading plugInsPath: \(error)")
+                self.plugInsFound = []
+            }
+        } else {
+            rawLogs.append("[PlugIns] builtInPlugInsURL is nil")
+            self.plugInsFound = []
+        }
+        
+        // 2. Check App Group
+        if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker") {
+            appGroupStatus = "✅ App Group 容器连接成功 (\(groupURL.lastPathComponent))"
+            rawLogs.append("[AppGroup] Success: \(groupURL.path)")
+        } else {
+            appGroupStatus = "❌ 无法连接 group.com.littlehabit.tracker 容器"
+            rawLogs.append("[AppGroup] Error: containerURL returned nil")
+        }
+        
+        // 3. Check WidgetKit Configurations
+        WidgetCenter.shared.getCurrentConfigurations { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let configs):
+                    self.rawLogs.append("[WidgetKit] Configurations found: \(configs.count)")
+                    for cfg in configs {
+                        self.rawLogs.append(" - Kind: \(cfg.kind), Family: \(cfg.family)")
+                    }
+                    if configs.isEmpty {
+                        self.widgetConfigsCount = "ℹ️ 桌面当前已放置 0 个小组件 (正常)"
+                    } else {
+                        self.widgetConfigsCount = "✅ 桌面当前已放置 \(configs.count) 个小组件实例"
+                    }
+                case .failure(let error):
+                    self.rawLogs.append("[WidgetKit] Error reading configs: \(error.localizedDescription)")
+                    self.widgetConfigsCount = "⚠️ 读取异常: \(error.localizedDescription)"
+                }
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ import Foundation
 import UserNotifications
 import SwiftUI
 import SwiftData
+import UIKit
 
 class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationManager()
@@ -43,8 +44,48 @@ class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterD
     }
     
     func cancelReminder(for habit: Habit) {
-        let ids = (0..<30).map { "habit_\(habit.id)_day_\($0)" } + ["habit_\(habit.id)"]
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+        cancelReminder(forHabitId: habit.id)
+    }
+
+    func cancelReminder(forHabitId habitId: String) {
+        let center = UNUserNotificationCenter.current()
+        let exactIds = (0..<60).map { "habit_\(habitId)_day_\($0)" } + ["habit_\(habitId)"]
+        center.removePendingNotificationRequests(withIdentifiers: exactIds)
+        center.removeDeliveredNotifications(withIdentifiers: exactIds)
+
+        center.getPendingNotificationRequests { requests in
+            let staleIds = requests
+                .map(\.identifier)
+                .filter { $0.hasPrefix("habit_\(habitId)_") }
+            if !staleIds.isEmpty {
+                center.removePendingNotificationRequests(withIdentifiers: staleIds)
+            }
+        }
+
+        center.getDeliveredNotifications { notifications in
+            let staleIds = notifications
+                .map { $0.request.identifier }
+                .filter { $0.hasPrefix("habit_\(habitId)_") }
+            if !staleIds.isEmpty {
+                center.removeDeliveredNotifications(withIdentifiers: staleIds)
+            }
+        }
+    }
+
+    func cancelAllHabitReminders() {
+        let center = UNUserNotificationCenter.current()
+        center.getPendingNotificationRequests { requests in
+            let ids = requests.map(\.identifier).filter { $0.hasPrefix("habit_") }
+            if !ids.isEmpty {
+                center.removePendingNotificationRequests(withIdentifiers: ids)
+            }
+        }
+        center.getDeliveredNotifications { notifications in
+            let ids = notifications.map { $0.request.identifier }.filter { $0.hasPrefix("habit_") }
+            if !ids.isEmpty {
+                center.removeDeliveredNotifications(withIdentifiers: ids)
+            }
+        }
     }
     
     func scheduleReminder(for habit: Habit) {
@@ -88,6 +129,9 @@ class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterD
             content.body = (habit.reminderText.isEmpty || habit.reminderText == "该打卡啦！坚持就是胜利～" || habit.reminderText == "Time to check in! Keep it up~") ? defaultMsg : habit.reminderText
             content.sound = .default
             content.userInfo = ["habitId": habit.id]
+            if let attachment = appIconAttachment() {
+                content.attachments = [attachment]
+            }
             
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
             let request = UNNotificationRequest(identifier: "habit_\(habit.id)_day_\(offset)", content: content, trigger: trigger)
@@ -102,6 +146,30 @@ class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterD
     func updateAllReminders(habits: [Habit]) {
         for habit in habits {
             scheduleReminder(for: habit)
+        }
+    }
+
+    private func appIconAttachment() -> UNNotificationAttachment? {
+        let fileManager = FileManager.default
+        let cacheURL = fileManager.temporaryDirectory.appendingPathComponent("tickday_notification_icon.png")
+        if fileManager.fileExists(atPath: cacheURL.path) {
+            return try? UNNotificationAttachment(identifier: "tickday_app_icon", url: cacheURL)
+        }
+
+        let image = UIImage(named: "app_logo")
+            ?? UIImage(named: "AppIcon")
+            ?? Bundle.main.url(forResource: "AppIcon60x60@2x", withExtension: "png").flatMap { UIImage(contentsOfFile: $0.path) }
+
+        guard let data = image?.pngData() else {
+            return nil
+        }
+
+        do {
+            try data.write(to: cacheURL, options: .atomic)
+            return try UNNotificationAttachment(identifier: "tickday_app_icon", url: cacheURL)
+        } catch {
+            print("Notification icon attachment error: \(error)")
+            return nil
         }
     }
     
