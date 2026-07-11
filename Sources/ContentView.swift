@@ -82,6 +82,11 @@ struct ContentView: View {
                 .onAppear {
                     appSettings.applyTheme()
                 }
+                .onChange(of: appSettings.isPremium) { _, isPremium in
+                    if !isPremium {
+                        appSettings.resetPremiumSettingsToDefault()
+                    }
+                }
                 .sheet(isPresented: $showingSettings) {
                     SettingsView()
                         .presentationDragIndicator(.visible)

@@ -216,8 +216,8 @@ struct PaywallView: View {
                             }
                         } label: {
                             HStack(spacing: 4) {
-                                Image(systemName: "ticket.fill")
-                                Text(appSettings.resolvedLanguage == .chinese ? "使用兑换码" : "Redeem Offer Code")
+                                Image(systemName: "giftcard.fill")
+                                Text("Redeem Offer Code".tr(appSettings.resolvedLanguage))
                             }
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(DS.primary)

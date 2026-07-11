@@ -410,7 +410,7 @@ struct MultiHabitCheckinWidgetView: View {
             } else {
                 ForEach(selectedHabits) { habit in
                     let isDone = isCheckedIn(habit: habit, date: entry.date, checkins: entry.checkins)
-                    if habit.goalType == "amount" {
+                    if habit.goalType == "amount" && !isDone {
                         Link(destination: URL(string: "littlehabit://checkin?habitId=\(habit.id)")!) {
                             HStack(spacing: 6) {
                                 ZStack {
@@ -519,6 +519,7 @@ struct MonthCalendarWidgetView: View {
         
         let monthStr = {
             let f = DateFormatter()
+            f.locale = lang == "zh" ? Locale(identifier: "zh_CN") : Locale(identifier: "en_US")
             f.dateFormat = lang == "zh" ? "yyyy年M月" : "MMM yyyy"
             return f.string(from: date)
         }()

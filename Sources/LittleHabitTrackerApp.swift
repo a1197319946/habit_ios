@@ -255,6 +255,7 @@ extension String {
             "创建第一个习惯": [.chinese: "创建第一个习惯", .english: "Create First Habit"],
             "Help & Support": [.chinese: "帮助与反馈", .english: "Help & Support"],
             "Habit Details": [.chinese: "习惯详情", .english: "Habit Details"],
+            "Redeem Offer Code": [.chinese: "使用兑换码", .english: "Redeem Offer Code"],
             
             "Features": [.chinese: "功能", .english: "Features"],
             "Widgets": [.chinese: "小组件", .english: "Widgets"],
