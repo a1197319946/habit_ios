@@ -62,15 +62,15 @@ struct ArchivedHabitCard: View {
             ZStack {
                 Circle()
                     .fill(Color(hex: habit.color).opacity(0.15))
-                    .frame(width: 36, height: 36)
+                    .frame(width: 44, height: 44)
                 Image(systemName: habit.icon)
-                    .font(.system(size: 16))
+                    .font(.system(size: 20))
                     .foregroundColor(Color(hex: habit.color))
             }
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(habit.name)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(DS.onSurface)
                 Text(targetText)
                     .bodyMd()
@@ -83,9 +83,9 @@ struct ArchivedHabitCard: View {
         }
         .padding(DS.spacingM)
         .background(DS.surface.opacity(0.7))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(DS.outlineVariant, lineWidth: 1)
         )
         .shadow(color: DS.primary.opacity(0.05), radius: 10, x: 0, y: 4)

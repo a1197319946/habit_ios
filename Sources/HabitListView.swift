@@ -237,40 +237,40 @@ struct HabitListCard: View {
     private var habitColor: Color { Color(hex: habit.color) }
     
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: DS.spacingM) {
             // Top Row
-            HStack(spacing: 8) {
+            HStack(spacing: DS.spacingS) {
                 // Icon
                 ZStack {
                     Circle()
                         .fill(habitColor.opacity(0.15))
-                        .frame(width: 32, height: 32)
+                        .frame(width: 44, height: 44)
                     Image(systemName: habit.icon)
                         .foregroundColor(habitColor)
-                        .font(.system(size: 14))
+                        .font(.system(size: 20))
                 }
                 
                 // Name & Streak
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(habit.name)
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundColor(DS.onSurface)
                     
                     Text("\(habit.currentStreak) \("Days Streak".tr(appSettings.resolvedLanguage))")
-                        .font(.system(size: 11, weight: .regular))
+                        .font(.system(size: 13, weight: .regular))
                         .foregroundColor(DS.onSurfaceVariant)
                 }
                 
                 Spacer()
                 
                 // Right Side: Last 30 Days Count
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: 4) {
                     Text("\(habit.checkinCountLast30Days) \("次".tr(appSettings.resolvedLanguage))")
-                        .font(.system(size: 18, weight: .bold))
+                        .font(.system(size: 24, weight: .bold))
                         .foregroundColor(habitColor)
                     
                     Text("30 Days".tr(appSettings.resolvedLanguage))
-                        .font(.system(size: 10, weight: .regular))
+                        .font(.system(size: 12, weight: .regular))
                         .foregroundColor(DS.onSurfaceVariant)
                 }
             }
@@ -293,9 +293,9 @@ struct HabitListCard: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .padding(12)
+        .padding(DS.spacingM)
         .background(DS.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
     }
 }
