@@ -74,30 +74,30 @@ struct HabitStatsDetailView: View {
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text(habit.name)
-                                .font(.system(size: 24, weight: .bold))
+                                .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(DS.onSurface)
                             
                             if habit.goalType == "amount" {
                                 let periodStr = habit.frequencyType == "weekly" ? "周".tr(appSettings.resolvedLanguage) : "月".tr(appSettings.resolvedLanguage)
                                 let amtStr = String(format: "%.1f", habit.amountValue).replacingOccurrences(of: ".0", with: "")
                                 Text("\("Target: ".tr(appSettings.resolvedLanguage)) \(amtStr) \(habit.amountUnit.tr(appSettings.resolvedLanguage)) / \(periodStr)")
-                                    .font(.system(size: 14))
+                                    .font(.system(size: 13))
                                     .foregroundColor(DS.onSurfaceVariant)
                             } else {
                                 let target = habit.frequencyType == "weekly" ? habit.weeklyTarget : habit.monthlyTarget
                                 let periodStr = habit.frequencyType == "weekly" ? "周".tr(appSettings.resolvedLanguage) : "月".tr(appSettings.resolvedLanguage)
                                 Text("\("Target: ".tr(appSettings.resolvedLanguage)) \(target) \("次".tr(appSettings.resolvedLanguage)) / \(periodStr)")
-                                    .font(.system(size: 14))
+                                    .font(.system(size: 13))
                                     .foregroundColor(DS.onSurfaceVariant)
                             }
                         }
                         
                         Spacer()
                     }
-                    .padding(16)
+                    .padding(12)
                     .background(DS.surface.opacity(0.8))
                     .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .shadow(color: Color.black.opacity(0.02), radius: 10, x: 0, y: 4)
                     
                     // Stats Section

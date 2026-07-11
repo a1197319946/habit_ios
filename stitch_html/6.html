@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bloom - Statistics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-on-surface": "#f3f0f5",
+                      "surface-container-low": "#f6f2f8",
+                      "inverse-surface": "#303034",
+                      "primary": "#5e4dbb",
+                      "surface-container": "#f0edf2",
+                      "error": "#ba1a1a",
+                      "on-surface-variant": "#484552",
+                      "on-error-container": "#93000a",
+                      "secondary": "#2a6951",
+                      "tertiary-container": "#bd9479",
+                      "on-tertiary-container": "#492e19",
+                      "on-tertiary-fixed-variant": "#5f402a",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed": "#2d1604",
+                      "primary-fixed-dim": "#c8bfff",
+                      "primary-fixed": "#e5deff",
+                      "on-error": "#ffffff",
+                      "surface-variant": "#e4e1e7",
+                      "secondary-container": "#aceece",
+                      "secondary-fixed-dim": "#94d4b6",
+                      "on-surface": "#1b1b1f",
+                      "tertiary-fixed-dim": "#eabea0",
+                      "on-secondary-fixed-variant": "#09513a",
+                      "surface": "#fbf8fe",
+                      "outline": "#787584",
+                      "surface-container-highest": "#e4e1e7",
+                      "on-primary-fixed": "#1a0064",
+                      "surface-tint": "#5e4dbb",
+                      "outline-variant": "#c9c4d5",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-fixed": "#002115",
+                      "surface-dim": "#dcd9de",
+                      "secondary-fixed": "#aff0d1",
+                      "on-primary-fixed-variant": "#4633a1",
+                      "background": "#fbf8fe",
+                      "on-secondary": "#ffffff",
+                      "surface-container-high": "#eae7ed",
+                      "surface-bright": "#fbf8fe",
+                      "tertiary-fixed": "#ffdcc5",
+                      "tertiary": "#79573f",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-container": "#2f6e55",
+                      "inverse-primary": "#c8bfff",
+                      "primary-container": "#9d8dff",
+                      "on-primary-container": "#321b8e",
+                      "on-background": "#1b1b1f",
+                      "on-primary": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "12px",
+                      "container-max": "1280px",
+                      "md": "24px",
+                      "xl": "80px",
+                      "margin-mobile": "16px",
+                      "gutter": "24px",
+                      "xs": "4px",
+                      "base": "8px",
+                      "lg": "48px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "display": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            border: 1px solid rgba(255, 255, 255, 1);
+        }
+        
+        .glass-card-shadow {
+            box-shadow: 0px 20px 40px rgba(157, 141, 255, 0.08);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #5e4dbb, #9d8dff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .primary-gradient-bg {
+            background: linear-gradient(135deg, #9d8dff, #c8bfff);
+        }
+        
+        .heatmap-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .heatmap-dot:hover {
+            transform: scale(1.2);
+            box-shadow: 0 2px 8px rgba(94, 77, 187, 0.3);
+        }
+
+        /* Nav Hide on Desktop/Mobile logic */
+        @media (min-width: 768px) {
+            .mobile-only { display: none !important; }
+        }
+        @media (max-width: 767px) {
+            .desktop-only { display: none !important; }
+            .content-area { padding-top: 80px; padding-bottom: 100px; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen font-body-md antialiased flex flex-col selection:bg-primary/20">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-surface/70 dark:bg-surface-dim/70 backdrop-blur-xl border-b border-white/20 dark:border-white/5 shadow-sm">
+<div class="flex justify-between items-center px-margin-mobile md:px-xl h-16 w-full max-w-container-max mx-auto">
+<!-- Leading -->
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-white/50 shadow-sm cursor-pointer hover:bg-primary/10 transition-colors active:scale-95 duration-200">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A stylized, high-quality avatar portrait of a modern user in an airy light aesthetic, featuring soft pastel tones and gentle illumination, evoking a sense of calm and clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3xw6PnmKnqjUcOp8yh-WOR0F9P_DeSoW6SqmXsqxMAbdIZgkkbifWvA1fP3yhlevZPz-kR8UWyUw0uMous05WvibmBIwgIBPQlLkADvW46xKbvxAyYmbJjfMlLMPk1pYo494GbYK5RVq8w6v0yBzhdj5yQbbtitujXl0a9eCer8rocq_k2jw-vGT8sb5H4w9TdchoO_gbd4ny6PXsra4H7KjrUjS2bdTG1cybBTwrJbbnKr-QmzXWjGw31ardXPI_p28IcD1pbwY"/>
+</div>
+</div>
+<!-- Brand -->
+<div class="font-display text-headline-lg font-bold text-primary dark:text-primary-fixed desktop-only">
+                Bloom
+            </div>
+<div class="font-display text-headline-lg-mobile font-bold text-primary dark:text-primary-fixed mobile-only">
+                Bloom
+            </div>
+<!-- Trailing -->
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-primary/10 transition-colors active:scale-95 duration-200 text-primary dark:text-primary-fixed-dim">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+</div>
+<!-- Desktop Navigation Cluster (in Header) -->
+<nav class="desktop-only hidden md:flex justify-center gap-md pb-xs border-t border-white/10 pt-xs bg-surface/50">
+<a class="text-on-surface-variant hover:bg-primary/10 transition-colors rounded-full px-4 py-2 font-label-md" href="#">Home</a>
+<a class="text-on-surface-variant hover:bg-primary/10 transition-colors rounded-full px-4 py-2 font-label-md" href="#">Habits</a>
+<a class="text-primary font-bold bg-primary/5 rounded-full px-4 py-2 font-label-md" href="#">Stats</a>
+<a class="text-on-surface-variant hover:bg-primary/10 transition-colors rounded-full px-4 py-2 font-label-md" href="#">Mood</a>
+<a class="text-on-surface-variant hover:bg-primary/10 transition-colors rounded-full px-4 py-2 font-label-md" href="#">Profile</a>
+</nav>
+</header>
+<!-- Main Content -->
+<main class="flex-grow content-area pt-24 pb-md md:pt-32 px-margin-mobile md:px-gutter max-w-container-max mx-auto w-full">
+<!-- Page Header & Controls -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-lg gap-md">
+<div>
+<h1 class="font-display text-display md:text-display text-on-surface mb-xs">Your Progress</h1>
+<p class="font-body-lg text-on-surface-variant">A detailed look at your journey.</p>
+</div>
+<!-- Segmented Control -->
+<div class="inline-flex bg-surface-container p-1 rounded-full shadow-inner w-full md:w-auto">
+<button class="flex-1 md:flex-none px-6 py-2 rounded-full font-label-md text-on-surface-variant hover:text-primary transition-colors">Month</button>
+<button class="flex-1 md:flex-none px-6 py-2 rounded-full font-label-md text-on-surface-variant hover:text-primary transition-colors">Year</button>
+<button class="flex-1 md:flex-none px-6 py-2 rounded-full font-label-md bg-white text-primary shadow-sm font-semibold transition-all">All</button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Streak Card (Spans 1 col on desktop) -->
+<div class="glass-card glass-card-shadow rounded-[24px] p-md flex flex-col justify-between min-h-[240px] relative overflow-hidden group">
+<!-- Decorative background elements -->
+<div class="absolute -right-10 -top-10 w-40 h-40 bg-primary-container/20 rounded-full blur-2xl group-hover:bg-primary-container/30 transition-all duration-700"></div>
+<div class="absolute -left-10 -bottom-10 w-32 h-32 bg-secondary-container/20 rounded-full blur-2xl group-hover:bg-secondary-container/30 transition-all duration-700"></div>
+<div class="flex justify-between items-start relative z-10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<h2 class="font-headline-md text-on-surface">Cumulative Streak</h2>
+</div>
+<div class="bg-primary/10 text-primary px-3 py-1 rounded-full font-label-sm border border-primary/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">star</span>
+                        Top 5%
+                    </div>
+</div>
+<div class="relative z-10 mt-auto">
+<div class="font-display text-[64px] leading-none font-bold gradient-text mb-2">365</div>
+<div class="font-body-lg text-on-surface-variant">Days of continuous growth</div>
+</div>
+</div>
+<!-- Heatmap Card (Spans 2 cols on desktop) -->
+<div class="glass-card glass-card-shadow rounded-[24px] p-md col-span-1 md:col-span-2 flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-headline-md text-on-surface">Consistency Map</h2>
+<button class="text-primary hover:bg-primary/5 p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<div class="flex-grow flex items-center justify-center">
+<!-- Heatmap Grid -->
+<div class="grid grid-rows-7 grid-flow-col gap-1 w-full overflow-x-auto pb-4 scrollbar-hide" id="heatmap-container">
+<!-- JS will populate dots -->
+</div>
+</div>
+<div class="flex justify-end items-center gap-2 mt-4 font-label-sm text-outline">
+<span>Less</span>
+<div class="flex gap-1">
+<div class="w-3 h-3 rounded-sm bg-surface-container-high border border-outline-variant/30"></div>
+<div class="w-3 h-3 rounded-sm bg-primary/20"></div>
+<div class="w-3 h-3 rounded-sm bg-primary/40"></div>
+<div class="w-3 h-3 rounded-sm bg-primary/60"></div>
+<div class="w-3 h-3 rounded-sm bg-primary"></div>
+</div>
+<span>More</span>
+</div>
+</div>
+<!-- Habit Distribution Bar Chart -->
+<div class="glass-card glass-card-shadow rounded-[24px] p-md col-span-1 md:col-span-3">
+<div class="flex justify-between items-center mb-8">
+<h2 class="font-headline-md text-on-surface">Habit Distribution</h2>
+<div class="flex gap-4">
+<div class="flex items-center gap-2 font-label-sm">
+<span class="w-3 h-3 rounded-full bg-primary"></span> Mind
+                        </div>
+<div class="flex items-center gap-2 font-label-sm">
+<span class="w-3 h-3 rounded-full bg-secondary-fixed-dim"></span> Body
+                        </div>
+<div class="flex items-center gap-2 font-label-sm">
+<span class="w-3 h-3 rounded-full bg-tertiary-fixed-dim"></span> Soul
+                        </div>
+</div>
+</div>
+<div class="h-64 flex items-end justify-between gap-2 px-2">
+<!-- Simulated Bars -->
+<div class="w-full flex flex-col justify-end h-full gap-1 group">
+<div class="w-full bg-primary rounded-t-full h-[30%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-secondary-fixed-dim h-[40%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-tertiary-fixed-dim rounded-b-full h-[15%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="text-center mt-2 font-label-sm text-on-surface-variant">Mon</div>
+</div>
+<div class="w-full flex flex-col justify-end h-full gap-1 group">
+<div class="w-full bg-primary rounded-t-full h-[40%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-secondary-fixed-dim h-[20%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-tertiary-fixed-dim rounded-b-full h-[25%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="text-center mt-2 font-label-sm text-on-surface-variant">Tue</div>
+</div>
+<div class="w-full flex flex-col justify-end h-full gap-1 group">
+<div class="w-full bg-primary rounded-t-full h-[20%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-secondary-fixed-dim h-[60%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-tertiary-fixed-dim rounded-b-full h-[10%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="text-center mt-2 font-label-sm text-on-surface-variant">Wed</div>
+</div>
+<div class="w-full flex flex-col justify-end h-full gap-1 group">
+<div class="w-full bg-primary rounded-t-full h-[50%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-secondary-fixed-dim h-[10%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-tertiary-fixed-dim rounded-b-full h-[30%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="text-center mt-2 font-label-sm text-on-surface-variant">Thu</div>
+</div>
+<div class="w-full flex flex-col justify-end h-full gap-1 group">
+<div class="w-full bg-primary rounded-t-full h-[60%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-secondary-fixed-dim h-[20%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-tertiary-fixed-dim rounded-b-full h-[15%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="text-center mt-2 font-label-sm text-on-surface-variant">Fri</div>
+</div>
+<div class="w-full flex flex-col justify-end h-full gap-1 group">
+<div class="w-full bg-primary rounded-t-full h-[30%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-secondary-fixed-dim h-[50%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-tertiary-fixed-dim rounded-b-full h-[10%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="text-center mt-2 font-label-sm text-on-surface-variant">Sat</div>
+</div>
+<div class="w-full flex flex-col justify-end h-full gap-1 group">
+<div class="w-full bg-primary rounded-t-full h-[10%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-secondary-fixed-dim h-[30%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="w-full bg-tertiary-fixed-dim rounded-b-full h-[40%] transition-all duration-300 group-hover:opacity-90"></div>
+<div class="text-center mt-2 font-label-sm text-on-surface-variant">Sun</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Nav Bar (Mobile Only) -->
+<nav class="mobile-only fixed bottom-4 left-4 right-4 rounded-full z-50 bg-white/70 dark:bg-inverse-surface/70 backdrop-blur-3xl border border-white/100 dark:border-white/10 shadow-[0px_20px_40px_rgba(157,141,255,0.08)]">
+<div class="flex justify-around items-center px-4 py-2 w-full">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-2 hover:text-primary transition-all active:scale-90 duration-300 group" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-2 hover:text-primary transition-all active:scale-90 duration-300 group" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">check_circle</span>
+<span class="font-label-sm text-label-sm">Habits</span>
+</a>
+<!-- Active State -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-2 transition-all duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">insights</span>
+<span class="font-label-sm text-label-sm font-bold">Stats</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-2 hover:text-primary transition-all active:scale-90 duration-300 group" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">sentiment_satisfied</span>
+<span class="font-label-sm text-label-sm">Mood</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-2 hover:text-primary transition-all active:scale-90 duration-300 group" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</div>
+</nav>
+<script>
+        // Generate Heatmap dots
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('heatmap-container');
+            const weeks = 26; // Half year for display purposes
+            const daysPerWeek = 7;
+            
+            const intensities = [
+                'bg-surface-container-high border border-outline-variant/30', // 0
+                'bg-primary/20', // 1
+                'bg-primary/40', // 2
+                'bg-primary/60', // 3
+                'bg-primary'     // 4
+            ];
+
+            for (let w = 0; w < weeks; w++) {
+                for (let d = 0; d < daysPerWeek; d++) {
+                    // Random intensity for demo, weighted towards lower numbers for realism
+                    let rand = Math.random();
+                    let intensityIndex = 0;
+                    if (rand > 0.8) intensityIndex = 4;
+                    else if (rand > 0.6) intensityIndex = 3;
+                    else if (rand > 0.4) intensityIndex = 2;
+                    else if (rand > 0.2) intensityIndex = 1;
+
+                    const dot = document.createElement('div');
+                    dot.className = `heatmap-dot ${intensities[intensityIndex]}`;
+                    // Optional tooltips could be added here
+                    container.appendChild(dot);
+                }
+            }
+        });
+    </script>
+</body></html>

@@ -1,0 +1,46 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "apps",
+      "--device",
+      "00008101-000C492C0A6B001E",
+      "--bundle-id",
+      "com.xiaodao.LittleHabitTracker",
+      "-j",
+      "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/app_info.json"
+    ],
+    "commandType" : "devicectl.device.info.apps",
+    "environment" : {
+
+    },
+    "jsonVersion" : 3,
+    "outcome" : "success",
+    "version" : "518.31"
+  },
+  "result" : {
+    "apps" : [
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.xiaodao.LittleHabitTracker",
+        "bundleVersion" : "3",
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "TickDay",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/631203B5-6700-4C5A-8B08-08E4FCF7A9C2/LittleHabitTracker.app/",
+        "version" : "1.0"
+      }
+    ],
+    "defaultAppsIncluded" : false,
+    "deviceIdentifier" : "0851E127-A4B2-562B-AB95-A3FF6715591A",
+    "hiddenAppsIncluded" : false,
+    "internalAppsIncluded" : false,
+    "matchingBundleIdentifier" : "com.xiaodao.LittleHabitTracker",
+    "removableAppsIncluded" : true
+  }
+}

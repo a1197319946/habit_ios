@@ -1,0 +1,53 @@
+Sources/LittleHabitTrackerApp.swift:293:1: error: 'main' attribute cannot be used in a module that contains top-level code
+  1 | import SwiftUI
+    | |- note: top-level code defined in this source file
+    | `- note: pass '-parse-as-library' to compiler invocation if this is intentional
+  2 | import SwiftData
+  3 | 
+    :
+291 | }
+292 | 
+293 | @main
+    | `- error: 'main' attribute cannot be used in a module that contains top-level code
+294 | struct LittleHabitTrackerApp: App {
+295 |     var sharedModelContainer: ModelContainer = {
+
+Sources/LittleHabitTrackerApp.swift:297:13: error: cannot find 'Habit' in scope
+295 |     var sharedModelContainer: ModelContainer = {
+296 |         let schema = Schema([
+297 |             Habit.self,
+    |             `- error: cannot find 'Habit' in scope
+298 |             Checkin.self,
+299 |             MoodRecord.self
+
+Sources/LittleHabitTrackerApp.swift:298:13: error: cannot find 'Checkin' in scope
+296 |         let schema = Schema([
+297 |             Habit.self,
+298 |             Checkin.self,
+    |             `- error: cannot find 'Checkin' in scope
+299 |             MoodRecord.self
+300 |         ])
+
+Sources/LittleHabitTrackerApp.swift:299:13: error: cannot find 'MoodRecord' in scope
+297 |             Habit.self,
+298 |             Checkin.self,
+299 |             MoodRecord.self
+    |             `- error: cannot find 'MoodRecord' in scope
+300 |         ])
+301 |         let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")!.appendingPathComponent("shared.store")
+
+Sources/LittleHabitTrackerApp.swift:348:13: error: cannot find 'ContentView' in scope
+346 |     var body: some Scene {
+347 |         WindowGroup {
+348 |             ContentView()
+    |             `- error: cannot find 'ContentView' in scope
+349 |                 .environmentObject(appSettings)
+350 |                 .environment(\.locale, appSettings.locale ?? Locale.current)
+
+Sources/LittleHabitTrackerApp.swift:350:30: error: cannot infer key path type from context; consider explicitly specifying a root type
+348 |             ContentView()
+349 |                 .environmentObject(appSettings)
+350 |                 .environment(\.locale, appSettings.locale ?? Locale.current)
+    |                              `- error: cannot infer key path type from context; consider explicitly specifying a root type
+351 |                 .preferredColorScheme(appSettings.colorScheme)
+352 |                 

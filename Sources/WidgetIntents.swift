@@ -72,9 +72,6 @@ struct CheckinHabitIntent: AppIntent {
             descriptor.includePendingChanges = true
             let habits = try context.fetch(descriptor)
             if let targetHabit = habits.first(where: { $0.id == habitId }) {
-                if targetHabit.goalType == "amount" {
-                    return .result()
-                }
                 let today = Date()
                 let dateString = {
                     let formatter = DateFormatter()
@@ -91,6 +88,7 @@ struct CheckinHabitIntent: AppIntent {
                 let allTodaysIds = Set(todaysFromHabit.map { $0.id }).union(todaysFromGlobal.map { $0.id })
                 let todays = allCheckins.filter { allTodaysIds.contains($0.id) }
                 let fillAmount = targetHabit.goalType == "amount" ? (targetHabit.amountValue > 0 ? targetHabit.amountValue : 1.0) : 1.0
+                
                 if !todays.isEmpty {
                     todays.forEach { checkinToDelete in
                         if let idx = targetHabit.checkins?.firstIndex(where: { $0.id == checkinToDelete.id }) {
@@ -99,6 +97,9 @@ struct CheckinHabitIntent: AppIntent {
                         context.delete(checkinToDelete)
                     }
                 } else {
+                    if targetHabit.goalType == "amount" {
+                        return .result()
+                    }
                     let newCheckin = Checkin(dateString: dateString, amount: fillAmount)
                     newCheckin.habit = targetHabit
                     newCheckin.timestamp = today

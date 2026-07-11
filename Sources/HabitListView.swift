@@ -72,9 +72,14 @@ struct HabitListView: View {
                                         Label("Edit".tr(appSettings.resolvedLanguage), systemImage: "pencil")
                                     }
                                         Button(action: {
-                                            NotificationManager.shared.cancelReminder(for: habit)
-                                            habit.isArchived = true
-                                            try? modelContext.save()
+                                            withAnimation {
+                                                NotificationManager.shared.cancelReminder(for: habit)
+                                                habit.isArchived = true
+                                                if let idx = localHabits.firstIndex(of: habit) {
+                                                    localHabits.remove(at: idx)
+                                                }
+                                                try? modelContext.save()
+                                            }
                                             WidgetCenter.shared.reloadAllTimelines()
                                         }) {
                                             Label("Archive".tr(appSettings.resolvedLanguage), systemImage: "archivebox")
@@ -149,11 +154,11 @@ struct HabitListView: View {
                 .presentationDragIndicator(.visible)
         }
         .onAppear {
-            localHabits = habits
+            localHabits = habits.filter { !$0.isArchived }
         }
         .onChange(of: habits) { _, newHabits in
             if draggedHabit == nil {
-                localHabits = newHabits
+                localHabits = newHabits.filter { !$0.isArchived }
             }
         }
         .background(AmbientBackground())
@@ -232,27 +237,27 @@ struct HabitListCard: View {
     private var habitColor: Color { Color(hex: habit.color) }
     
     var body: some View {
-        VStack(spacing: DS.spacingM) {
+        VStack(spacing: 8) {
             // Top Row
-            HStack(spacing: DS.spacingS) {
+            HStack(spacing: 8) {
                 // Icon
                 ZStack {
                     Circle()
                         .fill(habitColor.opacity(0.15))
-                        .frame(width: 36, height: 36)
+                        .frame(width: 32, height: 32)
                     Image(systemName: habit.icon)
                         .foregroundColor(habitColor)
-                        .font(.system(size: 16))
+                        .font(.system(size: 14))
                 }
                 
                 // Name & Streak
                 VStack(alignment: .leading, spacing: 2) {
                     Text(habit.name)
-                        .font(.system(size: 18, weight: .bold))
+                        .font(.system(size: 16, weight: .bold))
                         .foregroundColor(DS.onSurface)
                     
                     Text("\(habit.currentStreak) \("Days Streak".tr(appSettings.resolvedLanguage))")
-                        .font(.system(size: 12, weight: .regular))
+                        .font(.system(size: 11, weight: .regular))
                         .foregroundColor(DS.onSurfaceVariant)
                 }
                 
@@ -261,37 +266,37 @@ struct HabitListCard: View {
                 // Right Side: Last 30 Days Count
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("\(habit.checkinCountLast30Days) \("次".tr(appSettings.resolvedLanguage))")
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundColor(habitColor)
                     
                     Text("30 Days".tr(appSettings.resolvedLanguage))
-                        .font(.system(size: 11, weight: .regular))
+                        .font(.system(size: 10, weight: .regular))
                         .foregroundColor(DS.onSurfaceVariant)
                 }
             }
             
             // Heatmap Grid
             let gridData = habit.last182DaysCheckins
-            HStack(spacing: 4) {
+            HStack(spacing: 3) {
                 ForEach(0..<26, id: \.self) { weekIndex in
-                    VStack(spacing: 4) {
+                    VStack(spacing: 3) {
                         ForEach(0..<7, id: \.self) { dayIndex in
                             let index = weekIndex * 7 + dayIndex
                             let isChecked = gridData[index]
                             
                             RoundedRectangle(cornerRadius: 2)
                                 .fill(isChecked ? habitColor : DS.uncheckedPlaceholder)
-                                .frame(width: 8, height: 8)
+                                .frame(width: 7, height: 7)
                         }
                     }
                 }
             }
             .frame(maxWidth: .infinity)
         }
-        .padding(DS.spacingM)
+        .padding(12)
         .background(DS.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
     }
 }
 
@@ -302,15 +307,15 @@ struct StatBlock: View {
     var body: some View {
         VStack(spacing: 2) {
             Text(value)
-                .font(.system(size: 16, weight: .bold))
+                .font(.system(size: 14, weight: .bold))
                 .foregroundColor(DS.onSurface)
             Text(label)
-                .font(.system(size: 11, weight: .regular))
+                .font(.system(size: 10, weight: .regular))
                 .foregroundColor(DS.onSurfaceVariant)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
         .background(DS.uncheckedPlaceholder)
-        .cornerRadius(12)
+        .cornerRadius(8)
     }
 }

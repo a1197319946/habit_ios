@@ -1,0 +1,51 @@
+{
+  "" : {
+    "const-values" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/LittleHabitWidget-primary.swiftconstvalues",
+    "dependencies" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/LittleHabitWidget-primary.d",
+    "diagnostics" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/LittleHabitWidget-primary.dia",
+    "emit-module-dependencies" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/LittleHabitWidget-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/LittleHabitWidget-primary-emit-module.dia",
+    "pch" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/LittleHabitWidget-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/LittleHabitWidget-primary.swiftdeps"
+  },
+  "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/Sources/Constants.swift" : {
+    "index-unit-output-path" : "/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/Constants.o",
+    "llvm-bc" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/Constants.bc",
+    "object" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/Constants.o"
+  },
+  "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/Sources/DesignSystem.swift" : {
+    "index-unit-output-path" : "/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/DesignSystem.o",
+    "llvm-bc" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/DesignSystem.bc",
+    "object" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/DesignSystem.o"
+  },
+  "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/Sources/LittleHabitWidget/LittleHabitWidget.swift" : {
+    "index-unit-output-path" : "/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/LittleHabitWidget.o",
+    "llvm-bc" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/LittleHabitWidget.bc",
+    "object" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/LittleHabitWidget.o"
+  },
+  "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/Sources/LittleHabitWidget/WidgetConfigurationIntents.swift" : {
+    "index-unit-output-path" : "/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/WidgetConfigurationIntents.o",
+    "llvm-bc" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/WidgetConfigurationIntents.bc",
+    "object" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/WidgetConfigurationIntents.o"
+  },
+  "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/Sources/LittleHabitWidget/WidgetRegistrationProbe.swift" : {
+    "index-unit-output-path" : "/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/WidgetRegistrationProbe.o",
+    "llvm-bc" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/WidgetRegistrationProbe.bc",
+    "object" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/WidgetRegistrationProbe.o"
+  },
+  "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/Sources/Models.swift" : {
+    "index-unit-output-path" : "/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/Models.o",
+    "llvm-bc" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/Models.bc",
+    "object" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/Models.o"
+  },
+  "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/Sources/WidgetIntents.swift" : {
+    "index-unit-output-path" : "/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/WidgetIntents.o",
+    "llvm-bc" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/WidgetIntents.bc",
+    "object" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/WidgetIntents.o"
+  },
+  "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/xiaodao/Desktop/scratch/little-habit-tracker_ios/build/LittleHabitTracker.build/Debug-iphoneos/LittleHabitWidget.build/Objects-normal/arm64/GeneratedAssetSymbols.o"
+  }
+}

@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 struct PaywallView: View {
     @EnvironmentObject private var appSettings: AppSettings
@@ -10,6 +11,71 @@ struct PaywallView: View {
     @State private var showStoreErrorAlert = false
     @State private var storeErrorMessage = ""
     @ObservedObject private var storeManager = StoreManager.shared
+    
+    private var monthlyProduct: Product? {
+        storeManager.products.first(where: {
+            $0.id == "1005" || $0.id.contains("month") || ($0.subscription?.subscriptionPeriod.unit == .month && $0.subscription?.subscriptionPeriod.value == 1)
+        })
+    }
+    private var yearlyProduct: Product? {
+        storeManager.products.first(where: {
+            $0.id == "1006" || $0.id.contains("year") || ($0.subscription?.subscriptionPeriod.unit == .year && $0.subscription?.subscriptionPeriod.value == 1)
+        })
+    }
+    private var lifetimeProduct: Product? {
+        storeManager.products.first(where: {
+            $0.id == "1003" || $0.id.contains("lifetime") || $0.id.contains("vip") || $0.id.contains("pro") || $0.type == .nonConsumable
+        })
+    }
+    
+    private func productTitle(for product: Product?, defaultTitle: String) -> String {
+        if let name = product?.displayName, !name.isEmpty {
+            return name
+        }
+        return defaultTitle.tr(appSettings.resolvedLanguage)
+    }
+    
+    private func productSubtitle(for product: Product?, defaultSubtitle: String) -> String {
+        if let desc = product?.description, !desc.isEmpty {
+            return desc
+        }
+        return defaultSubtitle.tr(appSettings.resolvedLanguage)
+    }
+    
+    @ViewBuilder private var tiersSection: some View {
+        VStack(spacing: DS.spacingM) {
+            PricingCard(
+                isSelected: selectedTier == 0,
+                title: productTitle(for: monthlyProduct, defaultTitle: "Monthly Card"),
+                price: monthlyProduct?.displayPrice ?? "¥2.9",
+                originalPrice: "¥6",
+                subtitle: productSubtitle(for: monthlyProduct, defaultSubtitle: "按月扣费"),
+                tag: nil
+            )
+            .onTapGesture { withAnimation { selectedTier = 0 } }
+            
+            PricingCard(
+                isSelected: selectedTier == 1,
+                title: productTitle(for: yearlyProduct, defaultTitle: "Yearly Card"),
+                price: yearlyProduct?.displayPrice ?? "¥29.9",
+                originalPrice: "¥38",
+                subtitle: productSubtitle(for: yearlyProduct, defaultSubtitle: "按年扣费"),
+                tag: "POPULAR".tr(appSettings.resolvedLanguage)
+            )
+            .onTapGesture { withAnimation { selectedTier = 1 } }
+            
+            PricingCard(
+                isSelected: selectedTier == 2,
+                title: productTitle(for: lifetimeProduct, defaultTitle: "Lifetime Card"),
+                price: lifetimeProduct?.displayPrice ?? "¥39.9",
+                originalPrice: "¥78",
+                subtitle: productSubtitle(for: lifetimeProduct, defaultSubtitle: "一次性付费"),
+                tag: "BEST VALUE".tr(appSettings.resolvedLanguage)
+            )
+            .onTapGesture { withAnimation { selectedTier = 2 } }
+        }
+        .padding(.horizontal, DS.spacingL)
+    }
     
     var body: some View {
         NavigationView {
@@ -89,48 +155,7 @@ struct PaywallView: View {
                         }
                         
                         // Pricing Tiers
-                        let monthlyProduct = storeManager.products.first(where: {
-                            $0.id == "1005" || $0.id.contains("month") || ($0.subscription?.subscriptionPeriod.unit == .month && $0.subscription?.subscriptionPeriod.value == 1)
-                        })
-                        let yearlyProduct = storeManager.products.first(where: {
-                            $0.id == "1006" || $0.id.contains("year") || ($0.subscription?.subscriptionPeriod.unit == .year && $0.subscription?.subscriptionPeriod.value == 1)
-                        })
-                        let lifetimeProduct = storeManager.products.first(where: {
-                            $0.id == "1003" || $0.id.contains("lifetime") || $0.id.contains("vip") || $0.id.contains("pro") || $0.type == .nonConsumable
-                        })
-                        
-                        VStack(spacing: DS.spacingM) {
-                            PricingCard(
-                                isSelected: selectedTier == 0,
-                                title: !((monthlyProduct?.displayName ?? "").isEmpty) ? (monthlyProduct?.displayName)! : "Monthly Card".tr(appSettings.resolvedLanguage),
-                                price: monthlyProduct?.displayPrice ?? "¥2.9",
-                                originalPrice: "¥6",
-                                subtitle: !((monthlyProduct?.description ?? "").isEmpty) ? (monthlyProduct?.description)! : "按月扣费".tr(appSettings.resolvedLanguage),
-                                tag: nil
-                            )
-                            .onTapGesture { withAnimation { selectedTier = 0 } }
-                            
-                            PricingCard(
-                                isSelected: selectedTier == 1,
-                                title: !((yearlyProduct?.displayName ?? "").isEmpty) ? (yearlyProduct?.displayName)! : "Yearly Card".tr(appSettings.resolvedLanguage),
-                                price: yearlyProduct?.displayPrice ?? "¥29.9",
-                                originalPrice: "¥38",
-                                subtitle: !((yearlyProduct?.description ?? "").isEmpty) ? (yearlyProduct?.description)! : "按年扣费".tr(appSettings.resolvedLanguage),
-                                tag: "POPULAR".tr(appSettings.resolvedLanguage)
-                            )
-                            .onTapGesture { withAnimation { selectedTier = 1 } }
-                            
-                            PricingCard(
-                                isSelected: selectedTier == 2,
-                                title: !((lifetimeProduct?.displayName ?? "").isEmpty) ? (lifetimeProduct?.displayName)! : "Lifetime Card".tr(appSettings.resolvedLanguage),
-                                price: lifetimeProduct?.displayPrice ?? "¥39.9",
-                                originalPrice: "¥78",
-                                subtitle: !((lifetimeProduct?.description ?? "").isEmpty) ? (lifetimeProduct?.description)! : "一次性付费".tr(appSettings.resolvedLanguage),
-                                tag: "BEST VALUE".tr(appSettings.resolvedLanguage)
-                            )
-                            .onTapGesture { withAnimation { selectedTier = 2 } }
-                        }
-                        .padding(.horizontal, DS.spacingL)
+                        tiersSection
                         
                         // Purchase Button
                         VStack(spacing: 8) {
@@ -177,6 +202,27 @@ struct PaywallView: View {
                         }
                         .padding(.horizontal, DS.spacingL)
                         .padding(.top, DS.spacingM)
+                        
+                        // Redeem Offer Code Button
+                        Button {
+                            if #available(iOS 16.0, *) {
+                                Task {
+                                    if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+                                        try? await AppStore.presentOfferCodeRedeemSheet(in: scene)
+                                    }
+                                }
+                            } else {
+                                SKPaymentQueue.default().presentCodeRedemptionSheet()
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "ticket.fill")
+                                Text(appSettings.resolvedLanguage == .chinese ? "使用兑换码" : "Redeem Offer Code")
+                            }
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(DS.primary)
+                        }
+                        .padding(.top, DS.spacingS)
                         
                         // Terms & Privacy Links (Required by Apple App Store Review Guideline 3.1.2)
                         VStack(spacing: 6) {

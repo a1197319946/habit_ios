@@ -1,0 +1,101 @@
+extension Text {
+    func display() -> Text { self.font(.system(size: 34, weight: .bold)) } // Down from 48
+    func headlineLg() -> Text { self.font(.system(size: 28, weight: .semibold)) } // Down from 32
+    func headlineLgMobile() -> Text { self.font(.system(size: 22, weight: .semibold)) } // Down from 24
+    func headlineMd() -> Text { self.font(.system(size: 20, weight: .semibold)) } // Down from 24
+    func bodyLg() -> Text { self.font(.system(size: 17, weight: .regular)) } // Down from 18
+    func bodyMd() -> Text { self.font(.system(size: 15, weight: .regular)) } // Down from 16
+    func labelMd() -> Text { self.font(.system(size: 13, weight: .medium)) } // Down from 14
+    func labelSm() -> Text { self.font(.system(size: 11, weight: .semibold)) } // Down from 12
+}
+
+// MARK: - Ambient Background
+struct AmbientBackground: View {
+    var body: some View {
+        ZStack {
+            DS.background.ignoresSafeArea()
+            
+            // Top Left / Left Blob
+            Circle()
+                .fill(Color(hex: "#C8BFFF").opacity(0.3)) // Primary fixed dim tinted
+                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
+                .blur(radius: 120)
+                .offset(x: -UIScreen.main.bounds.width * 0.3, y: -UIScreen.main.bounds.height * 0.1)
+            
+            // Bottom Right / Right Blob
+            Circle()
+                .fill(Color(hex: "#ACEECE").opacity(0.3)) // Secondary container tinted
+                .frame(width: UIScreen.main.bounds.width * 1.2, height: UIScreen.main.bounds.width * 1.2)
+                .blur(radius: 140)
+                .offset(x: UIScreen.main.bounds.width * 0.4, y: UIScreen.main.bounds.height * 0.2)
+        }
+        .ignoresSafeArea()
+    }
+}
+
+// MARK: - Divider
+
+struct JDivider: View {
+    var body: some View {
+        Rectangle()
+            .fill(DS.outlineVariant.opacity(0.5))
+            .frame(height: 1)
+    }
+}
+
+// MARK: - Accent Dot
+
+struct AccentDot: View {
+    var color: Color
+    var size: CGFloat = 10
+    var body: some View {
+        Circle()
+            .fill(color)
+            .frame(width: size, height: size)
+    }
+}
+
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue:  Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+    
+    func toHex() -> String? {
+        let uic = UIColor(self)
+        guard let components = uic.cgColor.components, components.count >= 3 else {
+            return nil
+        }
+        let r = Float(components[0])
+        let g = Float(components[1])
+        let b = Float(components[2])
+        var a = Float(1.0)
+        
+        if components.count >= 4 {
+            a = Float(components[3])
+        }
+        
+        if a != Float(1.0) {
+            return String(format: "%02lX%02lX%02lX%02lX", lroundf(r * 255), lroundf(g * 255), lroundf(b * 255), lroundf(a * 255))
+        } else {
+            return String(format: "#%02lX%02lX%02lX", lroundf(r * 255), lroundf(g * 255), lroundf(b * 255))
+        }

@@ -58,6 +58,20 @@ class AppSettings: ObservableObject {
         }
     }
     
+    init() {
+        if !isPremium {
+            resetPremiumSettingsToDefault()
+        }
+    }
+    
+    func resetPremiumSettingsToDefault() {
+        appLockEnabled = false
+        iCloudSyncEnabled = false
+        themeColorHex = "#5e4dbb"
+        themeMode = .system
+        applyTheme()
+    }
+    
     func applyTheme() {
         DispatchQueue.main.async {
             for scene in UIApplication.shared.connectedScenes {
@@ -157,6 +171,18 @@ extension String {
             "Edit Habit": [.chinese: "编辑习惯", .english: "Edit Habit"],
             "Record Mood": [.chinese: "记录心情", .english: "Record Mood"],
             "记录心情": [.chinese: "记录心情", .english: "Record Mood"],
+            "当前心情": [.chinese: "当前心情", .english: "Current Mood"],
+            "想法 (选填)": [.chinese: "想法 (选填)", .english: "Thoughts (Optional)"],
+            "写下这一刻的想法...": [.chinese: "写下这一刻的想法...", .english: "Write down your thoughts..."],
+            "图片 (选填)": [.chinese: "图片 (选填)", .english: "Image (Optional)"],
+            "添加图片": [.chinese: "添加图片", .english: "Add Image"],
+            "记录": [.chinese: "记录", .english: "Save"],
+            "激动": [.chinese: "激动", .english: "Excited"],
+            "开心": [.chinese: "开心", .english: "Happy"],
+            "一般": [.chinese: "一般", .english: "Normal"],
+            "失落": [.chinese: "失落", .english: "Down"],
+            "愤怒": [.chinese: "愤怒", .english: "Angry"],
+            "兑换码 / Redeem Code": [.chinese: "使用兑换码兑换会员", .english: "Redeem Offer Code"],
             "Track your daily progress": [.chinese: "记录你的每日进步", .english: "Track your daily progress"],
             "Generate Sharing Image": [.chinese: "生成分享图", .english: "Generate Sharing Image"],
             "公里": [.chinese: "公里", .english: "km"],
@@ -226,6 +252,8 @@ extension String {
             "No data for this week.": [.chinese: "本周暂无数据", .english: "No data for this week."],
             "美好的改变，从今天开始": [.chinese: "美好的改变，从今天开始", .english: "Beautiful changes begin today"],
             "开启你的第一个小习惯吧": [.chinese: "开启你的第一个小习惯吧", .english: "Let's create your first habit"],
+            "创建第一个习惯": [.chinese: "创建第一个习惯", .english: "Create First Habit"],
+            "Help & Support": [.chinese: "帮助与反馈", .english: "Help & Support"],
             "Habit Details": [.chinese: "习惯详情", .english: "Habit Details"],
             
             "Features": [.chinese: "功能", .english: "Features"],

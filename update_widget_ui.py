@@ -1,0 +1,554 @@
+import re
+
+code = """
+import WidgetKit
+import SwiftUI
+import SwiftData
+import AppIntents
+import Foundation
+
+// MARK: - Providers
+struct Provider: AppIntentTimelineProvider {
+    let modelContainer: ModelContainer
+    
+    init() {
+        let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
+        guard let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") else {
+            fatalError("Could not get shared store URL")
+        }
+        let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
+        do {
+            modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }
+    
+    @MainActor
+    func fetchHabits() -> [Habit] {
+        let descriptor = FetchDescriptor<Habit>(sortBy: [SortDescriptor(\\.createdAt)])
+        return (try? modelContainer.mainContext.fetch(descriptor)) ?? []
+    }
+    
+    @MainActor
+    func fetchCheckins() -> [Checkin] {
+        return (try? modelContainer.mainContext.fetch(FetchDescriptor<Checkin>())) ?? []
+    }
+
+    func placeholder(in context: Context) -> SimpleEntry {
+        SimpleEntry(date: Date(), configuration: SelectHabitIntent(), habits: [], checkins: [])
+    }
+
+    @MainActor
+    func snapshot(for configuration: SelectHabitIntent, in context: Context) async -> SimpleEntry {
+        SimpleEntry(date: Date(), configuration: configuration, habits: fetchHabits(), checkins: fetchCheckins())
+    }
+
+    @MainActor
+    func timeline(for configuration: SelectHabitIntent, in context: Context) async -> Timeline<SimpleEntry> {
+        let entry = SimpleEntry(date: Date(), configuration: configuration, habits: fetchHabits(), checkins: fetchCheckins())
+        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
+        return Timeline(entries: [entry], policy: .after(nextUpdate))
+    }
+}
+
+struct MultipleHabitsProvider: AppIntentTimelineProvider {
+    let modelContainer: ModelContainer
+    init() {
+        let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
+        let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")!.appendingPathComponent("shared.store")
+        modelContainer = try! ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, url: sharedStoreURL)])
+    }
+    
+    @MainActor func fetchHabits() -> [Habit] { return (try? modelContainer.mainContext.fetch(FetchDescriptor<Habit>())) ?? [] }
+    @MainActor func fetchCheckins() -> [Checkin] { return (try? modelContainer.mainContext.fetch(FetchDescriptor<Checkin>())) ?? [] }
+
+    func placeholder(in context: Context) -> MultipleHabitsEntry {
+        MultipleHabitsEntry(date: Date(), configuration: SelectMultipleHabitsIntent(), habits: [], checkins: [])
+    }
+    @MainActor func snapshot(for configuration: SelectMultipleHabitsIntent, in context: Context) async -> MultipleHabitsEntry {
+        MultipleHabitsEntry(date: Date(), configuration: configuration, habits: fetchHabits(), checkins: fetchCheckins())
+    }
+    @MainActor func timeline(for configuration: SelectMultipleHabitsIntent, in context: Context) async -> Timeline<MultipleHabitsEntry> {
+        let entry = MultipleHabitsEntry(date: Date(), configuration: configuration, habits: fetchHabits(), checkins: fetchCheckins())
+        return Timeline(entries: [entry], policy: .after(Calendar.current.date(byAdding: .hour, value: 1, to: Date())!))
+    }
+}
+
+struct SimpleEntry: TimelineEntry {
+    let date: Date
+    let configuration: SelectHabitIntent
+    let habits: [Habit]
+    let checkins: [Checkin]
+}
+
+struct MultipleHabitsEntry: TimelineEntry {
+    let date: Date
+    let configuration: SelectMultipleHabitsIntent
+    let habits: [Habit]
+    let checkins: [Checkin]
+}
+
+// MARK: - App Intents
+struct HabitEntity: AppEntity {
+    var id: String
+    var name: String
+    var icon: String
+    var color: String
+
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Habit"
+    static var defaultQuery = HabitEntityQuery()
+
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(title: "\\(name)")
+    }
+}
+
+struct HabitEntityQuery: EntityQuery {
+    func entities(for identifiers: [String]) async throws -> [HabitEntity] {
+        let allHabits = await fetchAllHabits()
+        return allHabits.filter { identifiers.contains($0.id) }
+    }
+
+    func suggestedEntities() async throws -> [HabitEntity] { return await fetchAllHabits() }
+    func defaultResult() async -> HabitEntity? { return try? await suggestedEntities().first }
+
+    @MainActor
+    private func fetchAllHabits() -> [HabitEntity] {
+        let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
+        guard let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") else { return [] }
+        let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
+        do {
+            let modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let descriptor = FetchDescriptor<Habit>(sortBy: [SortDescriptor(\\.createdAt)])
+            let habits = try modelContainer.mainContext.fetch(descriptor)
+            return habits.map { HabitEntity(id: $0.id, name: $0.name, icon: $0.icon, color: $0.color) }
+        } catch {
+            return []
+        }
+    }
+}
+
+struct SelectHabitIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Select Habit"
+    @Parameter(title: "Habit") var selectedHabit: HabitEntity?
+}
+
+struct SelectMultipleHabitsIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Select Multiple Habits"
+    @Parameter(title: "Habits") var habits: [HabitEntity]?
+}
+
+struct CheckinHabitIntent: AppIntent {
+    static var title: LocalizedStringResource = "Check in Habit"
+    @Parameter(title: "Habit ID") var habitId: String
+
+    init() {}
+    init(habitId: String) { self.habitId = habitId }
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
+        guard let sharedStoreURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker")?.appendingPathComponent("shared.store") else { return .result() }
+        let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
+        do {
+            let modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let descriptor = FetchDescriptor<Habit>()
+            let habits = try modelContainer.mainContext.fetch(descriptor)
+            if let targetHabit = habits.first(where: { $0.id == habitId }) {
+                let today = Date()
+                let dateString = {
+                    let formatter = DateFormatter()
+                    formatter.dateFormat = "yyyy-MM-dd"
+                    return formatter.string(from: today)
+                }()
+                let descriptorCheckins = FetchDescriptor<Checkin>()
+                let allCheckins = try modelContainer.mainContext.fetch(descriptorCheckins)
+                let todays = allCheckins.filter { $0.habit?.id == habitId && $0.dateString == dateString }
+                if targetHabit.frequencyType == "weekly" || targetHabit.frequencyType == "monthly" {
+                    if let existing = todays.first { existing.amount += 1; existing.timestamp = today }
+                    else { let newCheckin = Checkin(dateString: dateString, amount: 1); modelContainer.mainContext.insert(newCheckin); newCheckin.habit = targetHabit }
+                } else {
+                    if let existing = todays.first { existing.amount = existing.amount > 0 ? 0 : 1; existing.timestamp = today }
+                    else { let newCheckin = Checkin(dateString: dateString, amount: 1); modelContainer.mainContext.insert(newCheckin); newCheckin.habit = targetHabit }
+                }
+                try modelContainer.mainContext.save()
+            }
+        } catch {}
+        WidgetCenter.shared.reloadAllTimelines()
+        return .result()
+    }
+}
+
+// MARK: - Widget Helpers
+func getWidgetFirstWeekday() -> Int {
+    let defaults = UserDefaults(suiteName: "group.com.littlehabit.tracker")
+    let wd = defaults?.integer(forKey: "firstWeekday") ?? 2
+    return wd == 0 ? 2 : wd // fallback to 2 if not found
+}
+
+func getDaysForMonth(date: Date) -> [Date?] {
+    var calendar = Calendar.current
+    calendar.firstWeekday = getWidgetFirstWeekday()
+    let components = calendar.dateComponents([.year, .month], from: date)
+    guard let startOfMonth = calendar.date(from: components),
+          let range = calendar.range(of: .day, in: .month, for: startOfMonth) else { return [] }
+    
+    let firstWeekday = calendar.component(.weekday, from: startOfMonth)
+    var offset = firstWeekday - calendar.firstWeekday
+    if offset < 0 { offset += 7 }
+    
+    var days: [Date?] = Array(repeating: nil, count: 42)
+    for day in 1...range.count {
+        if let d = calendar.date(byAdding: .day, value: day - 1, to: startOfMonth) {
+            days[offset + day - 1] = d
+        }
+    }
+    return days
+}
+
+func getDaysForWeek(date: Date) -> [Date] {
+    var calendar = Calendar.current
+    calendar.firstWeekday = getWidgetFirstWeekday()
+    let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+    guard let startOfWeek = calendar.date(from: components) else { return [] }
+    
+    var days: [Date] = []
+    for i in 0..<7 {
+        if let d = calendar.date(byAdding: .day, value: i, to: startOfWeek) {
+            days.append(d)
+        }
+    }
+    return days
+}
+
+func isCheckedIn(habit: Habit, date: Date, checkins: [Checkin]) -> Bool {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    let dateStr = formatter.string(from: date)
+    let todays = checkins.filter { $0.habit?.id == habit.id && $0.dateString == dateStr }
+    if habit.goalType == "amount" {
+        return todays.reduce(0) { $0 + $1.amount } >= habit.amountValue
+    }
+    return !todays.isEmpty
+}
+
+func getCheckinsForPeriod(habit: Habit, date: Date, checkins: [Checkin]) -> Int {
+    let calendar = Calendar.current
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    
+    let start: Date
+    let end: Date
+    
+    if habit.frequencyType == "weekly" {
+        var cal = calendar
+        cal.firstWeekday = getWidgetFirstWeekday()
+        let comps = cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+        start = cal.date(from: comps)!
+        end = cal.date(byAdding: .day, value: 7, to: start)!
+    } else {
+        let comps = calendar.dateComponents([.year, .month], from: date)
+        start = calendar.date(from: comps)!
+        end = calendar.date(byAdding: .month, value: 1, to: start)!
+    }
+    
+    var sum = 0
+    var curr = start
+    while curr < end {
+        let dateStr = formatter.string(from: curr)
+        let todays = checkins.filter { $0.habit?.id == habit.id && $0.dateString == dateStr }
+        sum += todays.reduce(0) { $0 + $1.amount }
+        curr = calendar.date(byAdding: .day, value: 1, to: curr)!
+    }
+    return sum
+}
+
+// MARK: - Views
+
+struct MultiHabitCheckinWidgetView: View {
+    var entry: MultipleHabitsEntry
+    var body: some View {
+        let selectedIds = entry.configuration.habits?.map { $0.id } ?? []
+        let selectedHabits = Array(entry.habits.filter { selectedIds.contains($0.id) }.prefix(3))
+        
+        VStack(spacing: 0) {
+            if selectedHabits.isEmpty {
+                Text("Select Habits").foregroundColor(.gray)
+            } else {
+                ForEach(selectedHabits) { habit in
+                    let isDone = isCheckedIn(habit: habit, date: entry.date, checkins: entry.checkins)
+                    HStack {
+                        ZStack {
+                            Circle().fill(Color(hex: habit.color).opacity(0.15)).frame(width: 32, height: 32)
+                            Image(systemName: habit.icon).font(.system(size: 16)).foregroundColor(Color(hex: habit.color))
+                        }
+                        Text(habit.name).font(.system(size: 14, weight: .bold)).lineLimit(1).padding(.leading, 4)
+                        Spacer()
+                        Button(intent: CheckinHabitIntent(habitId: habit.id)) {
+                            ZStack {
+                                if isDone {
+                                    Image(systemName: "checkmark.circle.fill").font(.system(size: 26)).foregroundColor(Color(hex: habit.color))
+                                } else {
+                                    Circle().stroke(Color(hex: habit.color), lineWidth: 2).frame(width: 24, height: 24)
+                                }
+                            }
+                            .frame(width: 32, height: 32)
+                        }.buttonStyle(.plain)
+                    }
+                    .frame(maxHeight: .infinity)
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+struct NewSingleHabitWidgetView: View {
+    var entry: SimpleEntry
+    var body: some View {
+        let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id }) } ?? entry.habits.first
+        VStack(spacing: 8) {
+            if let habit = habit {
+                let isDone = isCheckedIn(habit: habit, date: entry.date, checkins: entry.checkins)
+                Button(intent: CheckinHabitIntent(habitId: habit.id)) {
+                    ZStack {
+                        Circle().fill(isDone ? Color(hex: habit.color) : Color(hex: habit.color).opacity(0.15)).frame(width: 56, height: 56)
+                        if isDone {
+                            Image(systemName: "checkmark").font(.system(size: 24, weight: .bold)).foregroundColor(.white)
+                        } else {
+                            Image(systemName: habit.icon).font(.system(size: 24)).foregroundColor(Color(hex: habit.color))
+                        }
+                    }
+                }.buttonStyle(.plain)
+                
+                Text(habit.name).font(.system(size: 14, weight: .bold)).lineLimit(1)
+                
+                let label = habit.frequencyType == "weekly" ? "本周" : "本月"
+                let suffix = habit.goalType == "amount" ? habit.amountUnit : "次"
+                let count = getCheckinsForPeriod(habit: habit, date: entry.date, checkins: entry.checkins)
+                let target = habit.goalType == "amount" ? Int(habit.amountValue) : habit.frequencyValue
+                
+                Text("\\(label): \\(count)/\\(target)\\(suffix)").font(.system(size: 10, weight: .medium)).foregroundColor(.gray)
+            } else {
+                Text("No Habit").foregroundColor(.gray)
+            }
+        }
+    }
+}
+
+struct MonthCalendarWidgetView: View {
+    var habit: Habit
+    var checkins: [Checkin]
+    var date: Date
+    var body: some View {
+        let days = getDaysForMonth(date: date)
+        let sunFirst = getWidgetFirstWeekday() == 1
+        let weekdays = sunFirst ? ["日", "一", "二", "三", "四", "五", "六"] : ["一", "二", "三", "四", "五", "六", "日"]
+        
+        HStack(spacing: 12) {
+            VStack(spacing: 8) {
+                ZStack {
+                    Circle().fill(Color(hex: habit.color).opacity(0.15)).frame(width: 44, height: 44)
+                    Image(systemName: habit.icon).font(.system(size: 20)).foregroundColor(Color(hex: habit.color))
+                }
+                Text(habit.name).font(.system(size: 12, weight: .bold)).lineLimit(1)
+                Spacer()
+            }
+            .frame(width: 50)
+            
+            VStack(spacing: 4) {
+                HStack(spacing: 0) {
+                    ForEach(weekdays, id: \\.self) { day in
+                        Text(day).font(.system(size: 10)).foregroundColor(.gray).frame(maxWidth: .infinity)
+                    }
+                }
+                VStack(spacing: 2) {
+                    ForEach(0..<6, id: \\.self) { row in
+                        HStack(spacing: 0) {
+                            ForEach(0..<7, id: \\.self) { col in
+                                let index = row * 7 + col
+                                if let dayDate = days[index] {
+                                    let isDone = isCheckedIn(habit: habit, date: dayDate, checkins: checkins)
+                                    let dayStr = "\\(Calendar.current.component(.day, from: dayDate))"
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .fill(isDone ? Color(hex: habit.color) : Color(UIColor.tertiarySystemFill))
+                                            .frame(width: 18, height: 18)
+                                        Text(dayStr)
+                                            .font(.system(size: 9, weight: isDone ? .bold : .regular))
+                                            .foregroundColor(isDone ? .white : Color.primary.opacity(0.6))
+                                    }.frame(maxWidth: .infinity)
+                                } else {
+                                    Color.clear.frame(width: 18, height: 18).frame(maxWidth: .infinity)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct MultiHabitWeekWidgetView: View {
+    var entry: MultipleHabitsEntry
+    var body: some View {
+        let days = getDaysForWeek(date: entry.date)
+        let sunFirst = getWidgetFirstWeekday() == 1
+        let weekdays = sunFirst ? ["日", "一", "二", "三", "四", "五", "六"] : ["一", "二", "三", "四", "五", "六", "日"]
+        
+        let selectedIds = entry.configuration.habits?.map { $0.id } ?? []
+        let selectedHabits = Array(entry.habits.filter { selectedIds.contains($0.id) }.prefix(4))
+        
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                Spacer().frame(width: 60)
+                ForEach(weekdays, id: \\.self) { day in
+                    Text(day).font(.system(size: 10, weight: .bold)).foregroundColor(.gray)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            
+            ForEach(selectedHabits) { habit in
+                HStack(spacing: 6) {
+                    HStack(spacing: 4) {
+                        ZStack {
+                            Circle().fill(Color(hex: habit.color).opacity(0.15)).frame(width: 20, height: 20)
+                            Image(systemName: habit.icon).font(.system(size: 10)).foregroundColor(Color(hex: habit.color))
+                        }
+                        Text(habit.name).font(.system(size: 12, weight: .bold)).lineLimit(1)
+                        Spacer()
+                    }
+                    .frame(width: 60, alignment: .leading)
+                    
+                    ForEach(days, id: \\.self) { day in
+                        let isDone = isCheckedIn(habit: habit, date: day, checkins: entry.checkins)
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(isDone ? Color(hex: habit.color) : Color(UIColor.tertiarySystemFill))
+                            .frame(height: 20)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+struct YearlyHeatmapWidgetView: View {
+    var habit: Habit
+    var checkins: [Checkin]
+    var date: Date
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                ZStack {
+                    Circle().fill(Color(hex: habit.color).opacity(0.15)).frame(width: 20, height: 20)
+                    Image(systemName: habit.icon).font(.system(size: 10)).foregroundColor(Color(hex: habit.color))
+                }
+                Text(habit.name).font(.system(size: 12, weight: .bold))
+                Spacer()
+            }
+            
+            let cols = 52
+            let calendar = Calendar.current
+            let startOfToday = calendar.startOfDay(for: date)
+            // Generate last 52*7 = 364 days.
+            let daysArray = (0..<(cols*7)).compactMap { offset in 
+                calendar.date(byAdding: .day, value: -(cols*7 - 1) + offset, to: startOfToday)
+            }
+            
+            HStack(spacing: 2) {
+                ForEach(0..<cols, id: \\.self) { col in
+                    VStack(spacing: 2) {
+                        ForEach(0..<7, id: \\.self) { row in
+                            let index = col * 7 + row
+                            if index < daysArray.count {
+                                let isDone = isCheckedIn(habit: habit, date: daysArray[index], checkins: checkins)
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(isDone ? Color(hex: habit.color) : Color(UIColor.tertiarySystemFill))
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            } else {
+                                Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct SingleYearlyWidgetView: View {
+    var entry: SimpleEntry
+    var body: some View {
+        let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id }) } ?? entry.habits.first
+        VStack {
+            if let habit = habit { 
+                YearlyHeatmapWidgetView(habit: habit, checkins: entry.checkins, date: entry.date)
+            } else {
+                Text("No Habit").foregroundColor(.gray)
+            }
+        }
+    }
+}
+
+// MARK: - Configurations
+struct MultiHabitCheckinWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "LittleHabitWidget", intent: SelectMultipleHabitsIntent.self, provider: MultipleHabitsProvider()) { entry in
+            MultiHabitCheckinWidgetView(entry: entry).containerBackground(for: .widget) { Color(UIColor.systemBackground) }
+        }.configurationDisplayName("Multi Habit Checkin").description("Track 3 habits side by side.").supportedFamilies([.systemSmall])
+    }
+}
+
+struct NewSingleHabitWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "NewSingleHabitWidget", intent: SelectHabitIntent.self, provider: Provider()) { entry in
+            NewSingleHabitWidgetView(entry: entry).containerBackground(for: .widget) { Color(UIColor.systemBackground) }
+        }.configurationDisplayName("Single Habit Checkin").description("Quickly check in one habit.").supportedFamilies([.systemSmall])
+    }
+}
+
+struct SingleMonthWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "SingleMonthWidget", intent: SelectHabitIntent.self, provider: Provider()) { entry in
+            let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id }) } ?? entry.habits.first
+            VStack { if let habit = habit { MonthCalendarWidgetView(habit: habit, checkins: entry.checkins, date: entry.date) } }.containerBackground(for: .widget) { Color(UIColor.systemBackground) }
+        }.configurationDisplayName("Single Habit Month").description("Monthly calendar view for a habit.").supportedFamilies([.systemMedium])
+    }
+}
+
+struct MultiMonthWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "MultiMonthWidget", intent: SelectMultipleHabitsIntent.self, provider: MultipleHabitsProvider()) { entry in
+            MultiHabitWeekWidgetView(entry: entry).containerBackground(for: .widget) { Color(UIColor.systemBackground) }
+        }.configurationDisplayName("Multi Habit Weekly").description("Compare multiple habits weekly.").supportedFamilies([.systemMedium])
+    }
+}
+
+struct SingleYearlyWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "SingleYearlyWidget", intent: SelectHabitIntent.self, provider: Provider()) { entry in
+            SingleYearlyWidgetView(entry: entry).containerBackground(for: .widget) { Color(UIColor.systemBackground) }
+        }.configurationDisplayName("Single Habit Yearly").description("Yearly heatmap for a habit.").supportedFamilies([.systemMedium])
+    }
+}
+
+
+@main
+struct LittleHabitWidgetBundle: WidgetBundle {
+    var body: some Widget {
+        MultiHabitCheckinWidget()
+        NewSingleHabitWidget()          
+        SingleMonthWidget()          
+        MultiMonthWidget()           
+        SingleYearlyWidget()         
+    }
+}
+"""
+
+with open('Sources/LittleHabitWidget/LittleHabitWidget.swift', 'w') as f:
+    f.write(code)
+

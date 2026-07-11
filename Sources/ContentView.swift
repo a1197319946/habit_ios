@@ -46,8 +46,7 @@ struct ContentView: View {
             }
         )
         
-        AppLockView {
-            ZStack {
+        ZStack {
                 TabView(selection: proxySelection) {
                     TabNavStack {
                         HomeView(selectedTab: proxySelection)
@@ -94,7 +93,6 @@ struct ContentView: View {
                         .zIndex(1000)
                 }
             }
-        }
         .sheet(isPresented: $appSettings.showPaywall) {
             PaywallView()
                 .presentationDragIndicator(.visible)

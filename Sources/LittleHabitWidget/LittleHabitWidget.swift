@@ -466,7 +466,7 @@ struct NewSingleHabitWidgetView: View {
         VStack(spacing: 8) {
             if let habit = habit {
                 let isDone = isCheckedIn(habit: habit, date: entry.date, checkins: entry.checkins)
-                if habit.goalType == "amount" {
+                if habit.goalType == "amount" && !isDone {
                     Link(destination: URL(string: "littlehabit://checkin?habitId=\(habit.id)")!) {
                         ZStack {
                             if isDone {
@@ -595,7 +595,7 @@ struct MonthCalendarWidgetView: View {
             .frame(width: cellSize * 7 + gridSpacing * 6)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .widgetURL(habit.goalType == "amount" ? URL(string: "littlehabit://checkin?habitId=\(habit.id)") : nil)
+        .widgetURL((habit.goalType == "amount" && !isCheckedIn(habit: habit, date: date, checkins: checkins)) ? URL(string: "littlehabit://checkin?habitId=\(habit.id)") : nil)
     }
 }
 
@@ -778,7 +778,7 @@ struct YearlyHeatmapWidgetView: View {
             Spacer(minLength: 0)
         }
         .padding(.vertical, isLarge ? 16 : 8)
-        .widgetURL(habit.goalType == "amount" ? URL(string: "littlehabit://checkin?habitId=\(habit.id)") : nil)
+        .widgetURL((habit.goalType == "amount" && !isCheckedIn(habit: habit, date: date, checkins: checkins)) ? URL(string: "littlehabit://checkin?habitId=\(habit.id)") : nil)
     }
 }
 

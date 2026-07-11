@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bloom - Mood History</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            border: 1px solid rgba(255, 255, 255, 1);
+        }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            top: 24px;
+            bottom: -24px;
+            left: 28px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--tw-colors-primary-container), transparent);
+            z-index: -1;
+        }
+        .timeline-item:last-child .timeline-line::before {
+            display: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-on-surface": "#f3f0f5",
+                      "surface-container-low": "#f6f2f8",
+                      "inverse-surface": "#303034",
+                      "primary": "#5e4dbb",
+                      "surface-container": "#f0edf2",
+                      "error": "#ba1a1a",
+                      "on-surface-variant": "#484552",
+                      "on-error-container": "#93000a",
+                      "secondary": "#2a6951",
+                      "tertiary-container": "#bd9479",
+                      "on-tertiary-container": "#492e19",
+                      "on-tertiary-fixed-variant": "#5f402a",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed": "#2d1604",
+                      "primary-fixed-dim": "#c8bfff",
+                      "primary-fixed": "#e5deff",
+                      "on-error": "#ffffff",
+                      "surface-variant": "#e4e1e7",
+                      "secondary-container": "#aceece",
+                      "secondary-fixed-dim": "#94d4b6",
+                      "on-surface": "#1b1b1f",
+                      "tertiary-fixed-dim": "#eabea0",
+                      "on-secondary-fixed-variant": "#09513a",
+                      "surface": "#fbf8fe",
+                      "outline": "#787584",
+                      "surface-container-highest": "#e4e1e7",
+                      "on-primary-fixed": "#1a0064",
+                      "surface-tint": "#5e4dbb",
+                      "outline-variant": "#c9c4d5",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-fixed": "#002115",
+                      "surface-dim": "#dcd9de",
+                      "secondary-fixed": "#aff0d1",
+                      "on-primary-fixed-variant": "#4633a1",
+                      "background": "#fbf8fe",
+                      "on-secondary": "#ffffff",
+                      "surface-container-high": "#eae7ed",
+                      "surface-bright": "#fbf8fe",
+                      "tertiary-fixed": "#ffdcc5",
+                      "tertiary": "#79573f",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-container": "#2f6e55",
+                      "inverse-primary": "#c8bfff",
+                      "primary-container": "#9d8dff",
+                      "on-primary-container": "#321b8e",
+                      "on-background": "#1b1b1f",
+                      "on-primary": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "12px",
+                      "container-max": "1280px",
+                      "md": "24px",
+                      "xl": "80px",
+                      "margin-mobile": "16px",
+                      "gutter": "24px",
+                      "xs": "4px",
+                      "base": "8px",
+                      "lg": "48px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "display": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen relative overflow-x-hidden">
+<!-- Subtle Background Elements -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden z-[-1]">
+<div class="absolute top-[-10%] right-[-5%] w-[50vw] h-[50vw] rounded-full bg-primary/5 blur-[120px]"></div>
+<div class="absolute bottom-[-10%] left-[-5%] w-[60vw] h-[60vw] rounded-full bg-secondary-container/20 blur-[140px]"></div>
+</div>
+<!-- TopAppBar (Web) -->
+<header class="hidden md:flex justify-between items-center px-xl h-16 w-full max-w-container-max mx-auto bg-surface/70 backdrop-blur-xl fixed top-0 w-full z-50 border-b border-white/20 shadow-sm">
+<div class="font-display text-headline-lg font-bold text-primary">
+            Bloom
+        </div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant hover:bg-primary/10 transition-colors p-2 rounded-full cursor-pointer">search</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:bg-primary/10 transition-colors p-2 rounded-full cursor-pointer">notifications</span>
+<div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden border border-white">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A small circular profile picture showing a young woman with light blonde hair smiling gently in a bright, sunlit room, fitting the airy, light glassmorphism aesthetic of the app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeHOR6_s1Qi9kdQ8FpRjSOvEVWZ_lbvStkQTDyAL1fWffDOpBouuI2n08CfClIMYy783H4MKYZEpzIq4hkBpBVVfPOxzmpslaLd5LzVQM0e__tVk_sqPDIsBQLPh0ooj5Q2Wv9dCV0upkbK7M8QVwTKaVK4x8V6SGRirAK-TnFx9w9W1_Aeq0WdpDyR6EwsJDMWXAZhfPtqUuGbSF9Y76qurGg8I8adDsMZrRvoR8J4fIzSRtdBgzJ498UyrSyInqHz7l_aOpp1W0"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="max-w-container-max mx-auto px-margin-mobile md:px-xl pt-24 md:pt-32 pb-32">
+<div class="mb-lg">
+<h1 class="font-display text-display text-primary mb-sm">Your Journey</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">A reflective look back at your moods and moments.</p>
+</div>
+<div class="max-w-2xl">
+<!-- Timeline Container -->
+<div class="relative">
+<!-- Entry 1 -->
+<div class="timeline-item timeline-line relative pl-16 mb-lg">
+<!-- Icon Indicator -->
+<div class="absolute left-0 top-0 w-14 h-14 rounded-full bg-surface-container-low border-2 border-white flex items-center justify-center shadow-sm z-10">
+<span class="text-2xl">✨</span>
+</div>
+<div class="glass-card rounded-[24px] p-[24px] shadow-sm hover:shadow-[0px_10px_30px_rgba(94,77,187,0.05)] transition-all duration-300">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Today, 9:00 AM</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mt-xs">Feeling Radiant</h3>
+</div>
+<div class="bg-primary-container/20 text-primary px-3 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">self_improvement</span>
+<span class="font-label-sm text-label-sm">Morning Meditation</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">
+                            Started the day with a 15-minute guided meditation. The sunlight was pouring through the window, and I felt a profound sense of peace. Ready to tackle whatever comes next.
+                        </p>
+<div class="rounded-xl overflow-hidden h-48 w-full border border-white/50">
+<img class="w-full h-full object-cover" data-alt="A serene, sunlit room with sheer white curtains gently blowing in the breeze. A cozy meditation cushion sits on a light hardwood floor. The overall color palette is warm, bright, and airy, featuring soft whites and gentle morning light, capturing a peaceful, reflective mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0XaTpvByw4mYZgaDTa-OhOrFEMRJHWXFtYl6JwabJuGALQCNwHwaXiXvz7bKS8E58i-_KOj-WUgbqGQBGHd2ymHc-GHrodggqBbuSVpYPt9akpE5IWcySFPWN3zJPlcKNE8pitaYZHrq68MgQsFcKVr8kMyPyb9eTumEP241cv-xmCzLpI1gT1pW61HP6B_p-2jcdsm0VRKx1BY0831KXe9hx5N9oomcsDiKTljzwMR9d66KSx8FqTyeutdR_SjFrK7ZcRgzuHc4"/>
+</div>
+</div>
+</div>
+<!-- Entry 2 -->
+<div class="timeline-item timeline-line relative pl-16 mb-lg">
+<!-- Icon Indicator -->
+<div class="absolute left-0 top-0 w-14 h-14 rounded-full bg-surface-container-low border-2 border-white flex items-center justify-center shadow-sm z-10">
+<span class="text-2xl">🌿</span>
+</div>
+<div class="glass-card rounded-[24px] p-[24px] shadow-sm hover:shadow-[0px_10px_30px_rgba(94,77,187,0.05)] transition-all duration-300">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Yesterday, 5:30 PM</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mt-xs">Grounded &amp; Calm</h3>
+</div>
+<div class="bg-secondary-container/30 text-secondary px-3 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">nature_people</span>
+<span class="font-label-sm text-label-sm">Nature Walk</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                            Took a long walk through the botanical gardens after work. The crisp air and the smell of pine really helped clear my mind after a busy afternoon of meetings.
+                        </p>
+</div>
+</div>
+<!-- Entry 3 -->
+<div class="timeline-item timeline-line relative pl-16 mb-lg">
+<!-- Icon Indicator -->
+<div class="absolute left-0 top-0 w-14 h-14 rounded-full bg-surface-container-low border-2 border-white flex items-center justify-center shadow-sm z-10">
+<span class="text-2xl">☕</span>
+</div>
+<div class="glass-card rounded-[24px] p-[24px] shadow-sm hover:shadow-[0px_10px_30px_rgba(94,77,187,0.05)] transition-all duration-300">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Oct 24, 2:15 PM</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mt-xs">A Bit Sluggish</h3>
+</div>
+<div class="bg-tertiary-fixed/40 text-on-tertiary-fixed-variant px-3 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+<span class="font-label-sm text-label-sm">Reading</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                            Hit a bit of an afternoon slump. Decided to step away from the screen, make a cup of matcha, and read a few chapters of my new book. It helped reset my focus.
+                        </p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="md:hidden fixed bottom-4 left-4 right-4 rounded-full z-50 bg-white/70 backdrop-blur-3xl border border-white/100 shadow-[0px_20px_40px_rgba(157,141,255,0.08)]">
+<ul class="flex justify-around items-center px-4 py-2">
+<li class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-2 hover:text-primary transition-all active:scale-90 duration-300">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</li>
+<li class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-2 hover:text-primary transition-all active:scale-90 duration-300">
+<span class="material-symbols-outlined mb-1">check_circle</span>
+<span class="font-label-sm text-label-sm">Habits</span>
+</li>
+<li class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-2 hover:text-primary transition-all active:scale-90 duration-300">
+<span class="material-symbols-outlined mb-1">insights</span>
+<span class="font-label-sm text-label-sm">Stats</span>
+</li>
+<li class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-2 transition-all duration-300 active:scale-90">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">sentiment_satisfied</span>
+<span class="font-label-sm text-label-sm">Mood</span>
+</li>
+<li class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-2 hover:text-primary transition-all active:scale-90 duration-300">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</li>
+</ul>
+</nav>
+</body></html>
