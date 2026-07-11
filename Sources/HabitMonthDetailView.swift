@@ -147,7 +147,7 @@ struct HabitMonthDetailView: View {
                     .padding(.horizontal, 16)
                     
                     // Timeline Records
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             Image(systemName: "clock.arrow.circlepath")
                                 .foregroundColor(Color(hex: habit.color))

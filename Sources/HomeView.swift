@@ -383,7 +383,7 @@ struct ListHabitCard: View {
         Button(action: {
             onTapCard()
         }) {
-            HStack(spacing: 16) {
+            HStack(spacing: 10) {
                 // Icon
                 ZStack {
                     Circle()

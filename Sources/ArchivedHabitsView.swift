@@ -21,7 +21,7 @@ struct ArchivedHabitsView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, 100)
             } else {
-                LazyVStack(spacing: 16) {
+                LazyVStack(spacing: 10) {
                     ForEach(habits) { habit in
                         NavigationLink(value: habit) {
                             ArchivedHabitCard(habit: habit)

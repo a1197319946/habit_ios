@@ -305,7 +305,7 @@ struct StatisticsView: View {
                                     .frame(maxWidth: .infinity, alignment: .center)
                                     .padding(.vertical, DS.spacingL)
                             } else {
-                                VStack(spacing: 16) {
+                                VStack(spacing: 10) {
                                     // Day headers
                                     HStack(spacing: 6) {
                                         Spacer()

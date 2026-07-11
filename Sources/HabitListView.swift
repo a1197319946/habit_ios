@@ -61,7 +61,7 @@ struct HabitListView: View {
                             .padding(.top, 100)
                             .padding(.horizontal, 16)
                     } else {
-                        LazyVStack(spacing: 16) {
+                        LazyVStack(spacing: 10) {
                             ForEach(localHabits) { habit in
                                 NavigationLink(value: habit) {
                                     HabitListCard(habit: habit)
