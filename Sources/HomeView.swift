@@ -207,6 +207,30 @@ struct HomeView: View {
             }
             Button("Cancel".tr(appSettings.resolvedLanguage), role: .cancel) {}
         }
+        .onAppear {
+            if let habitId = appSettings.openCheckinHabitId, let habit = habits.first(where: { $0.id == habitId }) {
+                appSettings.openCheckinHabitId = nil
+                selectedHabit = habit
+                if habit.goalType == "amount" {
+                    initialAmountForSheet = nil
+                    showingAmountSheet = true
+                } else {
+                    handleCheckinTap(habit: habit)
+                }
+            }
+        }
+        .onChange(of: appSettings.openCheckinHabitId) { oldId, newId in
+            if let habitId = newId, let habit = habits.first(where: { $0.id == habitId }) {
+                appSettings.openCheckinHabitId = nil
+                selectedHabit = habit
+                if habit.goalType == "amount" {
+                    initialAmountForSheet = nil
+                    showingAmountSheet = true
+                } else {
+                    handleCheckinTap(habit: habit)
+                }
+            }
+        }
     }
     
     // MARK: - Actions

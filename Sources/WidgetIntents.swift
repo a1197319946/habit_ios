@@ -73,7 +73,7 @@ struct CheckinHabitIntent: AppIntent {
             let habits = try context.fetch(descriptor)
             if let targetHabit = habits.first(where: { $0.id == habitId }) {
                 if targetHabit.goalType == "amount" {
-                    return .result(opensIntent: OpenURLIntent(URL(string: "littlehabit://checkin?habitId=\(habitId)")!))
+                    return .result()
                 }
                 let today = Date()
                 let dateString = {
