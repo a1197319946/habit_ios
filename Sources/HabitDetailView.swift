@@ -1,6 +1,7 @@
 import SwiftUI
 import WidgetKit
-import SwiftData
+import CoreData
+import NotificationCenter
 
 extension Array {
     func chunked(into size: Int) -> [[Element]] {
@@ -11,7 +12,7 @@ extension Array {
 }
 
 struct HabitDetailView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var appSettings: AppSettings
@@ -416,7 +417,7 @@ struct HabitDetailView: View {
                     Menu {
                         Button(action: {
                             h.isArchived = false
-                            try? modelContext.save()
+                            try? viewContext.save()
                             NotificationManager.shared.scheduleReminder(for: h)
                             WidgetCenter.shared.reloadAllTimelines()
                             dismiss()
@@ -441,8 +442,8 @@ struct HabitDetailView: View {
              Button("Delete".tr(appSettings.resolvedLanguage), role: .destructive) {
                 if let h = habit {
                     NotificationManager.shared.cancelReminder(for: h)
-                    modelContext.delete(h)
-                    try? modelContext.save()
+                    viewContext.delete(h)
+                    try? viewContext.save()
             WidgetCenter.shared.reloadAllTimelines()
                     dismiss()
                 }
@@ -452,14 +453,19 @@ struct HabitDetailView: View {
         }
          .onAppear {
             if let h = habit {
-                name = h.name; colorHex = h.color; icon = h.icon
-                goalType = h.goalType; frequencyType = h.frequencyType
-                weeklyTarget = h.weeklyTarget; monthlyTarget = h.monthlyTarget
-                amountValue = h.amountValue; amountUnit = h.amountUnit
+                name = h.name
+                colorHex = h.color
+                icon = h.icon
+                goalType = h.goalType
+                frequencyType = h.frequencyType
+                weeklyTarget = h.weeklyTarget
+                monthlyTarget = h.monthlyTarget
+                amountValue = h.amountValue
+                amountUnit = h.amountUnit
                 isReminderEnabled = h.isReminderEnabled
                 reminderTime = h.reminderTime
                 reminderText = (h.reminderText == "该打卡啦！坚持就是胜利～" || h.reminderText == "Time to check in! Keep it up~") ? "" : h.reminderText
-            }
+        }
         }
         }
     }
@@ -477,17 +483,18 @@ struct HabitDetailView: View {
                 h.isReminderEnabled = isReminderEnabled
                 h.reminderTime = reminderTime
                 h.reminderText = textToSave
+                try? viewContext.save()
                 NotificationManager.shared.scheduleReminder(for: h)
             } else {
-                let newHabit = Habit(name: name, color: colorHex, icon: icon)
+                let newHabit = Habit(context: viewContext)
+                newHabit.name = name; newHabit.color = colorHex; newHabit.icon = icon
                 newHabit.goalType = goalType; newHabit.frequencyType = frequencyType
                 newHabit.weeklyTarget = weeklyTarget; newHabit.monthlyTarget = monthlyTarget
                 newHabit.amountValue = amountValue; newHabit.amountUnit = amountUnit
                 newHabit.isReminderEnabled = isReminderEnabled
                 newHabit.reminderTime = reminderTime
                 newHabit.reminderText = textToSave
-                modelContext.insert(newHabit)
-                try? modelContext.save()
+                try? viewContext.save()
                 NotificationManager.shared.scheduleReminder(for: newHabit)
             }
             WidgetCenter.shared.reloadAllTimelines()

@@ -1,15 +1,16 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import WidgetKit
 
 struct AmountCheckinSheet: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var appSettings: AppSettings
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isFocused: Bool
     
-    // We fetch checkins to calculate accumulation
-    @Query private var allCheckins: [Checkin]
+    @FetchRequest(
+        sortDescriptors: []
+    ) private var allCheckins: FetchedResults<Checkin>
     
     let habit: Habit
     let selectedDate: Date
@@ -183,15 +184,17 @@ struct AmountCheckinSheet: View {
             let dateString = formatter.string(from: selectedDate)
             
             let targetId = habit.id
-            let descriptor = FetchDescriptor<Checkin>(predicate: #Predicate { $0.dateString == dateString && $0.habit?.id == targetId })
-            if let existing = try? modelContext.fetch(descriptor).first {
+            let fetchRequest: NSFetchRequest<Checkin> = Checkin.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "dateString == %@ AND habit.id == %@", dateString, targetId)
+            if let existing = try? viewContext.fetch(fetchRequest).first {
                 existing.amount = val
             } else {
-                let newCheckin = Checkin(dateString: dateString, amount: val)
+                let newCheckin = Checkin(context: viewContext)
+                newCheckin.dateString = dateString
+                newCheckin.amount = val
                 newCheckin.habit = habit
-                modelContext.insert(newCheckin)
             }
-            try? modelContext.save()
+            try? viewContext.save()
             WidgetCenter.shared.reloadAllTimelines()
             isFocused = false
             onComplete()

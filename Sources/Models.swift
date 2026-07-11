@@ -1,75 +1,90 @@
 import Foundation
-import SwiftData
+import CoreData
 
-@Model
-final class Habit {
-    var id: String = UUID().uuidString
-    var name: String = ""
-    var color: String = "#8B5CF6"
-    var icon: String = "star.fill"
+@objc(Habit)
+public class Habit: NSManagedObject, Identifiable {
+    @NSManaged public var id: String
+    @NSManaged public var name: String
+    @NSManaged public var color: String
+    @NSManaged public var icon: String
     
-    var goalType: String = "frequency" // "frequency" or "amount"
-    var frequencyType: String = "weekly" // "weekly" or "monthly"
+    @NSManaged public var goalType: String
+    @NSManaged public var frequencyType: String
     
-    var weeklyTarget: Int = 3
-    var monthlyTarget: Int = 10
+    @NSManaged public var weeklyTarget: Int
+    @NSManaged public var monthlyTarget: Int
     
-    var amountValue: Double = 0.0
-    var amountUnit: String = ""
+    @NSManaged public var amountValue: Double
+    @NSManaged public var amountUnit: String
     
-    var order: Int = 0
-    var isArchived: Bool = false
+    @NSManaged public var order: Int
+    @NSManaged public var isArchived: Bool
     
-    var createdAt: Date = Date()
+    @NSManaged public var createdAt: Date
     
-    var isReminderEnabled: Bool = false
-    var reminderTime: Date = Calendar.current.date(from: DateComponents(hour: 20, minute: 0)) ?? Date()
-    var reminderText: String = ""
+    @NSManaged public var isReminderEnabled: Bool
+    @NSManaged public var reminderTime: Date
+    @NSManaged public var reminderText: String
     
-    // CloudKit requires relationships to be optional
-    @Relationship(deleteRule: .cascade) var checkins: [Checkin]?
-    @Relationship(deleteRule: .cascade) var moodRecords: [MoodRecord]?
+    @NSManaged public var checkins: NSSet?
+    @NSManaged public var moodRecords: NSSet?
     
-    init(name: String, color: String = "#8B5CF6", icon: String = "star.fill") {
-        self.name = name
-        self.color = color
-        self.icon = icon
+    public override func awakeFromInsert() {
+        super.awakeFromInsert()
+        self.id = UUID().uuidString
+        self.color = "#8B5CF6"
+        self.icon = "star.fill"
+        self.goalType = "frequency"
+        self.frequencyType = "weekly"
+        self.weeklyTarget = 3
+        self.monthlyTarget = 10
+        self.amountValue = 0.0
+        self.amountUnit = ""
+        self.order = 0
+        self.isArchived = false
+        self.createdAt = Date()
+        self.isReminderEnabled = false
+        self.reminderTime = Calendar.current.date(from: DateComponents(hour: 20, minute: 0)) ?? Date()
+        self.reminderText = ""
     }
 }
 
-@Model
-final class Checkin {
-    var id: String = UUID().uuidString
-    var dateString: String = "" // "YYYY-MM-DD"
-    var timestamp: Date = Date()
-    var amount: Double = 0.0
+@objc(Checkin)
+public class Checkin: NSManagedObject, Identifiable {
+    @NSManaged public var id: String
+    @NSManaged public var dateString: String
+    @NSManaged public var timestamp: Date
+    @NSManaged public var amount: Double
     
-    @Relationship(inverse: \Habit.checkins) var habit: Habit?
+    @NSManaged public var habit: Habit?
     
-    init(dateString: String, amount: Double = 1.0) {
-        self.dateString = dateString
-        self.amount = amount
+    public override func awakeFromInsert() {
+        super.awakeFromInsert()
+        self.id = UUID().uuidString
+        self.timestamp = Date()
+        self.amount = 0.0
+        self.dateString = ""
     }
 }
 
-@Model
-final class MoodRecord {
-    var id: String = UUID().uuidString
-    var type: String = "normal" // "excited", "happy", "normal", "down", "angry"
-    var text: String = ""
-    var timestamp: Date = Date()
+@objc(MoodRecord)
+public class MoodRecord: NSManagedObject, Identifiable {
+    @NSManaged public var id: String
+    @NSManaged public var type: String
+    @NSManaged public var text: String
+    @NSManaged public var timestamp: Date
+    @NSManaged public var imageData: Data?
     
-    @Attribute(.externalStorage) var imageData: Data?
+    @NSManaged public var habit: Habit?
     
-    @Relationship(inverse: \Habit.moodRecords) var habit: Habit?
-    
-    init(type: String, text: String = "") {
-        self.type = type
-        self.text = text
+    public override func awakeFromInsert() {
+        super.awakeFromInsert()
+        self.id = UUID().uuidString
+        self.type = "normal"
+        self.text = ""
+        self.timestamp = Date()
     }
 }
-import Foundation
-import SwiftData
 
 struct SharedFormatters {
     private static let _yyyyMMdd: DateFormatter = {
@@ -98,8 +113,18 @@ struct SharedFormatters {
 }
 
 extension Habit {
+    var checkinsArray: [Checkin] {
+        let set = checkins as? Set<Checkin> ?? []
+        return set.sorted { $0.timestamp < $1.timestamp }
+    }
+    
+    var moodRecordsArray: [MoodRecord] {
+        let set = moodRecords as? Set<MoodRecord> ?? []
+        return set.sorted { $0.timestamp < $1.timestamp }
+    }
+    
     var checkinDates: Set<String> {
-        Set((checkins ?? []).map { $0.dateString })
+        Set(checkinsArray.map { $0.dateString })
     }
     
     var totalCheckins: Int {
@@ -198,39 +223,165 @@ extension Habit {
         return maxStreak
     }
     
-    var last154DaysCheckins: [Bool] {
+    var last182DaysCheckins: [Bool] {
         var calendar = Calendar.current
         calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
-        let today = Date()
         let dates = checkinDates
-        if dates.isEmpty { return [Bool](repeating: false, count: 154) }
+        var result: [Bool] = Array(repeating: false, count: 182)
         
-        var result = [Bool](repeating: false, count: 154)
-        for i in 0..<154 {
-            let daysAgo = 153 - i
-            if let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) {
+        let today = Date()
+        
+        for i in 0..<182 {
+            if let date = calendar.date(byAdding: .day, value: -i, to: today) {
                 let dateStr = SharedFormatters.dateString(from: date)
-                result[i] = dates.contains(dateStr)
+                result[181 - i] = dates.contains(dateStr)
             }
         }
         return result
     }
+}
+
+extension Habit {
+    @nonobjc public class func fetchRequest() -> NSFetchRequest<Habit> {
+        return NSFetchRequest<Habit>(entityName: "Habit")
+    }
+}
+
+extension Checkin {
+    @nonobjc public class func fetchRequest() -> NSFetchRequest<Checkin> {
+        return NSFetchRequest<Checkin>(entityName: "Checkin")
+    }
+}
+
+extension MoodRecord {
+    @nonobjc public class func fetchRequest() -> NSFetchRequest<MoodRecord> {
+        return NSFetchRequest<MoodRecord>(entityName: "MoodRecord")
+    }
+}
+import Foundation
+import CoreData
+
+class PersistenceController {
+    static let shared = PersistenceController()
     
-    var last182DaysCheckins: [Bool] {
-        var calendar = Calendar.current
-        calendar.firstWeekday = UserDefaults.standard.integer(forKey: "firstWeekday") == 0 ? 2 : UserDefaults.standard.integer(forKey: "firstWeekday")
-        let today = Date()
-        let dates = checkinDates
-        if dates.isEmpty { return [Bool](repeating: false, count: 182) }
+    let container: NSPersistentContainer
+    
+    init(inMemory: Bool = false) {
+        let model = PersistenceController.createModel()
+        container = NSPersistentContainer(name: "LittleHabitTracker", managedObjectModel: model)
         
-        var result = [Bool](repeating: false, count: 182)
-        for i in 0..<182 {
-            let daysAgo = 181 - i
-            if let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) {
-                let dateStr = SharedFormatters.dateString(from: date)
-                result[i] = dates.contains(dateStr)
+        if inMemory {
+            container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
+        } else {
+            if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker") {
+                let storeURL = groupURL.appendingPathComponent("LittleHabitTracker.sqlite")
+                let description = NSPersistentStoreDescription(url: storeURL)
+                description.shouldMigrateStoreAutomatically = true
+                description.shouldInferMappingModelAutomatically = true
+                description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+                description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+                container.persistentStoreDescriptions = [description]
             }
         }
-        return result
+        
+        container.loadPersistentStores { (storeDescription, error) in
+            if let error = error as NSError? {
+                fatalError("Unresolved error \(error), \(error.userInfo)")
+            }
+        }
+        
+        container.viewContext.automaticallyMergesChangesFromParent = true
+        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+    }
+    
+    static func createModel() -> NSManagedObjectModel {
+        let model = NSManagedObjectModel()
+        
+        let habitEntity = NSEntityDescription()
+        habitEntity.name = "Habit"
+        habitEntity.managedObjectClassName = "Habit"
+        
+        let checkinEntity = NSEntityDescription()
+        checkinEntity.name = "Checkin"
+        checkinEntity.managedObjectClassName = "Checkin"
+        
+        let moodRecordEntity = NSEntityDescription()
+        moodRecordEntity.name = "MoodRecord"
+        moodRecordEntity.managedObjectClassName = "MoodRecord"
+        
+        // Habit Attributes
+        let hId = NSAttributeDescription(); hId.name = "id"; hId.attributeType = .stringAttributeType; hId.isOptional = false
+        let hName = NSAttributeDescription(); hName.name = "name"; hName.attributeType = .stringAttributeType; hName.isOptional = false
+        let hColor = NSAttributeDescription(); hColor.name = "color"; hColor.attributeType = .stringAttributeType; hColor.isOptional = false; hColor.defaultValue = "#8B5CF6"
+        let hIcon = NSAttributeDescription(); hIcon.name = "icon"; hIcon.attributeType = .stringAttributeType; hIcon.isOptional = false; hIcon.defaultValue = "star.fill"
+        let hGoalType = NSAttributeDescription(); hGoalType.name = "goalType"; hGoalType.attributeType = .stringAttributeType; hGoalType.isOptional = false; hGoalType.defaultValue = "frequency"
+        let hFreqType = NSAttributeDescription(); hFreqType.name = "frequencyType"; hFreqType.attributeType = .stringAttributeType; hFreqType.isOptional = false; hFreqType.defaultValue = "weekly"
+        let hWeekTarget = NSAttributeDescription(); hWeekTarget.name = "weeklyTarget"; hWeekTarget.attributeType = .integer64AttributeType; hWeekTarget.isOptional = false; hWeekTarget.defaultValue = 3
+        let hMonthTarget = NSAttributeDescription(); hMonthTarget.name = "monthlyTarget"; hMonthTarget.attributeType = .integer64AttributeType; hMonthTarget.isOptional = false; hMonthTarget.defaultValue = 10
+        let hAmtValue = NSAttributeDescription(); hAmtValue.name = "amountValue"; hAmtValue.attributeType = .doubleAttributeType; hAmtValue.isOptional = false; hAmtValue.defaultValue = 0.0
+        let hAmtUnit = NSAttributeDescription(); hAmtUnit.name = "amountUnit"; hAmtUnit.attributeType = .stringAttributeType; hAmtUnit.isOptional = false; hAmtUnit.defaultValue = ""
+        let hOrder = NSAttributeDescription(); hOrder.name = "order"; hOrder.attributeType = .integer64AttributeType; hOrder.isOptional = false; hOrder.defaultValue = 0
+        let hArchived = NSAttributeDescription(); hArchived.name = "isArchived"; hArchived.attributeType = .booleanAttributeType; hArchived.isOptional = false; hArchived.defaultValue = false
+        let hCreated = NSAttributeDescription(); hCreated.name = "createdAt"; hCreated.attributeType = .dateAttributeType; hCreated.isOptional = false
+        let hRemindEn = NSAttributeDescription(); hRemindEn.name = "isReminderEnabled"; hRemindEn.attributeType = .booleanAttributeType; hRemindEn.isOptional = false; hRemindEn.defaultValue = false
+        let hRemindTime = NSAttributeDescription(); hRemindTime.name = "reminderTime"; hRemindTime.attributeType = .dateAttributeType; hRemindTime.isOptional = false
+        let hRemindText = NSAttributeDescription(); hRemindText.name = "reminderText"; hRemindText.attributeType = .stringAttributeType; hRemindText.isOptional = false; hRemindText.defaultValue = ""
+        
+        habitEntity.properties = [hId, hName, hColor, hIcon, hGoalType, hFreqType, hWeekTarget, hMonthTarget, hAmtValue, hAmtUnit, hOrder, hArchived, hCreated, hRemindEn, hRemindTime, hRemindText]
+        
+        // Checkin Attributes
+        let cId = NSAttributeDescription(); cId.name = "id"; cId.attributeType = .stringAttributeType; cId.isOptional = false
+        let cDateStr = NSAttributeDescription(); cDateStr.name = "dateString"; cDateStr.attributeType = .stringAttributeType; cDateStr.isOptional = false
+        let cTime = NSAttributeDescription(); cTime.name = "timestamp"; cTime.attributeType = .dateAttributeType; cTime.isOptional = false
+        let cAmt = NSAttributeDescription(); cAmt.name = "amount"; cAmt.attributeType = .doubleAttributeType; cAmt.isOptional = false; cAmt.defaultValue = 0.0
+        
+        // MoodRecord Attributes
+        let mId = NSAttributeDescription(); mId.name = "id"; mId.attributeType = .stringAttributeType; mId.isOptional = false
+        let mType = NSAttributeDescription(); mType.name = "type"; mType.attributeType = .stringAttributeType; mType.isOptional = false; mType.defaultValue = "normal"
+        let mText = NSAttributeDescription(); mText.name = "text"; mText.attributeType = .stringAttributeType; mText.isOptional = false; mText.defaultValue = ""
+        let mTime = NSAttributeDescription(); mTime.name = "timestamp"; mTime.attributeType = .dateAttributeType; mTime.isOptional = false
+        let mImg = NSAttributeDescription(); mImg.name = "imageData"; mImg.attributeType = .binaryDataAttributeType; mImg.isOptional = true; mImg.allowsExternalBinaryDataStorage = true
+        
+        // Relationships
+        let habitToCheckins = NSRelationshipDescription()
+        habitToCheckins.name = "checkins"
+        habitToCheckins.destinationEntity = checkinEntity
+        habitToCheckins.maxCount = 0 // to-many
+        habitToCheckins.deleteRule = .cascadeDeleteRule
+        habitToCheckins.isOptional = true
+        
+        let checkinToHabit = NSRelationshipDescription()
+        checkinToHabit.name = "habit"
+        checkinToHabit.destinationEntity = habitEntity
+        checkinToHabit.maxCount = 1
+        checkinToHabit.deleteRule = .nullifyDeleteRule
+        checkinToHabit.isOptional = true
+        
+        habitToCheckins.inverseRelationship = checkinToHabit
+        checkinToHabit.inverseRelationship = habitToCheckins
+        
+        let habitToMoods = NSRelationshipDescription()
+        habitToMoods.name = "moodRecords"
+        habitToMoods.destinationEntity = moodRecordEntity
+        habitToMoods.maxCount = 0
+        habitToMoods.deleteRule = .cascadeDeleteRule
+        habitToMoods.isOptional = true
+        
+        let moodToHabit = NSRelationshipDescription()
+        moodToHabit.name = "habit"
+        moodToHabit.destinationEntity = habitEntity
+        moodToHabit.maxCount = 1
+        moodToHabit.deleteRule = .nullifyDeleteRule
+        moodToHabit.isOptional = true
+        
+        habitToMoods.inverseRelationship = moodToHabit
+        moodToHabit.inverseRelationship = habitToMoods
+        
+        checkinEntity.properties = [cId, cDateStr, cTime, cAmt, checkinToHabit]
+        moodRecordEntity.properties = [mId, mType, mText, mTime, mImg, moodToHabit]
+        habitEntity.properties.append(contentsOf: [habitToCheckins, habitToMoods])
+        
+        model.entities = [habitEntity, checkinEntity, moodRecordEntity]
+        return model
     }
 }

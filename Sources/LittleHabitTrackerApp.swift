@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 enum AppLanguage: String, CaseIterable, Identifiable {
     case system = "system"
@@ -65,6 +65,7 @@ class AppSettings: ObservableObject {
     }
     
     func resetPremiumSettingsToDefault() {
+        objectWillChange.send()
         appLockEnabled = false
         iCloudSyncEnabled = false
         themeColorHex = "#5e4dbb"
@@ -476,55 +477,16 @@ extension String {
         return self
     }
 }
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        return .portrait
+    }
+}
 
 @main
 struct LittleHabitTrackerApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Habit.self,
-            Checkin.self,
-            MoodRecord.self
-        ])
-        guard let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker") else {
-            print("LittleHabitTrackerApp: App Group container URL is nil! Using fallback.")
-            return getAppGroupModelContainer()
-        }
-        let sharedStoreURL = groupURL.appendingPathComponent("shared.store")
-        
-        // Data Migration: move from old default.store to shared App Group store
-        let defaultURL = URL.applicationSupportDirectory.appending(path: "default.store")
-        let fileManager = FileManager.default
-        
-        let hasMigrated = UserDefaults.standard.bool(forKey: "didMigrateToAppGroup2")
-        if !hasMigrated && fileManager.fileExists(atPath: defaultURL.path) {
-            do {
-                if fileManager.fileExists(atPath: sharedStoreURL.path) {
-                    try fileManager.removeItem(at: sharedStoreURL)
-                }
-                try fileManager.copyItem(at: defaultURL, to: sharedStoreURL)
-                
-                let defaultShmURL = URL.applicationSupportDirectory.appending(path: "default.store-shm")
-                let sharedShmURL = groupURL.appendingPathComponent("shared.store-shm")
-                if fileManager.fileExists(atPath: sharedShmURL.path) { try fileManager.removeItem(at: sharedShmURL) }
-                if fileManager.fileExists(atPath: defaultShmURL.path) {
-                    try fileManager.copyItem(at: defaultShmURL, to: sharedShmURL)
-                }
-                
-                let defaultWalURL = URL.applicationSupportDirectory.appending(path: "default.store-wal")
-                let sharedWalURL = groupURL.appendingPathComponent("shared.store-wal")
-                if fileManager.fileExists(atPath: sharedWalURL.path) { try fileManager.removeItem(at: sharedWalURL) }
-                if fileManager.fileExists(atPath: defaultWalURL.path) {
-                    try fileManager.copyItem(at: defaultWalURL, to: sharedWalURL)
-                }
-                UserDefaults.standard.set(true, forKey: "didMigrateToAppGroup2")
-                print("Successfully migrated SwiftData to App Group container.")
-            } catch {
-                print("Migration failed: \(error)")
-            }
-        }
-        return getAppGroupModelContainer()
-    }()
-
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    let persistenceController = PersistenceController.shared
     @StateObject private var appSettings = AppSettings()
 
     var body: some Scene {
@@ -533,10 +495,8 @@ struct LittleHabitTrackerApp: App {
                 .environmentObject(appSettings)
                 .environment(\.locale, appSettings.locale ?? Locale.current)
                 .preferredColorScheme(appSettings.colorScheme)
-                
-                
+                .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
-        .modelContainer(sharedModelContainer)
     }
 }
 

@@ -1,10 +1,10 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import PhotosUI
 import WidgetKit
 
 struct MoodRecorderView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var appSettings: AppSettings
     
@@ -229,15 +229,16 @@ struct MoodRecorderView: View {
     }
     
     private func saveMood() {
-        let record = MoodRecord(type: selectedMood, text: noteText)
+        let record = MoodRecord(context: viewContext)
+        record.type = selectedMood
+        record.text = noteText
         if let data = selectedImageData {
             record.imageData = data
         }
         if let h = habit {
             record.habit = h
         }
-        modelContext.insert(record)
-        try? modelContext.save()
+        try? viewContext.save()
         WidgetCenter.shared.reloadAllTimelines()
         dismiss()
     }

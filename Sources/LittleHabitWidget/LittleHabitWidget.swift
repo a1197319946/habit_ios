@@ -1,6 +1,6 @@
 import WidgetKit
 import SwiftUI
-import SwiftData
+import CoreData
 import AppIntents
 
 import Foundation
@@ -45,47 +45,38 @@ extension String {
 // MARK: - Providers
 @MainActor
 func fetchFreshHabitsAndCheckins(isPreview: Bool = false) -> ([Habit], [Checkin]) {
+    let context = PersistenceController.shared.container.viewContext
     if isPreview {
-        let mockHabit1 = Habit(name: "早起喝水", color: "#4A90E2", icon: "drop.fill")
-        let mockHabit2 = Habit(name: "每天阅读", color: "#F5A623", icon: "book.fill")
+        let mockHabit1 = Habit(context: context)
+        mockHabit1.name = "早起喝水"
+        mockHabit1.color = "#4A90E2"
+        mockHabit1.icon = "drop.fill"
+        
+        let mockHabit2 = Habit(context: context)
+        mockHabit2.name = "每天阅读"
+        mockHabit2.color = "#F5A623"
+        mockHabit2.icon = "book.fill"
+        
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         let todayStr = formatter.string(from: Date())
-        let mockCheckin = Checkin(dateString: todayStr, amount: 1.0)
+        let mockCheckin = Checkin(context: context)
+        mockCheckin.dateString = todayStr
+        mockCheckin.amount = 1.0
         mockCheckin.habit = mockHabit1
-        mockHabit1.checkins = [mockCheckin]
+        
         return ([mockHabit1, mockHabit2], [mockCheckin])
     }
-    do {
-        let context = SharedModelContainerManager.mainContext
-        context.processPendingChanges()
-        var habitDescriptor = FetchDescriptor<Habit>(predicate: #Predicate<Habit> { $0.isArchived == false }, sortBy: [SortDescriptor(\.order)])
-        habitDescriptor.relationshipKeyPathsForPrefetching = [\.checkins]
-        habitDescriptor.includePendingChanges = true
-        var checkinDescriptor = FetchDescriptor<Checkin>()
-        checkinDescriptor.relationshipKeyPathsForPrefetching = [\.habit]
-        checkinDescriptor.includePendingChanges = true
-        let habits = (try? context.fetch(habitDescriptor)) ?? []
-        let checkins = (try? context.fetch(checkinDescriptor)) ?? []
-        
-        for h in habits {
-            _ = h.checkins?.count
-            if let hc = h.checkins {
-                for c in hc { _ = c.dateString }
-            }
-        }
-        for c in checkins {
-            _ = c.habit?.id
-        }
-        if habits.isEmpty {
-            let mockHabit1 = Habit(name: "早起打卡", color: "#F5A623", icon: "sun.max.fill")
-            return ([mockHabit1], [])
-        }
-        return (habits, checkins)
-    } catch {
-        let mockHabit1 = Habit(name: "早起打卡", color: "#F5A623", icon: "sun.max.fill")
-        return ([mockHabit1], [])
-    }
+    let habitFetch: NSFetchRequest<Habit> = Habit.fetchRequest()
+    habitFetch.predicate = NSPredicate(format: "isArchived == NO")
+    habitFetch.sortDescriptors = [NSSortDescriptor(keyPath: \Habit.order, ascending: true)]
+    
+    let checkinFetch: NSFetchRequest<Checkin> = Checkin.fetchRequest()
+    
+    let habits = (try? context.fetch(habitFetch)) ?? []
+    let checkins = (try? context.fetch(checkinFetch)) ?? []
+    
+    return (habits, checkins)
 }
 
 struct Provider: AppIntentTimelineProvider {
@@ -236,7 +227,7 @@ func isCheckedIn(habit: Habit, date: Date, checkins: [Checkin]) -> Bool {
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd"
     let dateStr = formatter.string(from: date)
-    if let hc = habit.checkins, hc.contains(where: { $0.dateString == dateStr }) {
+    if let hc = habit.checkins?.allObjects as? [Checkin], hc.contains(where: { $0.dateString == dateStr }) {
         return true
     }
     return checkins.contains(where: { $0.habit?.id == habit.id && $0.dateString == dateStr })
@@ -266,7 +257,7 @@ func getCheckinsForPeriod(habit: Habit, date: Date, checkins: [Checkin]) -> Doub
     var curr = start
     while curr < end {
         let dateStr = formatter.string(from: curr)
-        let hc = habit.checkins ?? []
+        let hc = habit.checkins?.allObjects as? [Checkin] ?? []
         let todaysFromHabit = hc.filter { $0.dateString == dateStr }
         let todaysFromGlobal = checkins.filter { $0.habit?.id == habit.id && $0.dateString == dateStr }
         let todays = todaysFromHabit.isEmpty ? todaysFromGlobal : todaysFromHabit
@@ -284,7 +275,7 @@ func getWidgetStatText(habit: Habit, date: Date, checkins: [Checkin]) -> String 
     let value = getCheckinsForPeriod(habit: habit, date: date, checkins: checkins)
     if habit.goalType == "amount" {
         let amount = value.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", value) : String(format: "%.1f", value)
-        return "\(amount) \(habit.amountUnit.wTr())"
+        return "\(amount) \((habit.amountUnit ?? "次").wTr())"
     }
     return "\(Int(value)) \("天".wTr())"
 }
@@ -293,7 +284,7 @@ func getWidgetMonthProgressText(habit: Habit, date: Date, checkins: [Checkin]) -
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM"
     let monthPrefix = formatter.string(from: date)
-    let habitCheckins = habit.checkins ?? []
+    let habitCheckins = habit.checkins?.allObjects as? [Checkin] ?? []
     let globalCheckins = checkins.filter { $0.habit?.id == habit.id }
     let uniqueCheckins = Dictionary(grouping: habitCheckins + globalCheckins, by: { $0.id }).compactMap { $0.value.first }
     let monthCheckins = uniqueCheckins.filter { $0.dateString.hasPrefix(monthPrefix) }
@@ -520,7 +511,7 @@ struct MonthCalendarWidgetView: View {
         let monthStr = {
             let f = DateFormatter()
             f.locale = lang == "zh" ? Locale(identifier: "zh_CN") : Locale(identifier: "en_US")
-            f.dateFormat = lang == "zh" ? "yyyy年M月" : "MMM yyyy"
+            f.setLocalizedDateFormatFromTemplate("yMMMM")
             return f.string(from: date)
         }()
         let habitColor = Color(hex: habit.color)
@@ -614,13 +605,8 @@ struct MultiHabitWeekWidgetView: View {
         let weekRangeStr = {
             guard let first = days.first, let last = days.last else { return "" }
             let f = DateFormatter()
-            if lang == "zh" {
-                f.locale = Locale(identifier: "zh_CN")
-                f.dateFormat = "M月d日"
-            } else {
-                f.locale = Locale(identifier: "en_US")
-                f.dateFormat = "MMM d"
-            }
+            f.locale = lang == "zh" ? Locale(identifier: "zh_CN") : Locale(identifier: "en_US")
+            f.setLocalizedDateFormatFromTemplate("MMMd")
             return "\(f.string(from: first)) - \(f.string(from: last))"
         }()
         let cellSize: CGFloat = 18
@@ -696,7 +682,7 @@ struct YearlyHeatmapWidgetView: View {
         let yearStr = lang == "zh" ? "\(currentYear)年" : "\(currentYear)"
         let yearPrefix = String(format: "%04d-", currentYear)
         
-        let hc = habit.checkins ?? []
+        let hc = habit.checkins?.allObjects as? [Checkin] ?? []
         let globalHc = checkins.filter { $0.habit?.id == habit.id }
         let checkedDateStrings = Set(hc.map { $0.dateString } + globalHc.map { $0.dateString })
         
@@ -811,7 +797,7 @@ struct YearlyLargeThreeHabitsView: View {
             
             ForEach(habits) { habit in
                 let habitColor = Color(hex: habit.color)
-                let hc = habit.checkins ?? []
+                let hc = habit.checkins?.allObjects as? [Checkin] ?? []
                 let globalHc = checkins.filter { $0.habit?.id == habit.id }
                 let checkedDateStrings = Set(hc.map { $0.dateString } + globalHc.map { $0.dateString })
                 

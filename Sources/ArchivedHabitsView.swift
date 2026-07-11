@@ -1,11 +1,14 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 struct ArchivedHabitsView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var appSettings: AppSettings
-    @Query(filter: #Predicate<Habit> { $0.isArchived == true }, sort: \Habit.order) private var habits: [Habit]
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Habit.order, ascending: true)],
+        predicate: NSPredicate(format: "isArchived == true")
+    ) private var habits: FetchedResults<Habit>
     
     var body: some View {
         ScrollView {

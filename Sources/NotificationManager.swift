@@ -95,6 +95,8 @@ class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterD
             return
         }
         
+        requestAuthorization { _ in }
+        
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         let todayStr = formatter.string(from: Date())
@@ -102,8 +104,9 @@ class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterD
         
         let calendar = Calendar.current
         let now = Date()
-        let hour = calendar.component(.hour, from: habit.reminderTime)
-        let minute = calendar.component(.minute, from: habit.reminderTime)
+        let rTime = habit.reminderTime ?? Date()
+        let hour = calendar.component(.hour, from: rTime)
+        let minute = calendar.component(.minute, from: rTime)
         
         for offset in 0..<14 {
             if offset == 0 && isCheckedInToday {
@@ -126,7 +129,8 @@ class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterD
             let content = UNMutableNotificationContent()
             content.title = habit.name
             let defaultMsg = "该打卡啦！坚持就是胜利～".tr(resolvedLanguage)
-            content.body = (habit.reminderText.isEmpty || habit.reminderText == "该打卡啦！坚持就是胜利～" || habit.reminderText == "Time to check in! Keep it up~") ? defaultMsg : habit.reminderText
+            let rText = habit.reminderText ?? ""
+            content.body = (rText.isEmpty || rText == "该打卡啦！坚持就是胜利～" || rText == "Time to check in! Keep it up~") ? defaultMsg : rText
             content.sound = .default
             content.userInfo = ["habitId": habit.id]
             if let attachment = appIconAttachment() {

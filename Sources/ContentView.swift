@@ -49,23 +49,7 @@ struct ContentView: View {
         ZStack {
                 Group {
                     if #available(iOS 18.0, *) {
-                        TabView(selection: proxySelection) {
-                            TabSection {
-                                Tab(AppTab.home.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.home.iconName, value: AppTab.home) {
-                                    TabNavStack { HomeView(selectedTab: proxySelection) }
-                                }
-                                Tab(AppTab.habits.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.habits.iconName, value: AppTab.habits) {
-                                    TabNavStack { HabitListView() }
-                                }
-                                Tab(AppTab.stats.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.stats.iconName, value: AppTab.stats) {
-                                    TabNavStack { StatisticsView() }
-                                }
-                            }
-                            Tab(AppTab.settings.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.settings.iconName, value: AppTab.settings) {
-                                Color.clear
-                            }
-                        }
-                        .tabViewStyle(.sidebarAdaptable)
+                        MainTabView_iOS18(proxySelection: proxySelection)
                     } else {
                         TabView(selection: proxySelection) {
                             TabNavStack {
@@ -150,7 +134,6 @@ struct ContentView: View {
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appSettings.showRetentionOffer)
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
-                getAppGroupModelContainer().mainContext.rollback()
                 LittleHabitAppShortcuts.updateAppShortcutParameters()
                 reloadLittleHabitWidgets()
             }
@@ -318,5 +301,34 @@ struct LaunchScreenView: View {
                 }
             }
         }
+    }
+}
+
+@available(iOS 18.0, *)
+struct MainTabView_iOS18: View {
+    var proxySelection: Binding<AppTab>
+    @EnvironmentObject private var appSettings: AppSettings
+    @AppStorage("tabCustomization") private var tabCustomization: TabViewCustomization
+    
+    var body: some View {
+        TabView(selection: proxySelection) {
+            TabSection("Main".tr(appSettings.resolvedLanguage)) {
+                Tab(AppTab.home.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.home.iconName, value: AppTab.home) {
+                    TabNavStack { HomeView(selectedTab: proxySelection) }
+                }
+                Tab(AppTab.habits.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.habits.iconName, value: AppTab.habits) {
+                    TabNavStack { HabitListView() }
+                }
+                Tab(AppTab.stats.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.stats.iconName, value: AppTab.stats) {
+                    TabNavStack { StatisticsView() }
+                }
+            }
+            
+            Tab(AppTab.settings.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.settings.iconName, value: AppTab.settings, role: .search) {
+                Color.clear
+            }
+        }
+        .tabViewStyle(.sidebarAdaptable)
+        .tabViewCustomization($tabCustomization)
     }
 }

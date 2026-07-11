@@ -216,8 +216,10 @@ struct PaywallView: View {
                             }
                         } label: {
                             HStack(spacing: 4) {
-                                Image(systemName: "giftcard.fill")
+                                Image(systemName: "gift.fill")
                                 Text("Redeem Offer Code".tr(appSettings.resolvedLanguage))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.5)
                             }
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(DS.primary)

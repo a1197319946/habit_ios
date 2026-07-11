@@ -1,5 +1,5 @@
 import Foundation
-import SwiftData
+import CoreData
 import WidgetKit
 
 struct BackupData: Codable {
@@ -42,11 +42,11 @@ struct BackupMoodRecord: Codable {
 class DataBackupManager {
     static let shared = DataBackupManager()
     
-    func exportData(modelContext: ModelContext) -> URL? {
+    func exportData(modelContext: NSManagedObjectContext) -> URL? {
         do {
-            let habits = try modelContext.fetch(FetchDescriptor<Habit>())
-            let checkins = try modelContext.fetch(FetchDescriptor<Checkin>())
-            let moodRecords = try modelContext.fetch(FetchDescriptor<MoodRecord>())
+            let habits = try modelContext.fetch(Habit.fetchRequest()) as! [Habit]
+            let checkins = try modelContext.fetch(Checkin.fetchRequest()) as! [Checkin]
+            let moodRecords = try modelContext.fetch(MoodRecord.fetchRequest()) as! [MoodRecord]
             
             let backupHabits = habits.map { BackupHabit(id: $0.id, name: $0.name, color: $0.color, icon: $0.icon, order: $0.order, isArchived: $0.isArchived, frequencyType: $0.frequencyType, goalType: $0.goalType, weeklyTarget: $0.weeklyTarget, monthlyTarget: $0.monthlyTarget, amountValue: $0.amountValue, amountUnit: $0.amountUnit) }
             
@@ -74,14 +74,14 @@ class DataBackupManager {
         }
     }
     
-    func exportExcelData(modelContext: ModelContext, language: AppLanguage) -> URL? {
+    func exportExcelData(modelContext: NSManagedObjectContext, language: AppLanguage) -> URL? {
         do {
-            let habits = try modelContext.fetch(FetchDescriptor<Habit>())
-            let checkins = try modelContext.fetch(FetchDescriptor<Checkin>())
+            let habits = try modelContext.fetch(Habit.fetchRequest()) as! [Habit]
+            let checkins = try modelContext.fetch(Checkin.fetchRequest()) as! [Checkin]
             
             let isCN = (language == .chinese)
             
-            var csvString = "\u{FEFF}" // UTF-8 BOM for Microsoft Excel compatibility
+            var csvString = "\u{FEFF}"
             if isCN {
                 csvString += "习惯名称,颜色编号,图标编号,频率类型,目标类型,打卡日期,打卡数值\n"
             } else {
@@ -118,7 +118,7 @@ class DataBackupManager {
         return string
     }
     
-    func importData(from url: URL, modelContext: ModelContext) {
+    func importData(from url: URL, modelContext: NSManagedObjectContext) {
         guard url.startAccessingSecurityScopedResource() else { return }
         defer { url.stopAccessingSecurityScopedResource() }
         
@@ -127,17 +127,25 @@ class DataBackupManager {
             let decoder = JSONDecoder()
             let backup = try decoder.decode(BackupData.self, from: data)
             
-            // Delete existing
             NotificationManager.shared.cancelAllHabitReminders()
-            try modelContext.delete(model: Habit.self)
-            try modelContext.delete(model: Checkin.self)
-            try modelContext.delete(model: MoodRecord.self)
+            let fetchHabits = NSFetchRequest<NSFetchRequestResult>(entityName: "Habit")
+            let deleteHabits = NSBatchDeleteRequest(fetchRequest: fetchHabits)
+            let fetchCheckins = NSFetchRequest<NSFetchRequestResult>(entityName: "Checkin")
+            let deleteCheckins = NSBatchDeleteRequest(fetchRequest: fetchCheckins)
+            let fetchMoods = NSFetchRequest<NSFetchRequestResult>(entityName: "MoodRecord")
+            let deleteMoods = NSBatchDeleteRequest(fetchRequest: fetchMoods)
             
-            // Re-insert
+            try modelContext.execute(deleteHabits)
+            try modelContext.execute(deleteCheckins)
+            try modelContext.execute(deleteMoods)
+            
             var habitMap: [String: Habit] = [:]
             
             for bh in backup.habits {
-                let habit = Habit(name: bh.name, color: bh.color, icon: bh.icon)
+                let habit = Habit(context: modelContext)
+                habit.name = bh.name
+                habit.color = bh.color
+                habit.icon = bh.icon
                 habit.id = bh.id
                 habit.order = bh.order
                 habit.isArchived = bh.isArchived
@@ -147,27 +155,28 @@ class DataBackupManager {
                 habit.monthlyTarget = bh.monthlyTarget
                 habit.amountValue = bh.amountValue
                 habit.amountUnit = bh.amountUnit
-                modelContext.insert(habit)
                 habitMap[bh.id] = habit
             }
             
             for bc in backup.checkins {
                 if let h = habitMap[bc.habitId] {
-                    let checkin = Checkin(dateString: bc.dateString, amount: bc.amount)
+                    let checkin = Checkin(context: modelContext)
+                    checkin.dateString = bc.dateString
+                    checkin.amount = bc.amount
                     checkin.id = bc.id
                     checkin.habit = h
-                    modelContext.insert(checkin)
                 }
             }
             
             for bm in backup.moodRecords {
                 if let h = habitMap[bm.habitId] {
-                    let mood = MoodRecord(type: bm.type, text: bm.text)
+                    let mood = MoodRecord(context: modelContext)
+                    mood.type = bm.type
+                    mood.text = bm.text
                     mood.id = bm.id
                     mood.timestamp = bm.timestamp
                     mood.imageData = bm.imageData
                     mood.habit = h
-                    modelContext.insert(mood)
                 }
             }
             

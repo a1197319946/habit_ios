@@ -1,11 +1,16 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import WidgetKit
+import UniformTypeIdentifiers
 
 struct HabitListView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var appSettings: AppSettings
-    @Query(filter: #Predicate<Habit> { $0.isArchived == false }, sort: \Habit.order) private var habits: [Habit]
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Habit.order, ascending: true)],
+        predicate: NSPredicate(format: "isArchived == NO")
+    ) private var habits: FetchedResults<Habit>
     
     @State private var showingAddSheet = false
     @State private var draggedHabit: Habit?
@@ -21,39 +26,7 @@ struct HabitListView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     // Header
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Habit".tr(appSettings.resolvedLanguage))
-                                .display()
-                                .foregroundColor(DS.primary)
-                            Text("You have ".tr(appSettings.resolvedLanguage))
-                                .bodyLg()
-                                .foregroundColor(DS.onSurfaceVariant) + 
-                            Text("\(habits.count)")
-                                .bodyLg()
-                                .foregroundColor(DS.primary)
-                                .bold() +
-                            Text(" habits.".tr(appSettings.resolvedLanguage))
-                                .bodyLg()
-                                .foregroundColor(DS.onSurfaceVariant)
-                        }
-                        
-                        Spacer()
-                        
-                        NavigationLink(value: "archived_habits") {
-                            Image(systemName: "archivebox")
-                                .font(.system(size: 20))
-                                .foregroundColor(DS.primary)
-                                .padding(8)
-                                .background(DS.surface.opacity(0.8))
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.05), radius: 5)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, DS.spacingM)
-                    .padding(.bottom, DS.spacingM)
-                    .padding(.horizontal, 16)
+                    headerView
                     
                     // Habit List
                     if localHabits.isEmpty {
@@ -63,45 +36,7 @@ struct HabitListView: View {
                     } else {
                         LazyVStack(spacing: 10) {
                             ForEach(localHabits) { habit in
-                                NavigationLink(value: habit) {
-                                    HabitListCard(habit: habit)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                .contextMenu {
-                                    Button(action: { editingHabit = habit }) {
-                                        Label("Edit".tr(appSettings.resolvedLanguage), systemImage: "pencil")
-                                    }
-                                        Button(action: {
-                                            withAnimation {
-                                                NotificationManager.shared.cancelReminder(for: habit)
-                                                habit.isArchived = true
-                                                if let idx = localHabits.firstIndex(of: habit) {
-                                                    localHabits.remove(at: idx)
-                                                }
-                                                try? modelContext.save()
-                                            }
-                                            WidgetCenter.shared.reloadAllTimelines()
-                                        }) {
-                                            Label("Archive".tr(appSettings.resolvedLanguage), systemImage: "archivebox")
-                                        }
-                                        
-                                        Button(role: .destructive, action: {
-                                            habitToDelete = habit
-                                            showDeleteAlert = true
-                                        }) {
-                                            Label("Delete".tr(appSettings.resolvedLanguage), systemImage: "trash")
-                                        }
-                                    }
-                                    .onDrag {
-                                        self.draggedHabit = habit
-                                        return NSItemProvider(object: habit.id as NSString)
-                                    } preview: {
-                                        HabitListCard(habit: habit)
-                                            .environmentObject(appSettings)
-                                            .frame(width: UIScreen.main.bounds.width - 32)
-                                    }
-                                    .onDrop(of: [.text], delegate: HabitDropDelegate(item: habit, habits: $localHabits, draggedHabit: $draggedHabit, modelContext: modelContext))
-                                    
+                                habitRow(for: habit)
                             }
                         }
                         .padding(.horizontal, 16)
@@ -115,32 +50,7 @@ struct HabitListView: View {
             .scrollIndicators(.hidden)
             
             // FAB
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    Button(action: {
-                        if localHabits.count >= 5 && !appSettings.isPremium {
-                            showPaywall = true
-                        } else {
-                            navigateToAddHabit = true
-                        }
-                    }) {
-                        ZStack {
-                            Circle()
-                                .fill(DS.primary)
-                                .frame(width: 56, height: 56)
-                                .shadow(color: DS.primary.opacity(0.3), radius: 20, x: 0, y: 10)
-                            
-                            Image(systemName: "plus")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .padding(.trailing, DS.spacingL)
-                    .padding(.bottom, 16)
-                }
-            }
+            fabView
         }
         .navigationBarHidden(true)
         .sheet(isPresented: $navigateToAddHabit) {
@@ -156,22 +66,26 @@ struct HabitListView: View {
         .onAppear {
             localHabits = habits.filter { !$0.isArchived }
         }
-        .onChange(of: habits) { _, newHabits in
+        .onChange(of: Array(habits)) { newHabits in
             if draggedHabit == nil {
                 localHabits = newHabits.filter { !$0.isArchived }
             }
         }
         .background(AmbientBackground())
-        .alert("Delete Habit?".tr(appSettings.resolvedLanguage), isPresented: $showDeleteAlert, presenting: habitToDelete) { habit in
-            Button("Cancel".tr(appSettings.resolvedLanguage), role: .cancel) {
-                habitToDelete = nil
-            }
-            Button("Delete".tr(appSettings.resolvedLanguage), role: .destructive) {
-                deleteHabit(habit)
-                habitToDelete = nil
-            }
-        } message: { _ in
-            Text("Data irrecoverable after deletion.".tr(appSettings.resolvedLanguage))
+        .alert(isPresented: $showDeleteAlert) {
+            Alert(
+                title: Text("Delete Habit?".tr(appSettings.resolvedLanguage)),
+                message: Text("Data irrecoverable after deletion.".tr(appSettings.resolvedLanguage)),
+                primaryButton: .destructive(Text("Delete".tr(appSettings.resolvedLanguage))) {
+                    if let habit = habitToDelete {
+                        deleteHabit(habit)
+                    }
+                    habitToDelete = nil
+                },
+                secondaryButton: .cancel(Text("Cancel".tr(appSettings.resolvedLanguage))) {
+                    habitToDelete = nil
+                }
+            )
         }
     }
     
@@ -181,15 +95,128 @@ struct HabitListView: View {
             if let index = localHabits.firstIndex(of: habit) {
                 localHabits.remove(at: index)
             }
-            if let checkins = habit.checkins {
-                for c in checkins { modelContext.delete(c) }
+            if let checkins = habit.checkins?.allObjects as? [Checkin] {
+                for c in checkins { viewContext.delete(c) }
             }
-            if let moods = habit.moodRecords {
-                for m in moods { modelContext.delete(m) }
+            if let moods = habit.moodRecords?.allObjects as? [MoodRecord] {
+                for m in moods { viewContext.delete(m) }
             }
-            modelContext.delete(habit)
-            try? modelContext.save()
+            viewContext.delete(habit)
+            try? viewContext.save()
             WidgetCenter.shared.reloadAllTimelines()
+        }
+    }
+    
+    @ViewBuilder
+    private var headerView: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Habit".tr(appSettings.resolvedLanguage))
+                    .display()
+                    .foregroundColor(DS.primary)
+                HStack(spacing: 0) {
+                    Text("You have ".tr(appSettings.resolvedLanguage))
+                        .bodyLg()
+                        .foregroundColor(DS.onSurfaceVariant)
+                    Text("\(habits.count)")
+                        .bodyLg()
+                        .foregroundColor(DS.primary)
+                        .bold()
+                    Text(" habits.".tr(appSettings.resolvedLanguage))
+                        .bodyLg()
+                        .foregroundColor(DS.onSurfaceVariant)
+                }
+            }
+            
+            Spacer()
+            
+            NavigationLink(value: "archived_habits") {
+                Image(systemName: "archivebox")
+                    .font(.system(size: 20))
+                    .foregroundColor(DS.primary)
+                    .padding(8)
+                    .background(DS.surface.opacity(0.8))
+                    .clipShape(Circle())
+                    .shadow(color: .black.opacity(0.05), radius: 5)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, DS.spacingM)
+        .padding(.bottom, DS.spacingM)
+        .padding(.horizontal, 16)
+    }
+
+    @ViewBuilder
+    private func habitRow(for habit: Habit) -> some View {
+        NavigationLink(value: habit) {
+            HabitListCard(habit: habit)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .contextMenu {
+            habitContextMenu(for: habit)
+        }
+        .onDrag {
+            self.draggedHabit = habit
+            return NSItemProvider(object: habit.id as NSString)
+        }
+        .onDrop(of: [UTType.text], delegate: HabitDropDelegate(item: habit, habits: $localHabits, draggedHabit: $draggedHabit, viewContext: viewContext))
+    }
+    
+    @ViewBuilder
+    private func habitContextMenu(for habit: Habit) -> some View {
+        Button(action: { editingHabit = habit }) {
+            Label("Edit".tr(appSettings.resolvedLanguage), systemImage: "pencil")
+        }
+        Button(action: {
+            withAnimation {
+                NotificationManager.shared.cancelReminder(for: habit)
+                habit.isArchived = true
+                if let idx = localHabits.firstIndex(of: habit) {
+                    localHabits.remove(at: idx)
+                }
+                try? viewContext.save()
+            }
+            WidgetCenter.shared.reloadAllTimelines()
+        }) {
+            Label("Archive".tr(appSettings.resolvedLanguage), systemImage: "archivebox")
+        }
+        
+        Button(role: .destructive, action: {
+            habitToDelete = habit
+            showDeleteAlert = true
+        }) {
+            Label("Delete".tr(appSettings.resolvedLanguage), systemImage: "trash")
+        }
+    }
+    
+    @ViewBuilder
+    private var fabView: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Button(action: {
+                    let impact = UIImpactFeedbackGenerator(style: .medium)
+                    impact.impactOccurred()
+                    navigateToAddHabit = true
+                }) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 60, height: 60)
+                        .background(
+                            LinearGradient(
+                                colors: [DS.primary, DS.primary.opacity(0.8)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .clipShape(Circle())
+                        .shadow(color: DS.primary.opacity(0.4), radius: 10, x: 0, y: 5)
+                }
+                .padding(.trailing, 24)
+                .padding(.bottom, 30)
+            }
         }
     }
 }
@@ -198,7 +225,7 @@ struct HabitDropDelegate: DropDelegate {
     let item: Habit
     @Binding var habits: [Habit]
     @Binding var draggedHabit: Habit?
-    let modelContext: ModelContext
+    let viewContext: NSManagedObjectContext
     
     func dropEntered(info: DropInfo) {
         guard let draggedHabit = self.draggedHabit,
@@ -219,7 +246,7 @@ struct HabitDropDelegate: DropDelegate {
         for (index, habit) in habits.enumerated() {
             habit.order = index
         }
-        try? modelContext.save()
+        try? viewContext.save()
         WidgetCenter.shared.reloadAllTimelines()
         self.draggedHabit = nil
         return true

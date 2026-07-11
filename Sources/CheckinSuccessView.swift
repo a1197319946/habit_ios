@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 struct CheckinSuccessView: View {
     @Environment(\.dismiss) private var dismiss
@@ -15,7 +14,7 @@ struct CheckinSuccessView: View {
     @State private var showSharePreview = false
     
     private var isAmount: Bool { habit.goalType == "amount" }
-    private var unit: String { isAmount ? habit.amountUnit.tr(appSettings.resolvedLanguage) : "次".tr(appSettings.resolvedLanguage) }
+    private var unit: String { isAmount ? (habit.amountUnit ?? "次").tr(appSettings.resolvedLanguage) : "次".tr(appSettings.resolvedLanguage) }
     private var label: String { (habit.frequencyType == "weekly" ? "本周" : "本月").tr(appSettings.resolvedLanguage) }
     private var targetLabel: String { (habit.frequencyType == "weekly" ? "周目标" : "月目标").tr(appSettings.resolvedLanguage) }
     

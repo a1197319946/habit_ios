@@ -1,6 +1,6 @@
 import SwiftUI
 import UIKit
-import SwiftData
+import CoreData
 
 struct HabitMonthRoute: Hashable {
     let habit: Habit
@@ -10,10 +10,10 @@ struct HabitMonthRoute: Hashable {
 
 struct HabitMonthDetailView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var appSettings: AppSettings
-    @Query private var checkins: [Checkin]
-    @Query private var moodRecords: [MoodRecord]
+    @FetchRequest(sortDescriptors: []) private var checkins: FetchedResults<Checkin>
+    @FetchRequest(sortDescriptors: []) private var moodRecords: FetchedResults<MoodRecord>
     
     let habit: Habit
     @State private var selectedImageForFullscreen: IdentifiableImage? = nil
@@ -188,7 +188,7 @@ struct HabitMonthDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
-        .onChange(of: currentMonthDate) { _, newValue in
+        .onChange(of: currentMonthDate) { newValue in
             year = calendar.component(.year, from: newValue)
             month = calendar.component(.month, from: newValue)
         }

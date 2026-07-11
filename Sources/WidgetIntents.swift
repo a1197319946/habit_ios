@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import AppIntents
 import WidgetKit
 
@@ -20,35 +20,6 @@ func reloadLittleHabitWidgets() {
     }
 }
 
-final class SharedModelContainerManager {
-    static let shared: ModelContainer = {
-        let schema = Schema([Habit.self, Checkin.self, MoodRecord.self])
-        guard let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.littlehabit.tracker") else {
-            print("SharedModelContainerManager: App Group container URL is nil! Using fallback.")
-            let fallbackConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-            return try! ModelContainer(for: schema, configurations: [fallbackConfig])
-        }
-        let sharedStoreURL = groupURL.appendingPathComponent("shared.store")
-        let modelConfiguration = ModelConfiguration(schema: schema, url: sharedStoreURL)
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            print("SharedModelContainerManager error creating container: \(error)")
-            let fallbackConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-            return try! ModelContainer(for: schema, configurations: [fallbackConfig])
-        }
-    }()
-    
-    @MainActor
-    static var mainContext: ModelContext {
-        shared.mainContext
-    }
-}
-
-func getAppGroupModelContainer() -> ModelContainer {
-    return SharedModelContainerManager.shared
-}
-
 struct CheckinHabitIntent: AppIntent {
     static var title: LocalizedStringResource = "打卡习惯"
     static var description = IntentDescription("完成指定习惯的一次快捷打卡")
@@ -65,50 +36,32 @@ struct CheckinHabitIntent: AppIntent {
             return .result()
         }
         do {
-            let context = SharedModelContainerManager.mainContext
-            context.processPendingChanges()
-            var descriptor = FetchDescriptor<Habit>()
-            descriptor.relationshipKeyPathsForPrefetching = [\.checkins]
-            descriptor.includePendingChanges = true
-            let habits = try context.fetch(descriptor)
-            if let targetHabit = habits.first(where: { $0.id == habitId }) {
+            let context = PersistenceController.shared.container.viewContext
+            let fetchRequest: NSFetchRequest<Habit> = Habit.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "id == %@", habitId)
+            
+            let habits = try context.fetch(fetchRequest)
+            if let targetHabit = habits.first {
                 let today = Date()
-                let dateString = {
-                    let formatter = DateFormatter()
-                    formatter.dateFormat = "yyyy-MM-dd"
-                    return formatter.string(from: today)
-                }()
-                var descriptorCheckins = FetchDescriptor<Checkin>()
-                descriptorCheckins.relationshipKeyPathsForPrefetching = [\.habit]
-                descriptorCheckins.includePendingChanges = true
-                let allCheckins = try context.fetch(descriptorCheckins)
-                let hc = targetHabit.checkins ?? []
-                let todaysFromHabit = hc.filter { $0.dateString == dateString }
-                let todaysFromGlobal = allCheckins.filter { $0.habit?.id == habitId && $0.dateString == dateString }
-                let allTodaysIds = Set(todaysFromHabit.map { $0.id }).union(todaysFromGlobal.map { $0.id })
-                let todays = allCheckins.filter { allTodaysIds.contains($0.id) }
+                let dateString = SharedFormatters.dateString(from: today)
+                
+                let checkinFetch: NSFetchRequest<Checkin> = Checkin.fetchRequest()
+                checkinFetch.predicate = NSPredicate(format: "habit.id == %@ AND dateString == %@", habitId, dateString)
+                
+                let todays = try context.fetch(checkinFetch)
                 let fillAmount = targetHabit.goalType == "amount" ? (targetHabit.amountValue > 0 ? targetHabit.amountValue : 1.0) : 1.0
                 
                 if !todays.isEmpty {
-                    todays.forEach { checkinToDelete in
-                        if let idx = targetHabit.checkins?.firstIndex(where: { $0.id == checkinToDelete.id }) {
-                            targetHabit.checkins?.remove(at: idx)
-                        }
-                        context.delete(checkinToDelete)
-                    }
+                    todays.forEach { context.delete($0) }
                 } else {
                     if targetHabit.goalType == "amount" {
                         return .result()
                     }
-                    let newCheckin = Checkin(dateString: dateString, amount: fillAmount)
+                    let newCheckin = Checkin(context: context)
+                    newCheckin.dateString = dateString
+                    newCheckin.amount = fillAmount
                     newCheckin.habit = targetHabit
                     newCheckin.timestamp = today
-                    context.insert(newCheckin)
-                    if targetHabit.checkins == nil {
-                        targetHabit.checkins = [newCheckin]
-                    } else if !targetHabit.checkins!.contains(where: { $0.id == newCheckin.id }) {
-                        targetHabit.checkins?.append(newCheckin)
-                    }
                 }
                 try context.save()
                 let defaults = UserDefaults(suiteName: "group.com.littlehabit.tracker")

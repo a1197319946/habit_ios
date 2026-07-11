@@ -1,5 +1,5 @@
 import AppIntents
-import SwiftData
+import CoreData
 
 struct HabitEntity: AppEntity {
     var id: String
@@ -32,15 +32,12 @@ struct HabitEntityQuery: EntityQuery {
     @MainActor
     private func fetchAllHabits() -> [HabitEntity] {
         do {
-            let context = SharedModelContainerManager.mainContext
-            context.processPendingChanges()
-            var descriptor = FetchDescriptor<Habit>(
-                predicate: #Predicate<Habit> { $0.isArchived == false },
-                sortBy: [SortDescriptor(\.order)]
-            )
-            descriptor.includePendingChanges = true
-            let habits = try context.fetch(descriptor)
-            return habits.map { HabitEntity(id: $0.id, name: $0.name, icon: $0.icon, color: $0.color) }
+            let context = PersistenceController.shared.container.viewContext
+            let fetchRequest: NSFetchRequest<Habit> = Habit.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "isArchived == NO")
+            fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Habit.order, ascending: true)]
+            let habits = try context.fetch(fetchRequest)
+            return habits.map { HabitEntity(id: $0.id ?? "", name: $0.name ?? "", icon: $0.icon ?? "", color: $0.color ?? "") }
         } catch {
             return []
         }

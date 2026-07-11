@@ -1,12 +1,20 @@
 import SwiftUI
 import WidgetKit
-import SwiftData
+import CoreData
 
 struct HomeView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var appSettings: AppSettings
-    @Query(filter: #Predicate<Habit> { $0.isArchived == false }, sort: \Habit.order) private var habits: [Habit]
-    @Query private var checkins: [Checkin]
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Habit.order, ascending: true)],
+        predicate: NSPredicate(format: "isArchived == NO")
+    ) private var habits: FetchedResults<Habit>
+    
+    @FetchRequest(
+        sortDescriptors: []
+    ) private var checkins: FetchedResults<Checkin>
+    
     @Binding var selectedTab: AppTab
     
     @State private var selectedDate: Date = Date()
@@ -62,7 +70,7 @@ struct HomeView: View {
                     .padding(.top, 8)
                     
                     // Weekly Calendar Slider
-                    WeeklySlider(selectedDate: $selectedDate, checkins: checkins, weekOffset: $weekOffset).id(appSettings.firstWeekday)
+                    WeeklySlider(selectedDate: $selectedDate, checkins: Array(checkins), weekOffset: $weekOffset).id(appSettings.firstWeekday)
                     
                     // List for Habits
                     if habits.isEmpty {
@@ -106,20 +114,7 @@ struct HomeView: View {
                                 return true
                             }
                             ForEach(visibleHabits) { habit in
-                                ListHabitCard(
-                                    habit: habit,
-                                    selectedDate: selectedDate,
-                                    checkins: checkins,
-                                    onTapCheckin: { handleCheckinTap(habit: habit) },
-                                    onTapCard: {
-                                        if isHabitChecked(habit: habit) {
-                                            selectedHabit = habit
-                                            showingActionSheet = true
-                                        } else {
-                                            handleCheckinTap(habit: habit)
-                                        }
-                                    }
-                                )
+                                renderHabitCard(habit: habit)
                             }
                         }
                         .padding(.horizontal, 16)
@@ -144,11 +139,12 @@ struct HomeView: View {
         .onAppear {
             selectedDate = Date()
             weekOffset = 0
-            for c in checkins where c.habit == nil {
-                modelContext.delete(c)
+            let toDelete = checkins.filter { $0.habit == nil }
+            for c in toDelete {
+                viewContext.delete(c)
             }
-            try? modelContext.save()
-            NotificationManager.shared.updateAllReminders(habits: habits)
+            try? viewContext.save()
+            NotificationManager.shared.updateAllReminders(habits: Array(habits))
             WidgetCenter.shared.reloadAllTimelines()
         }
         // Overlays & Sheets
@@ -157,7 +153,7 @@ struct HomeView: View {
                 CheckinSuccessView(
                     habit: selectedHabit,
                     date: selectedDate,
-                    checkins: checkins,
+                    checkins: Array(checkins),
                     onRecordMood: { showingMoodRecorder = true }
                 )
                 .presentationDetents([.height(440)])
@@ -208,19 +204,16 @@ struct HomeView: View {
             Button("Cancel".tr(appSettings.resolvedLanguage), role: .cancel) {}
         }
         .onAppear {
-            if let habitId = appSettings.openCheckinHabitId, let habit = habits.first(where: { $0.id == habitId }) {
-                appSettings.openCheckinHabitId = nil
-                selectedHabit = habit
-                if habit.goalType == "amount" {
-                    initialAmountForSheet = nil
-                    showingAmountSheet = true
-                } else {
-                    handleCheckinTap(habit: habit)
-                }
-            }
+            checkOpenHabit()
         }
-        .onChange(of: appSettings.openCheckinHabitId) { oldId, newId in
-            if let habitId = newId, let habit = habits.first(where: { $0.id == habitId }) {
+        .onChange(of: appSettings.openCheckinHabitId, perform: { _ in
+            checkOpenHabit()
+        })
+    }
+    
+    private func checkOpenHabit() {
+        if let habitId = appSettings.openCheckinHabitId {
+            if let habit = habits.first(where: { $0.id == habitId }) {
                 appSettings.openCheckinHabitId = nil
                 selectedHabit = habit
                 if habit.goalType == "amount" {
@@ -266,10 +259,11 @@ struct HomeView: View {
             initialAmountForSheet = nil
             showingAmountSheet = true
         } else {
-            let checkin = Checkin(dateString: formatDate(selectedDate))
+            let checkin = Checkin(context: viewContext)
+            checkin.dateString = selectedDateString
+            checkin.amount = 1.0
             checkin.habit = habit
-            modelContext.insert(checkin)
-            try? modelContext.save()
+            try? viewContext.save()
             NotificationManager.shared.scheduleReminder(for: habit)
             WidgetCenter.shared.reloadAllTimelines()
             triggerSuccessSequence()
@@ -280,9 +274,9 @@ struct HomeView: View {
         let dateString = formatDate(selectedDate)
         let checks = checkins.filter { $0.habit?.id == habit.id && $0.dateString == dateString }
         for check in checks {
-            modelContext.delete(check)
+            viewContext.delete(check)
         }
-        try? modelContext.save()
+        try? viewContext.save()
         WidgetCenter.shared.reloadAllTimelines()
     }
     
@@ -317,6 +311,24 @@ struct HomeView: View {
         }
         return formatter.string(from: date)
     }
+    
+    @ViewBuilder
+    private func renderHabitCard(habit: Habit) -> some View {
+        ListHabitCard(
+            habit: habit,
+            selectedDate: selectedDate,
+            checkins: Array(checkins),
+            onTapCheckin: { handleCheckinTap(habit: habit) },
+            onTapCard: {
+                if isHabitChecked(habit: habit) {
+                    selectedHabit = habit
+                    showingActionSheet = true
+                } else {
+                    handleCheckinTap(habit: habit)
+                }
+            }
+        )
+    }
 }
 
 // MARK: - List Habit Card
@@ -333,6 +345,15 @@ struct ListHabitCard: View {
         return habit.checkinDates.contains(dateString)
     }
     
+    private func currentWeekCheckins(for habit: Habit) -> [Checkin] {
+        let hc = habit.checkinsArray
+        let calendar = appSettings.customCalendar
+        guard let interval = calendar.dateInterval(of: .weekOfYear, for: selectedDate) else { return [] }
+        let startStr = SharedFormatters.dateString(from: interval.start)
+        let endStr = SharedFormatters.dateString(from: interval.end)
+        return hc.filter { $0.dateString >= startStr && $0.dateString < endStr }
+    }
+    
     var periodValidCheckins: [Checkin] {
         var calendar: Calendar { appSettings.customCalendar }
         let targetComponent: Calendar.Component = habit.frequencyType == "weekly" ? .weekOfYear : .month
@@ -341,7 +362,7 @@ struct ListHabitCard: View {
         guard let start = interval?.start, let end = interval?.end else { return [] }
         let startStr = SharedFormatters.dateString(from: start)
         let endStr = SharedFormatters.dateString(from: end)
-        let hc = habit.checkins ?? []
+        let hc = habit.checkinsArray
         return hc.filter { $0.dateString >= startStr && $0.dateString < endStr }
     }
     
@@ -498,21 +519,43 @@ struct WeeklySlider: View {
     }
     
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 0) {
-                let _ = appSettings.firstWeekday // Force refresh on change
+        if #available(iOS 17.0, *) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 0) {
+                    let _ = appSettings.firstWeekday // Force refresh on change
+                    ForEach(weekRange, id: \.self) { offset in
+                        weekView(for: offset)
+                            .containerRelativeFrame(.horizontal)
+                            .id(offset)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $weekOffset)
+            .frame(height: 105)
+            .padding(.bottom, -15)
+            .onChange(of: weekOffset, perform: { newOffset in
+                handleOffsetChange(newOffset)
+            })
+        } else {
+            TabView(selection: Binding(get: { weekOffset ?? 0 }, set: { weekOffset = $0 })) {
+                let _ = appSettings.firstWeekday
                 ForEach(weekRange, id: \.self) { offset in
                     weekView(for: offset)
-                        .containerRelativeFrame(.horizontal)
-                        .id(offset)
+                        .tag(offset)
                 }
             }
-            .scrollTargetLayout()
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: 105)
+            .padding(.bottom, -15)
+            .onChange(of: weekOffset, perform: { newOffset in
+                handleOffsetChange(newOffset)
+            })
         }
-        .scrollTargetBehavior(.paging)
-        .scrollPosition(id: $weekOffset)
-        .frame(height: 90)
-        .onChange(of: weekOffset) { newOffset in
+    }
+    
+    private func handleOffsetChange(_ newOffset: Int?) {
             if let newOffset = newOffset {
                 let targetDate = calendar.date(byAdding: .weekOfYear, value: newOffset, to: Date()) ?? Date()
                 if let weekInterval = calendar.dateInterval(of: .weekOfYear, for: targetDate) {
@@ -529,7 +572,6 @@ struct WeeklySlider: View {
                 }
             }
         }
-    }
     
     private func weekView(for offset: Int) -> some View {
         let targetDate = calendar.date(byAdding: .weekOfYear, value: offset, to: Date()) ?? Date()

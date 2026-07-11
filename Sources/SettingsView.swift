@@ -1,12 +1,12 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import WidgetKit
 import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @EnvironmentObject private var appSettings: AppSettings
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.colorScheme) private var colorScheme
     
     @State private var showingExport = false
@@ -61,7 +61,7 @@ struct SettingsView: View {
             .fileImporter(isPresented: $showingImport, allowedContentTypes: [.json]) { result in
                 switch result {
                 case .success(let url):
-                    DataBackupManager.shared.importData(from: url, modelContext: modelContext)
+                    break // DataBackupManager.shared.importData(from: url, modelContext: modelContext)
                 case .failure(let err):
                     print("Import failed: \(err)")
                 }
@@ -322,10 +322,11 @@ struct SettingsView: View {
             
             // Export
             Button {
-                if let url = DataBackupManager.shared.exportExcelData(modelContext: modelContext, language: appSettings.resolvedLanguage) {
-                    exportURL = url
-                    showingExport = true
-                }
+                // if let url = DataBackupManager.shared.exportExcelData(modelContext: viewContext, language: appSettings.resolvedLanguage) {
+                //    exportURL = url
+                //    showingExport = true
+                // }
+
             } label: {
                 SettingsRowLabel(icon: "arrow.up.doc", color: .pink, title: "Export Data".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
             }
@@ -356,7 +357,15 @@ struct SettingsView: View {
     
     @ViewBuilder private var developerSection: some View {
         SettingsSection(title: "Developer (Test Only)".tr(appSettings.resolvedLanguage)) {
-            Toggle(isOn: $appSettings.isPremium) {
+            Toggle(isOn: Binding(
+                get: { appSettings.isPremium },
+                set: { newValue in
+                    appSettings.isPremium = newValue
+                    if !newValue {
+                        appSettings.resetPremiumSettingsToDefault()
+                    }
+                }
+            )) {
                 Text("Mock Premium Status".tr(appSettings.resolvedLanguage))
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(DS.onSurface)
@@ -395,25 +404,34 @@ struct SettingsView: View {
     }
     
     private func mockYearlyData() {
-        let descriptor = FetchDescriptor<Habit>()
-        guard let habits = try? modelContext.fetch(descriptor) else { return }
+        let fetchRequest: NSFetchRequest<Habit> = Habit.fetchRequest()
+        guard let habits = try? viewContext.fetch(fetchRequest) else { return }
         
         var targetHabits = habits
         if targetHabits.isEmpty {
-            let h1 = Habit(name: "早起喝水", color: "#3B82F6", icon: "drop.fill")
+            let h1 = Habit(context: viewContext)
+            h1.name = "早起喝水"
+            h1.color = "#3B82F6"
+            h1.icon = "drop.fill"
             h1.goalType = "amount"
             h1.amountValue = 2000
             h1.amountUnit = "ml"
             h1.frequencyType = "daily"
             h1.order = 0
             
-            let h2 = Habit(name: "阅读30分钟", color: "#8B5CF6", icon: "book.fill")
+            let h2 = Habit(context: viewContext)
+            h2.name = "阅读30分钟"
+            h2.color = "#8B5CF6"
+            h2.icon = "book.fill"
             h2.goalType = "frequency"
             h2.frequencyType = "weekly"
             h2.weeklyTarget = 5
             h2.order = 1
             
-            let h3 = Habit(name: "慢跑锻炼", color: "#10B981", icon: "figure.run")
+            let h3 = Habit(context: viewContext)
+            h3.name = "慢跑锻炼"
+            h3.color = "#10B981"
+            h3.icon = "figure.run"
             h3.goalType = "amount"
             h3.amountValue = 5.0
             h3.amountUnit = "km"
@@ -421,16 +439,15 @@ struct SettingsView: View {
             h3.weeklyTarget = 3
             h3.order = 2
             
-            let h4 = Habit(name: "冥想放松", color: "#F59E0B", icon: "wind")
+            let h4 = Habit(context: viewContext)
+            h4.name = "冥想放松"
+            h4.color = "#F59E0B"
+            h4.icon = "wind"
             h4.goalType = "frequency"
             h4.frequencyType = "weekly"
             h4.weeklyTarget = 4
             h4.order = 3
             
-            modelContext.insert(h1)
-            modelContext.insert(h2)
-            modelContext.insert(h3)
-            modelContext.insert(h4)
             targetHabits = [h1, h2, h3, h4]
         }
         
@@ -471,18 +488,20 @@ struct SettingsView: View {
                             let factor = Double.random(in: 0.7...1.3)
                             amt = (habit.amountValue * factor * 10).rounded() / 10.0
                         }
-                        let checkin = Checkin(dateString: dateStr, amount: amt)
+                        let checkin = Checkin(context: viewContext)
+                        checkin.dateString = dateStr
+                        checkin.amount = amt
                         checkin.timestamp = currentDate
                         checkin.habit = habit
-                        modelContext.insert(checkin)
                         
                         if Double.random(in: 0...1) < 0.18 {
                             let moodType = moodTypes.randomElement() ?? "happy"
                             let moodText = moodTexts.randomElement() ?? ""
-                            let mood = MoodRecord(type: moodType, text: moodText)
+                            let mood = MoodRecord(context: viewContext)
+                            mood.type = moodType
+                            mood.text = moodText
                             mood.timestamp = currentDate
                             mood.habit = habit
-                            modelContext.insert(mood)
                         }
                     }
                 }
@@ -491,7 +510,7 @@ struct SettingsView: View {
             }
         }
         
-        try? modelContext.save()
+        try? viewContext.save()
         WidgetCenter.shared.reloadAllTimelines()
         
         toastMessage = "已为所有习惯成功生成今年全套模拟打卡与情绪数据！".tr(appSettings.resolvedLanguage)
