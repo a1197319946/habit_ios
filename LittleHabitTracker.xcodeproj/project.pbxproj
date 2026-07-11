@@ -16,7 +16,6 @@
 		1DF1298501ACC23DA8D2D975 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E32D4DA98A3BEBF1FB0FDCC /* DesignSystem.swift */; };
 		214F9D0D061FDB690162561C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E62589DA97C36CAE55D66A4 /* ContentView.swift */; };
 		2C0217F7450C582914928A10 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88127A9DEACFFE63BDD2CFD2 /* SettingsView.swift */; };
-		2CA6F3245F3FFBC273163689 /* AppLockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6699EA17A25EBA6EF17DF3C0 /* AppLockView.swift */; };
 		3EECD3D6C1FCF131093A6A2C /* LittleHabitWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA9E6C16B85EA1CD528B0006 /* LittleHabitWidget.swift */; };
 		3F0E7867E7544880061F4F84 /* MoodRecorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6F3FD8046594E7D6C1A2F6E /* MoodRecorderView.swift */; };
 		4281B2CF987B2476753AD94D /* StatisticsExtViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A57B29DD7206AFA589C8EE /* StatisticsExtViews.swift */; };
@@ -84,7 +83,6 @@
 		4E32D4DA98A3BEBF1FB0FDCC /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		5634F5D835A25713AFA8D740 /* LittleHabitWidget.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = LittleHabitWidget.entitlements; sourceTree = "<group>"; };
 		64C1C23158D8D65B0E699D19 /* StatisticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsView.swift; sourceTree = "<group>"; };
-		6699EA17A25EBA6EF17DF3C0 /* AppLockView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppLockView.swift; sourceTree = "<group>"; };
 		6716C97A09EA31F66D20C6E5 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/WidgetKit.framework; sourceTree = DEVELOPER_DIR; };
 		6D4656F1150590B4BBCD5746 /* CloudSyncManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudSyncManager.swift; sourceTree = "<group>"; };
 		733B06F96043BCDFC9FF5CB8 /* LittleHabitTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LittleHabitTrackerApp.swift; sourceTree = "<group>"; };
@@ -195,7 +193,6 @@
 				F80E2428D210ED72FC6E7B33 /* LittleHabitTracker.entitlements */,
 				C88F406ECA6FB7B11F3047AF /* PaywallView.swift */,
 				2DB21F5B9B3A4858A7076262 /* DataBackupManager.swift */,
-				6699EA17A25EBA6EF17DF3C0 /* AppLockView.swift */,
 				EA1498A56C4D9176F58C006F /* AttemptToDismissModifier.swift */,
 				963CE0C1E02D7769989BD182 /* NotificationManager.swift */,
 				0209F0B18ADE06507E69B114 /* StoreManager.swift */,
@@ -349,7 +346,6 @@
 				FBB4BBDED5615E1630468F5E /* StatisticsView.swift in Sources */,
 				DB076AC915433F7CE88000EE /* PaywallView.swift in Sources */,
 				4D6488225F1D6CF4D5563188 /* DataBackupManager.swift in Sources */,
-				2CA6F3245F3FFBC273163689 /* AppLockView.swift in Sources */,
 				6EDBE85E40E23AB9445F228F /* AttemptToDismissModifier.swift in Sources */,
 				601CC4B56743A580DD1B2F70 /* NotificationManager.swift in Sources */,
 				BE637617ABBD659D363E3FA5 /* StoreManager.swift in Sources */,
