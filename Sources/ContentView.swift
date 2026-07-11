@@ -47,42 +47,64 @@ struct ContentView: View {
         )
         
         ZStack {
-                TabView(selection: proxySelection) {
-                    TabNavStack {
-                        HomeView(selectedTab: proxySelection)
+                Group {
+                    if #available(iOS 18.0, *) {
+                        TabView(selection: proxySelection) {
+                            TabSection {
+                                Tab(AppTab.home.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.home.iconName, value: AppTab.home) {
+                                    TabNavStack { HomeView(selectedTab: proxySelection) }
+                                }
+                                Tab(AppTab.habits.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.habits.iconName, value: AppTab.habits) {
+                                    TabNavStack { HabitListView() }
+                                }
+                                Tab(AppTab.stats.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.stats.iconName, value: AppTab.stats) {
+                                    TabNavStack { StatisticsView() }
+                                }
+                            }
+                            Tab(AppTab.settings.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.settings.iconName, value: AppTab.settings) {
+                                Color.clear
+                            }
+                        }
+                        .tabViewStyle(.sidebarAdaptable)
+                    } else {
+                        TabView(selection: proxySelection) {
+                            TabNavStack {
+                                HomeView(selectedTab: proxySelection)
+                            }
+                            .tabItem {
+                                Label(AppTab.home.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.home.iconName)
+                            }
+                            .tag(AppTab.home)
+                            
+                            TabNavStack {
+                                HabitListView()
+                            }
+                            .tabItem {
+                                Label(AppTab.habits.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.habits.iconName)
+                            }
+                            .tag(AppTab.habits)
+                            
+                            TabNavStack {
+                                StatisticsView()
+                            }
+                            .tabItem {
+                                Label(AppTab.stats.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.stats.iconName)
+                            }
+                            .tag(AppTab.stats)
+                            
+                            Color.clear
+                            .tabItem {
+                                Label(AppTab.settings.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.settings.iconName)
+                            }
+                            .tag(AppTab.settings)
+                        }
                     }
-                    .tabItem {
-                        Label(AppTab.home.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.home.iconName)
-                    }
-                    .tag(AppTab.home)
-                    
-                    TabNavStack {
-                        HabitListView()
-                    }
-                    .tabItem {
-                        Label(AppTab.habits.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.habits.iconName)
-                    }
-                    .tag(AppTab.habits)
-                    
-                    TabNavStack {
-                        StatisticsView()
-                    }
-                    .tabItem {
-                        Label(AppTab.stats.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.stats.iconName)
-                    }
-                    .tag(AppTab.stats)
-                    
-                    Color.clear
-                    .tabItem {
-                        Label(AppTab.settings.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.settings.iconName)
-                    }
-                    .tag(AppTab.settings)
                 }
                 .tint(DS.primary)
                 .onAppear {
                     appSettings.applyTheme()
                 }
-                .onChange(of: appSettings.isPremium) { _, isPremium in
+                .onChange(of: appSettings.isPremium) { isPremium in
                     if !isPremium {
                         appSettings.resetPremiumSettingsToDefault()
                     }
@@ -126,7 +148,7 @@ struct ContentView: View {
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appSettings.showRetentionOffer)
-        .onChange(of: scenePhase) { oldPhase, newPhase in
+        .onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
                 getAppGroupModelContainer().mainContext.rollback()
                 LittleHabitAppShortcuts.updateAppShortcutParameters()

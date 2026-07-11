@@ -33,7 +33,6 @@ struct HabitDetailView: View {
     @State private var reminderText: String = ""
     @State private var isSubmitting = false
     @State private var showingDeleteAlert = false
-    @State private var showingSettingsAlert = false
     
     let unitOptions = ["公里", "米", "分钟", "小时", "次", "页"]
     
@@ -331,20 +330,9 @@ struct HabitDetailView: View {
                                 }
                             }
                             .tint(Color(hex: colorHex))
-                            .onChange(of: isReminderEnabled) { oldValue, newValue in
+                            .onChange(of: isReminderEnabled) { newValue in
                                 if newValue {
-                                    NotificationManager.shared.checkAuthorizationStatus { status in
-                                        if status == .denied {
-                                            showingSettingsAlert = true
-                                            isReminderEnabled = false
-                                        } else {
-                                            NotificationManager.shared.requestAuthorization { granted in
-                                                if !granted {
-                                                    isReminderEnabled = false
-                                                }
-                                            }
-                                        }
-                                    }
+                                    NotificationManager.shared.requestAuthorization { _ in }
                                 }
                             }
                             
@@ -411,18 +399,6 @@ struct HabitDetailView: View {
             }
         }
         .background(AmbientBackground())
-        .alert(isPresented: $showingSettingsAlert) {
-            Alert(
-                title: Text("需要通知权限".tr(appSettings.resolvedLanguage)),
-                message: Text("您已拒绝通知权限。如需打卡提醒，请前往设置中开启。".tr(appSettings.resolvedLanguage)),
-                primaryButton: .default(Text("去设置".tr(appSettings.resolvedLanguage)), action: {
-                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                        UIApplication.shared.open(url)
-                    }
-                }),
-                secondaryButton: .cancel(Text("Cancel".tr(appSettings.resolvedLanguage)))
-            )
-        }
         .navigationTitle(habit == nil ? "New Habit".tr(appSettings.resolvedLanguage) : "Edit Habit".tr(appSettings.resolvedLanguage))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
