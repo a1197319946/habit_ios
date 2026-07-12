@@ -20,7 +20,7 @@ struct HabitStatsDetailView: View {
     @EnvironmentObject private var appSettings: AppSettings
     @FetchRequest(sortDescriptors: []) private var checkins: FetchedResults<Checkin>
     
-    let habit: Habit
+    @ObservedObject var habit: Habit
     @State private var currentYear: Int = Calendar.current.component(.year, from: Date())
     @State private var showDeleteAlert = false
     @State private var showToast = false
@@ -433,7 +433,7 @@ struct MonthMiniGrid: View {
     let year: Int
     let month: Int
     let checkins: [Checkin]
-    let habit: Habit
+    @ObservedObject var habit: Habit
     
     @EnvironmentObject private var appSettings: AppSettings
     private var calendar: Calendar { appSettings.customCalendar }

@@ -44,7 +44,7 @@ struct ArchivedHabitsView: View {
 }
 
 struct ArchivedHabitCard: View {
-    let habit: Habit
+    @ObservedObject var habit: Habit
     @EnvironmentObject private var appSettings: AppSettings
     
     private var targetText: String {

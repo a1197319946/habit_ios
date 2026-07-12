@@ -15,7 +15,7 @@ struct HabitMonthDetailView: View {
     @FetchRequest(sortDescriptors: []) private var checkins: FetchedResults<Checkin>
     @FetchRequest(sortDescriptors: []) private var moodRecords: FetchedResults<MoodRecord>
     
-    let habit: Habit
+    @ObservedObject var habit: Habit
     @State private var selectedImageForFullscreen: IdentifiableImage? = nil
     @State var year: Int
     @State var month: Int

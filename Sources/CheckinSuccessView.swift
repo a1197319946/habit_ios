@@ -4,7 +4,7 @@ struct CheckinSuccessView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var appSettings: AppSettings
     
-    let habit: Habit
+    @ObservedObject var habit: Habit
     let date: Date
     let checkins: [Checkin]
     let onRecordMood: () -> Void
@@ -199,7 +199,7 @@ struct SharePreviewSheet: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var appSettings: AppSettings
     
-    let habit: Habit
+    @ObservedObject var habit: Habit
     let date: Date
     let checkins: [Checkin]
     let isAmount: Bool
@@ -308,7 +308,7 @@ struct SharePreviewSheet: View {
 // MARK: - Poster View
 
 struct PosterView: View {
-    let habit: Habit
+    @ObservedObject var habit: Habit
     let date: Date
     let checkins: [Checkin]
     let isAmount: Bool

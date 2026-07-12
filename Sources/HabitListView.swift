@@ -259,7 +259,7 @@ struct HabitDropDelegate: DropDelegate {
 
 struct HabitListCard: View {
     @EnvironmentObject private var appSettings: AppSettings
-    let habit: Habit
+    @ObservedObject var habit: Habit
     
     private var habitColor: Color { Color(hex: habit.color) }
     

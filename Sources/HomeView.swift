@@ -333,7 +333,7 @@ struct HomeView: View {
 
 // MARK: - List Habit Card
 struct ListHabitCard: View {
-    let habit: Habit
+    @ObservedObject var habit: Habit
     let selectedDate: Date
     let checkins: [Checkin]
     @EnvironmentObject private var appSettings: AppSettings

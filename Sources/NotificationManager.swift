@@ -133,9 +133,6 @@ class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterD
             content.body = (rText.isEmpty || rText == "该打卡啦！坚持就是胜利～" || rText == "Time to check in! Keep it up~") ? defaultMsg : rText
             content.sound = .default
             content.userInfo = ["habitId": habit.id]
-            if let attachment = appIconAttachment() {
-                content.attachments = [attachment]
-            }
             
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
             let request = UNNotificationRequest(identifier: "habit_\(habit.id)_day_\(offset)", content: content, trigger: trigger)

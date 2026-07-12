@@ -12,7 +12,7 @@ struct AmountCheckinSheet: View {
         sortDescriptors: []
     ) private var allCheckins: FetchedResults<Checkin>
     
-    let habit: Habit
+    @ObservedObject var habit: Habit
     let selectedDate: Date
     let initialAmount: Double?
     let onComplete: () -> Void
