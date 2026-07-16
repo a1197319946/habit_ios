@@ -371,6 +371,8 @@ struct HabitDetailView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 12)
+                .background(Color.black.opacity(0.001)) // catch scroll touches
+                .scrollDismissesKeyboard(.immediately)
             }
             
             // Sticky Bottom Button
@@ -399,7 +401,12 @@ struct HabitDetailView: View {
                 .ignoresSafeArea(edges: .bottom)
             }
         }
-        .background(AmbientBackground())
+        .background(
+            AmbientBackground()
+                .onTapGesture {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+        )
         .navigationTitle(habit == nil ? "New Habit".tr(appSettings.resolvedLanguage) : "Edit Habit".tr(appSettings.resolvedLanguage))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)

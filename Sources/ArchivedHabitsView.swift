@@ -8,7 +8,7 @@ struct ArchivedHabitsView: View {
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Habit.order, ascending: true)],
         predicate: NSPredicate(format: "isArchived == true")
-    ) private var habits: FetchedResults<Habit>
+    ) private var habits: FetchedResults<Habit> 
     
     var body: some View {
         ScrollView {

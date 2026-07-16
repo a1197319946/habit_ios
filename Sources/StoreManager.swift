@@ -98,8 +98,10 @@ class StoreManager: ObservableObject {
         var lifetime = false
         
         for await result in Transaction.currentEntitlements {
+            print("🔍 [StoreKit] Found an entitlement in local cache!")
             do {
                 let transaction = try checkVerified(result)
+                print("🔍 [StoreKit] Transaction ID: \(transaction.id), Product ID: \(transaction.productID)")
                 if transaction.revocationDate == nil {
                     purchased.insert(transaction.productID)
                     
@@ -115,6 +117,7 @@ class StoreManager: ObservableObject {
                 print("Transaction verification failed: \(error)")
             }
         }
+        print("🔍 [StoreKit] Purchased products count: \(purchased.count)")
         
         self.purchasedProductIDs = purchased
         self.membershipExpirationDate = latestExpiration

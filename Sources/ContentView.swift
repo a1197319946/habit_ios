@@ -181,7 +181,7 @@ struct RetentionOfferSheet: View {
                     .foregroundColor(DS.onSurface)
                 
                 VStack(spacing: DS.spacingS) {
-                    Text("15 天免费试用".tr(appSettings.resolvedLanguage))
+                    Text("首月免费".tr(appSettings.resolvedLanguage))
                         .font(.system(size: 24, weight: .black))
                         .foregroundColor(Color(hex: "D4AF37"))
                     

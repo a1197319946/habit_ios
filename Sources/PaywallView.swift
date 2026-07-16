@@ -29,17 +29,49 @@ struct PaywallView: View {
     }
     
     private func productTitle(for product: Product?, defaultTitle: String) -> String {
-        if let name = product?.displayName, !name.isEmpty {
-            return name
-        }
         return defaultTitle.tr(appSettings.resolvedLanguage)
     }
     
     private func productSubtitle(for product: Product?, defaultSubtitle: String) -> String {
-        if let desc = product?.description, !desc.isEmpty {
-            return desc
-        }
         return defaultSubtitle.tr(appSettings.resolvedLanguage)
+    }
+    
+    private func formattedSubscriptionPeriod(for product: Product?) -> String {
+        guard let product = product,
+              let period = product.subscription?.subscriptionPeriod else {
+            return ""
+        }
+        let value = period.value
+        
+        if appSettings.resolvedLanguage == .chinese {
+            let unit: String
+            switch period.unit {
+            case .day: unit = "天"
+            case .week: unit = "周"
+            case .month: unit = value == 1 ? "月" : "个月"
+            case .year: unit = "年"
+            @unknown default: unit = ""
+            }
+            if value == 1 {
+                return "/\(unit)"
+            } else {
+                return "/\(value)\(unit)"
+            }
+        } else {
+            let unit: String
+            switch period.unit {
+            case .day: unit = "day"
+            case .week: unit = "week"
+            case .month: unit = "month"
+            case .year: unit = "year"
+            @unknown default: unit = ""
+            }
+            if value == 1 {
+                return "/\(unit)"
+            } else {
+                return "/\(value) \(unit)s"
+            }
+        }
     }
     
     @ViewBuilder private var tiersSection: some View {
@@ -47,8 +79,8 @@ struct PaywallView: View {
             PricingCard(
                 isSelected: selectedTier == 0,
                 title: productTitle(for: monthlyProduct, defaultTitle: "Monthly Card"),
-                price: monthlyProduct?.displayPrice ?? "¥2.9",
-                originalPrice: "¥6",
+                price: monthlyProduct?.displayPrice ?? "",
+                originalPrice: "",
                 subtitle: productSubtitle(for: monthlyProduct, defaultSubtitle: "按月扣费"),
                 tag: nil
             )
@@ -57,8 +89,8 @@ struct PaywallView: View {
             PricingCard(
                 isSelected: selectedTier == 1,
                 title: productTitle(for: yearlyProduct, defaultTitle: "Yearly Card"),
-                price: yearlyProduct?.displayPrice ?? "¥29.9",
-                originalPrice: "¥38",
+                price: yearlyProduct?.displayPrice ?? "",
+                originalPrice: "",
                 subtitle: productSubtitle(for: yearlyProduct, defaultSubtitle: "按年扣费"),
                 tag: "POPULAR".tr(appSettings.resolvedLanguage)
             )
@@ -67,8 +99,8 @@ struct PaywallView: View {
             PricingCard(
                 isSelected: selectedTier == 2,
                 title: productTitle(for: lifetimeProduct, defaultTitle: "Lifetime Card"),
-                price: lifetimeProduct?.displayPrice ?? "¥39.9",
-                originalPrice: "¥78",
+                price: lifetimeProduct?.displayPrice ?? "",
+                originalPrice: "",
                 subtitle: productSubtitle(for: lifetimeProduct, defaultSubtitle: "一次性付费"),
                 tag: "BEST VALUE".tr(appSettings.resolvedLanguage)
             )
@@ -132,9 +164,7 @@ struct PaywallView: View {
                             FeatureRow(icon: "nosign", color: .yellow, title: "Ad-Free Experience".tr(appSettings.resolvedLanguage), subtitle: "Reduce the resistance to your daily habits.".tr(appSettings.resolvedLanguage))
                             FeatureRow(icon: "paintpalette.fill", color: .purple, title: "Theme Colors".tr(appSettings.resolvedLanguage), subtitle: "Personalize your app with custom colors".tr(appSettings.resolvedLanguage))
                             FeatureRow(icon: "moon.stars.fill", color: .blue, title: "Dark Mode".tr(appSettings.resolvedLanguage), subtitle: "Reduce eye strain with a sleek dark theme".tr(appSettings.resolvedLanguage))
-                            FeatureRow(icon: "lock.shield.fill", color: .green, title: "App Lock".tr(appSettings.resolvedLanguage), subtitle: "Protect your habits with Face ID / Touch ID".tr(appSettings.resolvedLanguage))
                             FeatureRow(icon: "infinity", color: .orange, title: "Unlimited Habits".tr(appSettings.resolvedLanguage), subtitle: "Create as many habits as you want".tr(appSettings.resolvedLanguage))
-                            FeatureRow(icon: "arrow.up.arrow.down.circle.fill", color: .pink, title: "Import / Export Data".tr(appSettings.resolvedLanguage), subtitle: "Backup to Excel & Import".tr(appSettings.resolvedLanguage))
                             FeatureRow(icon: "icloud.fill", color: .cyan, title: "iCloud Sync".tr(appSettings.resolvedLanguage), subtitle: "Keep your habits synced across all devices".tr(appSettings.resolvedLanguage))
                         }
                         .padding(.horizontal, DS.spacingL)
@@ -182,20 +212,24 @@ struct PaywallView: View {
                             .disabled(isProcessing)
                             
                             if selectedTier == 0 {
-                                let monthPrice = monthlyProduct?.displayPrice ?? "¥2.9"
-                                Text(appSettings.resolvedLanguage == .chinese ? "自动续期，\(monthPrice)/月，可随时取消" : "Auto-renewable, \(monthPrice)/month, cancel anytime")
+                                let monthPrice = monthlyProduct?.displayPrice ?? ""
+                                let periodStr = formattedSubscriptionPeriod(for: monthlyProduct)
+                                let priceText = "\(monthPrice)\(periodStr)"
+                                Text("自动续期，{price}，可随时取消".tr(appSettings.resolvedLanguage).replacingOccurrences(of: "{price}", with: priceText))
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
                             } else if selectedTier == 1 {
-                                let yearPrice = yearlyProduct?.displayPrice ?? "¥29.9"
-                                Text(appSettings.resolvedLanguage == .chinese ? "15 天免费试用，结束后按 \(yearPrice)/年收费" : "15-day free trial, then \(yearPrice)/year")
+                                let yearPrice = yearlyProduct?.displayPrice ?? ""
+                                let periodStr = formattedSubscriptionPeriod(for: yearlyProduct)
+                                let priceText = "\(yearPrice)\(periodStr)"
+                                Text("首月免费，结束后按 {price}收费".tr(appSettings.resolvedLanguage).replacingOccurrences(of: "{price}", with: priceText))
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
                                 Text("试用期间可以随时取消，不扣费".tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
                             } else if selectedTier == 2 {
-                                Text(appSettings.resolvedLanguage == .chinese ? "一次性付费，永久解锁全部尊享权益" : "One-time payment, lifetime access to all features")
+                                Text("一次性付费，永久解锁全部尊享权益".tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
                             }
@@ -226,12 +260,20 @@ struct PaywallView: View {
                         }
                         .padding(.top, DS.spacingS)
                         
-                        // Terms & Privacy Links (Required by Apple App Store Review Guideline 3.1.2)
-                        VStack(spacing: 6) {
+                        // Terms & Privacy Links & Disclaimers (Required by Apple App Store Review Guideline 3.1.2)
+                        VStack(spacing: 8) {
+                            Text("确认购买后，款项将从您的 iTunes 账户扣除。订阅将自动续期，除非在当前订阅期结束前至少24小时关闭自动续订。您的账户将在当前订阅期结束前24小时内扣取续订费用。您可以在购买后前往 App Store 账户设置中管理或取消您的订阅。".tr(appSettings.resolvedLanguage))
+                                .multilineTextAlignment(.center)
+                                .font(.system(size: 11))
+                                .foregroundColor(DS.onSurfaceVariant.opacity(0.7))
+                                .padding(.horizontal, DS.spacingS)
+                                .padding(.bottom, 4)
+                            
                             Text("By continuing, you agree to our".tr(appSettings.resolvedLanguage))
+                                .font(.system(size: 12))
                             HStack(spacing: 8) {
                                 Button {
-                                    if let url = URL(string: "https://a1197319946.github.io/habit_ios/support.html") {
+                                    if let url = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/") {
                                         UIApplication.shared.open(url)
                                     }
                                 } label: {
@@ -251,8 +293,8 @@ struct PaywallView: View {
                                 }
                             }
                             .foregroundColor(DS.primary)
+                            .font(.system(size: 12))
                         }
-                        .font(.system(size: 12))
                         .foregroundColor(DS.onSurfaceVariant.opacity(0.8))
                         .padding(.bottom, DS.spacingXL)
                     }
@@ -360,21 +402,16 @@ struct PaywallView: View {
                 } catch {
                     DispatchQueue.main.async {
                         isProcessing = false
-                        storeErrorMessage = "购买失败：\(error.localizedDescription)"
+                        storeErrorMessage = "\("购买失败".tr(appSettings.resolvedLanguage))：\(error.localizedDescription)"
                         showStoreErrorAlert = true
                         print("Purchase error: \(error)")
                     }
                 }
             }
         } else {
-            #if DEBUG
-            // In Xcode Debug mode without a StoreKit config attached, allow simulation
-            simulatePurchase()
-            #else
             isProcessing = false
-            storeErrorMessage = "无法从 App Store 获取产品价格与配置，请检查网络连接或确认苹果后台产品已生效。".tr(appSettings.resolvedLanguage)
+            storeErrorMessage = "无法从 App Store 获取产品价格与配置，无法发起购买。请检查：1.网络连接 2.苹果后台产品状态(不能是需要开发者操作) 3.确保已签署《付费应用程序协议》。".tr(appSettings.resolvedLanguage)
             showStoreErrorAlert = true
-            #endif
         }
     }
     
@@ -393,17 +430,6 @@ struct PaywallView: View {
                     storeErrorMessage = "没有可恢复的购买项".tr(appSettings.resolvedLanguage)
                     showStoreErrorAlert = true
                 }
-            }
-        }
-    }
-    
-    private func simulatePurchase() {
-        isProcessing = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            isProcessing = false
-            withAnimation {
-                appSettings.isPremium = true
-                dismiss()
             }
         }
     }
@@ -468,19 +494,21 @@ struct PricingCard: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text("Limited Time Offer".tr(appSettings.resolvedLanguage))
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.red.opacity(0.8))
-                            .cornerRadius(4)
-                            
-                        Text(originalPrice)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(DS.onSurfaceVariant)
-                            .strikethrough(true, color: DS.onSurfaceVariant)
+                    if !originalPrice.isEmpty {
+                        HStack(spacing: 6) {
+                            Text("Limited Time Offer".tr(appSettings.resolvedLanguage))
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.red.opacity(0.8))
+                                .cornerRadius(4)
+                                
+                            Text(originalPrice)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(DS.onSurfaceVariant)
+                                .strikethrough(true, color: DS.onSurfaceVariant)
+                        }
                     }
                     
                     Text(price)
