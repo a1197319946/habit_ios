@@ -128,7 +128,7 @@ class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterD
             
             let content = UNMutableNotificationContent()
             content.title = habit.name
-            let defaultMsg = "该打卡啦！坚持就是胜利～".tr(resolvedLanguage)
+            let defaultMsg = L10n.timeToCheckInKeepItUp.tr(resolvedLanguage)
             let rText = habit.reminderText ?? ""
             content.body = (rText.isEmpty || rText == "该打卡啦！坚持就是胜利～" || rText == "Time to check in! Keep it up~") ? defaultMsg : rText
             content.sound = .default

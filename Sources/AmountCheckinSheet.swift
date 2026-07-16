@@ -57,7 +57,7 @@ struct AmountCheckinSheet: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text(isEditing ? "Edit Data".tr(appSettings.resolvedLanguage) : "Enter Data".tr(appSettings.resolvedLanguage))
+                Text(isEditing ? L10n.editData.tr(appSettings.resolvedLanguage) : L10n.enterData.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(DS.onSurface)
                 
@@ -96,11 +96,11 @@ struct AmountCheckinSheet: View {
                     let targetFormatted = formatDouble(periodTarget)
                     let accFormatted = formatDouble(accumulatedAmount)
                     
-                    Text("\("Period Target: ".tr(appSettings.resolvedLanguage))\(targetFormatted) \(habit.amountUnit.tr(appSettings.resolvedLanguage))")
+                    Text("\(L10n.periodTarget.tr(appSettings.resolvedLanguage))\(targetFormatted) \(habit.amountUnit.tr(appSettings.resolvedLanguage))")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(DS.onSurfaceVariant)
                     
-                    Text("\("Period Total: ".tr(appSettings.resolvedLanguage))\(accFormatted) \(habit.amountUnit.tr(appSettings.resolvedLanguage))")
+                    Text("\(L10n.periodTotal.tr(appSettings.resolvedLanguage))\(accFormatted) \(habit.amountUnit.tr(appSettings.resolvedLanguage))")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(Color(hex: "#5856D6")) // Blue-ish color matching screenshot
                 }
@@ -114,7 +114,7 @@ struct AmountCheckinSheet: View {
             
             // Input Area
             VStack(alignment: .leading, spacing: 12) {
-                Text("Amount Completed".tr(appSettings.resolvedLanguage))
+                Text(L10n.amountCompleted.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(DS.onSurface)
                     .padding(.horizontal, DS.spacingL)
@@ -144,7 +144,7 @@ struct AmountCheckinSheet: View {
             
             // Submit Button
             Button(action: submit) {
-                Text(isEditing ? "Save Changes".tr(appSettings.resolvedLanguage) : "Check In".tr(appSettings.resolvedLanguage))
+                Text(isEditing ? L10n.saveChanges.tr(appSettings.resolvedLanguage) : L10n.checkIn1.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)

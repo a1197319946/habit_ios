@@ -17,7 +17,7 @@ struct ArchivedHabitsView: View {
                     Image(systemName: "archivebox")
                         .font(.system(size: 48))
                         .foregroundColor(DS.outline)
-                    Text("No archived habits.".tr(appSettings.resolvedLanguage))
+                    Text(L10n.noArchivedHabits.tr(appSettings.resolvedLanguage))
                         .bodyLg()
                         .foregroundColor(DS.onSurfaceVariant)
                 }
@@ -37,7 +37,7 @@ struct ArchivedHabitsView: View {
             }
         }
         .background(AmbientBackground())
-        .navigationTitle("Archived Habits".tr(appSettings.resolvedLanguage))
+        .navigationTitle(L10n.archivedHabits.tr(appSettings.resolvedLanguage))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
     }
@@ -49,14 +49,14 @@ struct ArchivedHabitCard: View {
     
     private var targetText: String {
         let lang = appSettings.resolvedLanguage
-        let freqStr = habit.frequencyType == "weekly" ? "周".tr(lang) : "月".tr(lang)
+        let freqStr = habit.frequencyType == "weekly" ? L10n.week2.tr(lang) : L10n.month3.tr(lang)
         if habit.goalType == "amount" {
             let formattedVal = habit.amountValue.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", habit.amountValue) : String(format: "%.1f", habit.amountValue)
             let unitStr = habit.amountUnit.tr(lang)
             return "\("目标: ".tr(lang))\(formattedVal) \(unitStr) / \(freqStr)"
         } else {
             let targetVal = habit.frequencyType == "weekly" ? habit.weeklyTarget : habit.monthlyTarget
-            return "\("目标: ".tr(lang))\(targetVal) \("次".tr(lang)) / \(freqStr)"
+            return "\("目标: ".tr(lang))\(targetVal) \(L10n.times1.tr(lang)) / \(freqStr)"
         }
     }
     

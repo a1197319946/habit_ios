@@ -14,7 +14,7 @@ struct CheckinSuccessView: View {
     @State private var showSharePreview = false
     
     private var isAmount: Bool { habit.goalType == "amount" }
-    private var unit: String { isAmount ? (habit.amountUnit ?? "次").tr(appSettings.resolvedLanguage) : "次".tr(appSettings.resolvedLanguage) }
+    private var unit: String { isAmount ? (habit.amountUnit ?? "次").tr(appSettings.resolvedLanguage) : L10n.times1.tr(appSettings.resolvedLanguage) }
     private var label: String { (habit.frequencyType == "weekly" ? "本周" : "本月").tr(appSettings.resolvedLanguage) }
     private var targetLabel: String { (habit.frequencyType == "weekly" ? "周目标" : "月目标").tr(appSettings.resolvedLanguage) }
     
@@ -57,7 +57,7 @@ struct CheckinSuccessView: View {
             Spacer().frame(height: 64)
             // Header + Icon + Name
             VStack(spacing: 12) {
-                Text("Check-in Successful".tr(appSettings.resolvedLanguage))
+                Text(L10n.checkInSuccessful.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .foregroundColor(DS.textPrimary)
                 
@@ -81,13 +81,13 @@ struct CheckinSuccessView: View {
             
             // Stats
             HStack(spacing: 0) {
-                StatCell(label: "Amount Completed".tr(appSettings.resolvedLanguage), value: formatNumber(todayAmount), unit: unit, accent: true)
+                StatCell(label: L10n.amountCompleted.tr(appSettings.resolvedLanguage), value: formatNumber(todayAmount), unit: unit, accent: true)
                 
                 Rectangle()
                     .fill(DS.border)
                     .frame(width: 1, height: 48)
                 
-                StatCell(label: "\(label)\(" Total".tr(appSettings.resolvedLanguage))", value: formatNumber(currentTotal), unit: unit, accent: false)
+                StatCell(label: "\(label)\(L10n.total.tr(appSettings.resolvedLanguage))", value: formatNumber(currentTotal), unit: unit, accent: false)
                 
                 Rectangle()
                     .fill(DS.border)
@@ -104,7 +104,7 @@ struct CheckinSuccessView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "checkmark.seal.fill")
                         .foregroundColor(DS.success)
-                    Text("\(targetLabel)\(" Achieved!".tr(appSettings.resolvedLanguage))")
+                    Text("\(targetLabel)\(L10n.achieved.tr(appSettings.resolvedLanguage))")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(DS.success)
                 }
@@ -123,7 +123,7 @@ struct CheckinSuccessView: View {
                     dismiss()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { onRecordMood() }
                 }) {
-                    Text("Record Mood".tr(appSettings.resolvedLanguage))
+                    Text(L10n.recordMood.tr(appSettings.resolvedLanguage))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -134,7 +134,7 @@ struct CheckinSuccessView: View {
                 
                 Button(action: { showSharePreview = true }) {
                     HStack {
-                        Text("Generate Sharing Image".tr(appSettings.resolvedLanguage))
+                        Text(L10n.generateSharingImage.tr(appSettings.resolvedLanguage))
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(DS.primary)
                     }
@@ -234,7 +234,7 @@ struct SharePreviewSheet: View {
                                 ProgressView().tint(.white)
                             } else {
                                 Image(systemName: "square.and.arrow.up")
-                                Text("Share with Friends".tr(appSettings.resolvedLanguage))
+                                Text(L10n.shareWithFriends.tr(appSettings.resolvedLanguage))
                             }
                         }
                         .font(.system(size: 18, weight: .bold))
@@ -254,7 +254,7 @@ struct SharePreviewSheet: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { dismiss() }) {
-                        Text("Close".tr(appSettings.resolvedLanguage))
+                        Text(L10n.close.tr(appSettings.resolvedLanguage))
                             .foregroundColor(DS.primary)
                             .font(.system(size: 15, weight: .medium))
                     }
@@ -374,7 +374,7 @@ struct PosterView: View {
                             .font(.system(size: 24, weight: .black))
                             .foregroundColor(Color(hex: "#E0E2E5"))
                         
-                        Text("\"Small steps, big changes.\"".tr(appSettings.resolvedLanguage))
+                        Text(L10n.smallStepsBigChanges.tr(appSettings.resolvedLanguage))
                             .font(.system(size: 24, weight: .semibold, design: .serif))
                             .foregroundColor(Color(hex: "#1A1C1E"))
                             .lineSpacing(8)
@@ -384,7 +384,7 @@ struct PosterView: View {
                     // Stats
                     HStack(spacing: 48) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Today".tr(appSettings.resolvedLanguage))
+                            Text(L10n.today.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(Color(hex: "#7A7C7E"))
                             HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -397,7 +397,7 @@ struct PosterView: View {
                             }
                         }
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Total".tr(appSettings.resolvedLanguage))
+                            Text(L10n.total1.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(Color(hex: "#7A7C7E"))
                             HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -420,10 +420,10 @@ struct PosterView: View {
                     // Bottom branding
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("TickDay".tr(appSettings.resolvedLanguage))
+                            Text(L10n.tickday.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 18, weight: .bold, design: .rounded))
                                 .foregroundColor(Color(hex: "#4A4C4E"))
-                            Text("Track your daily progress".tr(appSettings.resolvedLanguage))
+                            Text(L10n.trackYourDailyProgress.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(Color(hex: "#7A7C7E"))
                         }
@@ -431,8 +431,8 @@ struct PosterView: View {
                         Image("app_logo")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 88, height: 88)
-                            .clipShape(RoundedRectangle(cornerRadius: 20))
+                            .frame(width: 56, height: 56)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
                             .shadow(color: Color.black.opacity(0.12), radius: 6, y: 3)
                     }
                     .padding(.bottom, 40)

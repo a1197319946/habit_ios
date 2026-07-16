@@ -92,7 +92,7 @@ struct PaywallView: View {
                 price: yearlyProduct?.displayPrice ?? "",
                 originalPrice: "",
                 subtitle: productSubtitle(for: yearlyProduct, defaultSubtitle: "按年扣费"),
-                tag: "POPULAR".tr(appSettings.resolvedLanguage)
+                tag: L10n.popular.tr(appSettings.resolvedLanguage)
             )
             .onTapGesture { withAnimation { selectedTier = 1 } }
             
@@ -102,7 +102,7 @@ struct PaywallView: View {
                 price: lifetimeProduct?.displayPrice ?? "",
                 originalPrice: "",
                 subtitle: productSubtitle(for: lifetimeProduct, defaultSubtitle: "一次性付费"),
-                tag: "BEST VALUE".tr(appSettings.resolvedLanguage)
+                tag: L10n.bestValue.tr(appSettings.resolvedLanguage)
             )
             .onTapGesture { withAnimation { selectedTier = 2 } }
         }
@@ -124,11 +124,11 @@ struct PaywallView: View {
                                 .foregroundColor(.yellow)
                                 .shadow(color: .yellow.opacity(0.5), radius: 10, x: 0, y: 5)
                             
-                            Text("Little Habit Premium".tr(appSettings.resolvedLanguage))
+                            Text(L10n.tickdayPremium.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 28, weight: .black))
                                 .foregroundColor(DS.onSurface)
                             
-                            Text("Unlock your full potential".tr(appSettings.resolvedLanguage))
+                            Text(L10n.unlockYourFullPotential.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(DS.onSurfaceVariant)
                         }
@@ -140,7 +140,7 @@ struct PaywallView: View {
                                     .font(.system(size: 28))
                                     .foregroundColor(Color(hex: "D4AF37"))
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("您已是尊享会员".tr(appSettings.resolvedLanguage))
+                                    Text(L10n.youAreAPremiumMember.tr(appSettings.resolvedLanguage))
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(DS.onSurface)
                                     Text(StoreManager.shared.expirationDateFormatted(in: appSettings.resolvedLanguage))
@@ -161,11 +161,11 @@ struct PaywallView: View {
                         
                         // Features List
                         VStack(alignment: .leading, spacing: DS.spacingM) {
-                            FeatureRow(icon: "nosign", color: .yellow, title: "Ad-Free Experience".tr(appSettings.resolvedLanguage), subtitle: "Reduce the resistance to your daily habits.".tr(appSettings.resolvedLanguage))
-                            FeatureRow(icon: "paintpalette.fill", color: .purple, title: "Theme Colors".tr(appSettings.resolvedLanguage), subtitle: "Personalize your app with custom colors".tr(appSettings.resolvedLanguage))
-                            FeatureRow(icon: "moon.stars.fill", color: .blue, title: "Dark Mode".tr(appSettings.resolvedLanguage), subtitle: "Reduce eye strain with a sleek dark theme".tr(appSettings.resolvedLanguage))
-                            FeatureRow(icon: "infinity", color: .orange, title: "Unlimited Habits".tr(appSettings.resolvedLanguage), subtitle: "Create as many habits as you want".tr(appSettings.resolvedLanguage))
-                            FeatureRow(icon: "icloud.fill", color: .cyan, title: "iCloud Sync".tr(appSettings.resolvedLanguage), subtitle: "Keep your habits synced across all devices".tr(appSettings.resolvedLanguage))
+                            FeatureRow(icon: "nosign", color: .yellow, title: L10n.adFreeExperience.tr(appSettings.resolvedLanguage), subtitle: L10n.reduceTheResistanceToYourDailyHabits.tr(appSettings.resolvedLanguage))
+                            FeatureRow(icon: "paintpalette.fill", color: .purple, title: L10n.themeColors.tr(appSettings.resolvedLanguage), subtitle: L10n.personalizeYourAppWithCustomColors.tr(appSettings.resolvedLanguage))
+                            FeatureRow(icon: "moon.stars.fill", color: .blue, title: L10n.darkMode.tr(appSettings.resolvedLanguage), subtitle: L10n.reduceEyeStrainWithASleekDarkTheme.tr(appSettings.resolvedLanguage))
+                            FeatureRow(icon: "infinity", color: .orange, title: L10n.unlimitedHabits.tr(appSettings.resolvedLanguage), subtitle: L10n.createAsManyHabitsAsYouWantFreeVersionMax5.tr(appSettings.resolvedLanguage))
+                            FeatureRow(icon: "icloud.fill", color: .cyan, title: L10n.icloudSync.tr(appSettings.resolvedLanguage), subtitle: L10n.keepYourHabitsSyncedAcrossAllDevices.tr(appSettings.resolvedLanguage))
                         }
                         .padding(.horizontal, DS.spacingL)
                         
@@ -174,7 +174,7 @@ struct PaywallView: View {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundColor(.orange)
                                     .font(.system(size: 14))
-                                Text(storeManager.errorMessage ?? "无法从苹果后台获取订阅价格，当前显示默认参考价。请检查：1) 苹果后台内购项目状态不为“缺少元数据”；2) App Store Connect 付费协议已生效；3) 产品 ID 匹配。".tr(appSettings.resolvedLanguage))
+                                Text(storeManager.errorMessage ?? L10n.unableToFetchSubscriptionPricingFromAppStoreConnectShowingDefaultReferencePricesPleaseCheck1InAppPurchaseStatusIsNotMissingMetadata2PaidApplicationsAgreementIsActive3ProductIdsMatchExactly.tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 12))
                                     .foregroundColor(DS.onSurfaceVariant)
                             }
@@ -198,7 +198,7 @@ struct PaywallView: View {
                                     if isProcessing {
                                         ProgressView().tint(.white)
                                     } else {
-                                        Text(selectedTier == 1 ? "Start Free Trial".tr(appSettings.resolvedLanguage) : "Purchase Now".tr(appSettings.resolvedLanguage))
+                                        Text(selectedTier == 1 ? L10n.startFreeTrial.tr(appSettings.resolvedLanguage) : L10n.purchaseNow.tr(appSettings.resolvedLanguage))
                                             .font(.system(size: 18, weight: .bold))
                                     }
                                     Spacer()
@@ -215,21 +215,21 @@ struct PaywallView: View {
                                 let monthPrice = monthlyProduct?.displayPrice ?? ""
                                 let periodStr = formattedSubscriptionPeriod(for: monthlyProduct)
                                 let priceText = "\(monthPrice)\(periodStr)"
-                                Text("自动续期，{price}，可随时取消".tr(appSettings.resolvedLanguage).replacingOccurrences(of: "{price}", with: priceText))
+                                Text(L10n.autoRenewablePriceCancelAnytime.tr(appSettings.resolvedLanguage).replacingOccurrences(of: "{price}", with: priceText))
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
                             } else if selectedTier == 1 {
                                 let yearPrice = yearlyProduct?.displayPrice ?? ""
                                 let periodStr = formattedSubscriptionPeriod(for: yearlyProduct)
                                 let priceText = "\(yearPrice)\(periodStr)"
-                                Text("首月免费，结束后按 {price}收费".tr(appSettings.resolvedLanguage).replacingOccurrences(of: "{price}", with: priceText))
+                                Text(L10n.firstMonthFreeThenPrice.tr(appSettings.resolvedLanguage).replacingOccurrences(of: "{price}", with: priceText))
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
-                                Text("试用期间可以随时取消，不扣费".tr(appSettings.resolvedLanguage))
+                                Text(L10n.cancelAnytimeDuringTrialNoCharge.tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
                             } else if selectedTier == 2 {
-                                Text("一次性付费，永久解锁全部尊享权益".tr(appSettings.resolvedLanguage))
+                                Text(L10n.oneTimePaymentLifetimeAccessToAllFeatures.tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
                             }
@@ -251,7 +251,7 @@ struct PaywallView: View {
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: "gift.fill")
-                                Text("Redeem Offer Code".tr(appSettings.resolvedLanguage))
+                                Text(L10n.redeemOfferCode1.tr(appSettings.resolvedLanguage))
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.5)
                             }
@@ -262,14 +262,14 @@ struct PaywallView: View {
                         
                         // Terms & Privacy Links & Disclaimers (Required by Apple App Store Review Guideline 3.1.2)
                         VStack(spacing: 8) {
-                            Text("确认购买后，款项将从您的 iTunes 账户扣除。订阅将自动续期，除非在当前订阅期结束前至少24小时关闭自动续订。您的账户将在当前订阅期结束前24小时内扣取续订费用。您可以在购买后前往 App Store 账户设置中管理或取消您的订阅。".tr(appSettings.resolvedLanguage))
+                            Text(L10n.paymentWillBeChargedToYourItunesAccountAtConfirmationOfPurchaseSubscriptionAutomaticallyRenewsUnlessAutoRenewIsTurnedOffAtLeast24HoursBeforeTheEndOfTheCurrentPeriodAccountWillBeChargedForRenewalWithin24HoursPriorToTheEndOfTheCurrentPeriodYouCanManageAndCancelYourSubscriptionsInYourAppStoreAccountSettings.tr(appSettings.resolvedLanguage))
                                 .multilineTextAlignment(.center)
                                 .font(.system(size: 11))
                                 .foregroundColor(DS.onSurfaceVariant.opacity(0.7))
                                 .padding(.horizontal, DS.spacingS)
                                 .padding(.bottom, 4)
                             
-                            Text("By continuing, you agree to our".tr(appSettings.resolvedLanguage))
+                            Text(L10n.byContinuingYouAgreeToOur.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 12))
                             HStack(spacing: 8) {
                                 Button {
@@ -277,18 +277,18 @@ struct PaywallView: View {
                                         UIApplication.shared.open(url)
                                     }
                                 } label: {
-                                    Text("Terms of Service".tr(appSettings.resolvedLanguage))
+                                    Text(L10n.termsOfService.tr(appSettings.resolvedLanguage))
                                         .underline()
                                 }
                                 
-                                Text("and".tr(appSettings.resolvedLanguage))
+                                Text(L10n.and.tr(appSettings.resolvedLanguage))
                                 
                                 Button {
                                     if let url = URL(string: "https://a1197319946.github.io/habit_ios/privacy.html") {
                                         UIApplication.shared.open(url)
                                     }
                                 } label: {
-                                    Text("Privacy Policy".tr(appSettings.resolvedLanguage))
+                                    Text(L10n.privacyPolicy.tr(appSettings.resolvedLanguage))
                                         .underline()
                                 }
                             }
@@ -304,7 +304,7 @@ struct PaywallView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { executeRestore() }) {
-                        Text("Restore Purchase".tr(appSettings.resolvedLanguage))
+                        Text(L10n.restore.tr(appSettings.resolvedLanguage))
                             .foregroundColor(DS.primary)
                             .font(.system(size: 16, weight: .medium))
                     }
@@ -317,7 +317,7 @@ struct PaywallView: View {
                             dismiss()
                         }
                     }) {
-                        Text("Close".tr(appSettings.resolvedLanguage))
+                        Text(L10n.close.tr(appSettings.resolvedLanguage))
                             .foregroundColor(DS.primary)
                             .font(.system(size: 16, weight: .medium))
                     }
@@ -363,8 +363,8 @@ struct PaywallView: View {
                 }
             }
         }
-        .alert("提示".tr(appSettings.resolvedLanguage), isPresented: $showStoreErrorAlert) {
-            Button("确定".tr(appSettings.resolvedLanguage), role: .cancel) { }
+        .alert(L10n.notice.tr(appSettings.resolvedLanguage), isPresented: $showStoreErrorAlert) {
+            Button(L10n.ok1.tr(appSettings.resolvedLanguage), role: .cancel) { }
         } message: {
             Text(storeErrorMessage)
         }
@@ -402,7 +402,7 @@ struct PaywallView: View {
                 } catch {
                     DispatchQueue.main.async {
                         isProcessing = false
-                        storeErrorMessage = "\("购买失败".tr(appSettings.resolvedLanguage))：\(error.localizedDescription)"
+                        storeErrorMessage = "\(L10n.purchaseFailed.tr(appSettings.resolvedLanguage))：\(error.localizedDescription)"
                         showStoreErrorAlert = true
                         print("Purchase error: \(error)")
                     }
@@ -427,7 +427,7 @@ struct PaywallView: View {
                         dismiss()
                     }
                 } else {
-                    storeErrorMessage = "没有可恢复的购买项".tr(appSettings.resolvedLanguage)
+                    storeErrorMessage = L10n.noPurchasesToRestore.tr(appSettings.resolvedLanguage)
                     showStoreErrorAlert = true
                 }
             }
@@ -496,7 +496,7 @@ struct PricingCard: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     if !originalPrice.isEmpty {
                         HStack(spacing: 6) {
-                            Text("Limited Time Offer".tr(appSettings.resolvedLanguage))
+                            Text(L10n.limitedTimeOffer.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 6)

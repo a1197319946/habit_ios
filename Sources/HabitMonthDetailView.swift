@@ -47,7 +47,7 @@ struct HabitMonthDetailView: View {
     }
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(spacing: DS.spacingM) {
+            VStack(spacing: 10) {
                 
                 // Month Selector
                 HStack {
@@ -110,7 +110,7 @@ struct HabitMonthDetailView: View {
                                 .foregroundColor(DS.onSurface)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.5)
-                            Text("Check-in Days".tr(appSettings.resolvedLanguage))
+                            Text(L10n.checkInDays.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(DS.onSurfaceVariant)
                                 .lineLimit(1)
@@ -130,7 +130,7 @@ struct HabitMonthDetailView: View {
                                     .foregroundColor(DS.onSurface)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.5)
-                                Text("Check-in Amount".tr(appSettings.resolvedLanguage))
+                                Text(L10n.checkInAmount.tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(DS.onSurfaceVariant)
                                     .lineLimit(1)
@@ -151,14 +151,14 @@ struct HabitMonthDetailView: View {
                         HStack {
                             Image(systemName: "clock.arrow.circlepath")
                                 .foregroundColor(Color(hex: habit.color))
-                            Text("Check-in Records".tr(appSettings.resolvedLanguage))
+                            Text(L10n.checkInRecords.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(DS.onSurface)
                             Spacer()
                         }
                         
                         if currentMonthCheckins.isEmpty {
-                            Text("No check-in records".tr(appSettings.resolvedLanguage))
+                            Text(L10n.noCheckInRecords.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 14))
                                 .foregroundColor(DS.onSurfaceVariant)
                                 .padding(.vertical, 10)
@@ -403,8 +403,8 @@ struct FullscreenImageView: View {
                 Spacer()
             }
         }
-        .alert("Saved to Album".tr(appSettings.resolvedLanguage), isPresented: $showingSaveAlert) {
-            Button("OK".tr(appSettings.resolvedLanguage), role: .cancel) { }
+        .alert(L10n.savedToAlbum.tr(appSettings.resolvedLanguage), isPresented: $showingSaveAlert) {
+            Button(L10n.ok.tr(appSettings.resolvedLanguage), role: .cancel) { }
         }
     }
 }

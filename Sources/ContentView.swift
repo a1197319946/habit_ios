@@ -165,7 +165,7 @@ struct RetentionOfferSheet: View {
                         .foregroundColor(.white)
                 }
                 
-                Text("Limited Time Offer".tr(appSettings.resolvedLanguage))
+                Text(L10n.limitedTimeOffer.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(Color(hex: "D4AF37"))
                     .padding(.horizontal, 14)
@@ -174,18 +174,18 @@ struct RetentionOfferSheet: View {
                     .cornerRadius(8)
                     .padding(.bottom, -10)
                 
-                Text("Wait, a special offer!".tr(appSettings.resolvedLanguage))
+                Text(L10n.waitASpecialOffer.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 24, weight: .heavy))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                     .foregroundColor(DS.onSurface)
                 
                 VStack(spacing: DS.spacingS) {
-                    Text("首月免费".tr(appSettings.resolvedLanguage))
+                    Text(L10n.firstMonthFree.tr(appSettings.resolvedLanguage))
                         .font(.system(size: 24, weight: .black))
                         .foregroundColor(Color(hex: "D4AF37"))
                     
-                    Text("试用期间可以随时取消，不扣费".tr(appSettings.resolvedLanguage))
+                    Text(L10n.cancelAnytimeDuringTrialNoCharge.tr(appSettings.resolvedLanguage))
                         .font(.system(size: 15, weight: .medium))
                         .foregroundColor(DS.onSurfaceVariant)
                 }
@@ -204,7 +204,7 @@ struct RetentionOfferSheet: View {
                             }
                         }
                     }) {
-                        Text("Start Free Trial".tr(appSettings.resolvedLanguage))
+                        Text(L10n.startFreeTrial.tr(appSettings.resolvedLanguage))
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -217,7 +217,7 @@ struct RetentionOfferSheet: View {
                         appSettings.showRetentionOffer = false
                         onDecline?()
                     }) {
-                        Text("No, thanks".tr(appSettings.resolvedLanguage))
+                        Text(L10n.noThanks.tr(appSettings.resolvedLanguage))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(DS.onSurfaceVariant)
                     }

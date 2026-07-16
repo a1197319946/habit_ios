@@ -32,12 +32,12 @@ struct SettingsView: View {
                 .padding(.bottom, 40)
             }
             .background(AmbientBackground())
-            .navigationTitle("Settings".tr(appSettings.resolvedLanguage))
+            .navigationTitle(L10n.settings.tr(appSettings.resolvedLanguage))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { dismiss() }) {
-                        Text("Close".tr(appSettings.resolvedLanguage))
+                        Text(L10n.close.tr(appSettings.resolvedLanguage))
                             .foregroundColor(DS.primary)
                             .font(.system(size: 15, weight: .medium))
                     }
@@ -47,7 +47,7 @@ struct SettingsView: View {
                 switch result {
                 case .success(_):
                     withAnimation(.spring()) {
-                        toastMessage = "导出成功！".tr(appSettings.resolvedLanguage)
+                        toastMessage = L10n.exportSuccessful.tr(appSettings.resolvedLanguage)
                     }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
                         withAnimation(.spring()) {
@@ -100,10 +100,10 @@ struct SettingsView: View {
             }) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Upgrade to Premium".tr(appSettings.resolvedLanguage))
+                        Text(L10n.upgradeToPremium.tr(appSettings.resolvedLanguage))
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(DS.onSurface)
-                        Text("Unlock all features".tr(appSettings.resolvedLanguage))
+                        Text(L10n.unlockAllFeatures.tr(appSettings.resolvedLanguage))
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(DS.onSurfaceVariant)
                     }
@@ -125,7 +125,7 @@ struct SettingsView: View {
         } else {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("TickDay 尊享会员".tr(appSettings.resolvedLanguage))
+                    Text(L10n.tickdayPremiumMember.tr(appSettings.resolvedLanguage))
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(DS.onSurface)
                     Text(storeManager.expirationDateFormatted(in: appSettings.resolvedLanguage))
@@ -149,17 +149,17 @@ struct SettingsView: View {
     }
     
     @ViewBuilder private var featuresSection: some View {
-        SettingsSection(title: "Features".tr(appSettings.resolvedLanguage)) {
+        SettingsSection(title: L10n.features.tr(appSettings.resolvedLanguage)) {
             Button {
                 showingWidgetGuide = true
             } label: {
-                SettingsRowLabel(icon: "squareshape.split.2x2", color: .purple, title: "Widgets".tr(appSettings.resolvedLanguage), value: "Add to Home Screen".tr(appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
+                SettingsRowLabel(icon: "squareshape.split.2x2", color: .purple, title: L10n.widgets.tr(appSettings.resolvedLanguage), value: L10n.addToHomeScreen.tr(appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
             }
         }
     }
     
     @ViewBuilder private var appearanceSection: some View {
-        SettingsSection(title: "Appearance".tr(appSettings.resolvedLanguage)) {
+        SettingsSection(title: L10n.appearance.tr(appSettings.resolvedLanguage)) {
             
             // Dark Mode
             if appSettings.isPremium {
@@ -175,11 +175,11 @@ struct SettingsView: View {
                         WidgetCenter.shared.reloadAllTimelines()
                     }
                 } label: {
-                    SettingsRowLabel(icon: "moon.stars", color: DS.primary, title: "Dark Mode".tr(appSettings.resolvedLanguage), value: appSettings.themeMode.displayName(in: appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
+                    SettingsRowLabel(icon: "moon.stars", color: DS.primary, title: L10n.darkMode.tr(appSettings.resolvedLanguage), value: appSettings.themeMode.displayName(in: appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
                 }
             } else {
                 Button { appSettings.showPaywallFromSettings = true } label: {
-                    SettingsRowLabel(icon: "moon.stars", color: DS.primary, title: "Dark Mode".tr(appSettings.resolvedLanguage), value: appSettings.themeMode.displayName(in: appSettings.resolvedLanguage), isPremiumFeature: true, isPremiumUser: false)
+                    SettingsRowLabel(icon: "moon.stars", color: DS.primary, title: L10n.darkMode.tr(appSettings.resolvedLanguage), value: appSettings.themeMode.displayName(in: appSettings.resolvedLanguage), isPremiumFeature: true, isPremiumUser: false)
                 }
             }
             
@@ -192,7 +192,7 @@ struct SettingsView: View {
                         Circle().fill(DS.accent.opacity(0.15)).frame(width: 36, height: 36)
                         Image(systemName: "paintpalette").font(.system(size: 16, weight: .semibold)).foregroundColor(DS.accent)
                     }
-                    Text("Theme Color".tr(appSettings.resolvedLanguage))
+                    Text(L10n.themeColor.tr(appSettings.resolvedLanguage))
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(DS.onSurface)
                     Spacer()
@@ -242,18 +242,18 @@ struct SettingsView: View {
             // Start of Week
             Menu {
                 Picker("", selection: $appSettings.firstWeekday) {
-                    Text("Monday".tr(appSettings.resolvedLanguage)).tag(2)
-                    Text("Sunday".tr(appSettings.resolvedLanguage)).tag(1)
+                    Text(L10n.monday.tr(appSettings.resolvedLanguage)).tag(2)
+                    Text(L10n.sunday.tr(appSettings.resolvedLanguage)).tag(1)
                 }
                 .onChange(of: appSettings.firstWeekday) { _ in appSettings.objectWillChange.send() }
             } label: {
-                SettingsRowLabel(icon: "calendar", color: DS.secondary, title: "Start of Week".tr(appSettings.resolvedLanguage), value: appSettings.firstWeekday == 2 ? "Monday".tr(appSettings.resolvedLanguage) : "Sunday".tr(appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
+                SettingsRowLabel(icon: "calendar", color: DS.secondary, title: L10n.startOfWeek.tr(appSettings.resolvedLanguage), value: appSettings.firstWeekday == 2 ? L10n.monday.tr(appSettings.resolvedLanguage) : L10n.sunday.tr(appSettings.resolvedLanguage), isPremiumFeature: false, isPremiumUser: true)
             }
         }
     }
     
     @ViewBuilder private var languageSection: some View {
-        SettingsSection(title: "Language".tr(appSettings.resolvedLanguage)) {
+        SettingsSection(title: L10n.language.tr(appSettings.resolvedLanguage)) {
             Menu {
                 Picker("", selection: $appSettings.language) {
                     ForEach(AppLanguage.allCases) { lang in
@@ -262,16 +262,16 @@ struct SettingsView: View {
                 }
                 .onChange(of: appSettings.language) { _ in appSettings.objectWillChange.send() }
             } label: {
-                SettingsRowLabel(icon: "globe", color: DS.tertiary, title: "Language".tr(appSettings.resolvedLanguage), value: appSettings.language.displayName, isPremiumFeature: false, isPremiumUser: true)
+                SettingsRowLabel(icon: "globe", color: DS.tertiary, title: L10n.language.tr(appSettings.resolvedLanguage), value: appSettings.language.displayName, isPremiumFeature: false, isPremiumUser: true)
             }
         }
     }
     
     @ViewBuilder private var dataSection: some View {
-        SettingsSection(title: "Data".tr(appSettings.resolvedLanguage)) {
+        SettingsSection(title: L10n.data.tr(appSettings.resolvedLanguage)) {
             
             // iCloud Sync
-            SettingsRowToggle(icon: "icloud", color: .cyan, title: "iCloud Sync".tr(appSettings.resolvedLanguage), isOn: appSettings.iCloudSyncEnabled, isPremiumFeature: true, isPremiumUser: appSettings.isPremium) {
+            SettingsRowToggle(icon: "icloud", color: .cyan, title: L10n.icloudSync.tr(appSettings.resolvedLanguage), isOn: appSettings.iCloudSyncEnabled, isPremiumFeature: true, isPremiumUser: appSettings.isPremium) {
                 if !appSettings.isPremium {
                     appSettings.showPaywallFromSettings = true
                 } else {
@@ -284,7 +284,7 @@ struct SettingsView: View {
                 
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("iCloud 状态".tr(appSettings.resolvedLanguage))
+                        Text(L10n.icloudStatus.tr(appSettings.resolvedLanguage))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(DS.onSurfaceVariant)
                         Text(cloudSyncManager.statusMessage.tr(appSettings.resolvedLanguage))
@@ -296,7 +296,7 @@ struct SettingsView: View {
                         cloudSyncManager.statusMessage = "状态检查中..."
                         cloudSyncManager.checkAccountStatus()
                     }) {
-                        Text("立即检查同步".tr(appSettings.resolvedLanguage))
+                        Text(L10n.checkSyncNow.tr(appSettings.resolvedLanguage))
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(DS.primary)
                             .padding(.horizontal, 10)
@@ -315,7 +315,7 @@ struct SettingsView: View {
             Button {
                 showingImport = true
             } label: {
-                SettingsRowLabel(icon: "arrow.down.doc", color: .blue, title: "Import Data".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
+                SettingsRowLabel(icon: "arrow.down.doc", color: .blue, title: L10n.importData.tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
             }
             
             Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)
@@ -328,19 +328,19 @@ struct SettingsView: View {
                 // }
 
             } label: {
-                SettingsRowLabel(icon: "arrow.up.doc", color: .pink, title: "Export Data".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
+                SettingsRowLabel(icon: "arrow.up.doc", color: .pink, title: L10n.exportData.tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
             }
         }
     }
     
     @ViewBuilder private var aboutSection: some View {
-        SettingsSection(title: "About".tr(appSettings.resolvedLanguage)) {
+        SettingsSection(title: L10n.about.tr(appSettings.resolvedLanguage)) {
             Button {
                 if let url = URL(string: "https://a1197319946.github.io/habit_ios/support.html") {
                     UIApplication.shared.open(url)
                 }
             } label: {
-                SettingsRowLabel(icon: "questionmark.circle", color: .orange, title: "Help & Support".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
+                SettingsRowLabel(icon: "questionmark.circle", color: .orange, title: L10n.helpSupport.tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
             }
             
             Divider().background(DS.outlineVariant.opacity(0.5)).padding(.horizontal, 20)
@@ -350,7 +350,7 @@ struct SettingsView: View {
                     UIApplication.shared.open(url)
                 }
             } label: {
-                SettingsRowLabel(icon: "hand.raised", color: .gray, title: "Privacy Policy".tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
+                SettingsRowLabel(icon: "hand.raised", color: .gray, title: L10n.privacyPolicy.tr(appSettings.resolvedLanguage), value: "", isPremiumFeature: false, isPremiumUser: true)
             }
         }
     }
@@ -489,7 +489,7 @@ struct WidgetGuideSheet: View {
         VStack(spacing: DS.spacingL) {
             // Header
             HStack {
-                Text("How to add Widgets".tr(appSettings.resolvedLanguage))
+                Text(L10n.howToAddWidgets.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(DS.onSurface)
                 Spacer()
@@ -500,19 +500,19 @@ struct WidgetGuideSheet: View {
             VStack(spacing: DS.spacingM) {
                 WidgetGuideStepRow(
                     number: "1",
-                    text: "Go to your Home Screen.".tr(appSettings.resolvedLanguage)
+                    text: L10n.goToYourHomeScreen.tr(appSettings.resolvedLanguage)
                 )
                 WidgetGuideStepRow(
                     number: "2",
-                    text: "Long press any empty space until apps jiggle.".tr(appSettings.resolvedLanguage)
+                    text: L10n.longPressAnyEmptySpaceUntilAppsJiggle.tr(appSettings.resolvedLanguage)
                 )
                 WidgetGuideStepRow(
                     number: "3",
-                    text: "Tap '+' in top left, search 'TickDay', and tap 'Add Widget'.".tr(appSettings.resolvedLanguage)
+                    text: L10n.tapInTopLeftSearchTickdayAndTapAddWidget.tr(appSettings.resolvedLanguage)
                 )
                 WidgetGuideStepRow(
                     number: "4",
-                    text: "Choose your favorite widget size and place it on your Home Screen.".tr(appSettings.resolvedLanguage)
+                    text: L10n.chooseYourFavoriteWidgetSizeAndPlaceItOnYourHomeScreen.tr(appSettings.resolvedLanguage)
                 )
             }
             .padding(DS.spacingM)
@@ -524,7 +524,7 @@ struct WidgetGuideSheet: View {
             
             // Bottom Button
             Button(action: { dismiss() }) {
-                Text("Got it".tr(appSettings.resolvedLanguage))
+                Text(L10n.gotIt.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)

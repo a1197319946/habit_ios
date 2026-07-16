@@ -90,7 +90,7 @@ struct HomeView: View {
                             Button(action: {
                                 withAnimation { hideCompleted.toggle() }
                             }) {
-                                Text(hideCompleted ? "Show Completed".tr(appSettings.resolvedLanguage) : "Hide Completed".tr(appSettings.resolvedLanguage))
+                                Text(hideCompleted ? L10n.showCompleted.tr(appSettings.resolvedLanguage) : L10n.hideCompleted.tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 12, weight: .bold))
                                     .foregroundColor(DS.primary)
                                     .padding(.horizontal, 12)
@@ -124,7 +124,7 @@ struct HomeView: View {
                     
                     // Motivational Banner
                     VStack {
-                        Text("\"Small steps, big changes.\"".tr(appSettings.resolvedLanguage))
+                        Text(L10n.smallStepsBigChanges.tr(appSettings.resolvedLanguage))
                             .font(.system(size: 16, weight: .bold, design: .rounded).italic())
                             .foregroundStyle(DS.onSurfaceVariant)
                             .opacity(0.8)
@@ -189,19 +189,19 @@ struct HomeView: View {
             }
         }
         .alert(
-            "Options".tr(appSettings.resolvedLanguage),
+            L10n.options.tr(appSettings.resolvedLanguage),
             isPresented: $showingActionSheet,
             presenting: selectedHabit
         ) { habit in
             if habit.goalType == "amount" {
-                Button("Edit Amount".tr(appSettings.resolvedLanguage)) {
+                Button(L10n.editAmount.tr(appSettings.resolvedLanguage)) {
                     editAmount(habit: habit)
                 }
             }
-            Button("Undo Check-in".tr(appSettings.resolvedLanguage), role: .destructive) {
+            Button(L10n.undoCheckIn.tr(appSettings.resolvedLanguage), role: .destructive) {
                 undoCheckin(habit: habit)
             }
-            Button("Cancel".tr(appSettings.resolvedLanguage), role: .cancel) {}
+            Button(L10n.cancel.tr(appSettings.resolvedLanguage), role: .cancel) {}
         }
         .onAppear {
             checkOpenHabit()
@@ -396,7 +396,7 @@ struct ListHabitCard: View {
             let targetFormatted = target.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", target) : String(format: "%.1f", target)
             return "\(sumFormatted)/\(targetFormatted) \(habit.amountUnit.tr(appSettings.resolvedLanguage))"
         } else {
-            return "\(periodCompletedCount)/\(periodTarget)\("次".tr(appSettings.resolvedLanguage))"
+            return "\(periodCompletedCount)/\(periodTarget)\(L10n.times1.tr(appSettings.resolvedLanguage))"
         }
     }
     
@@ -434,7 +434,7 @@ struct ListHabitCard: View {
                     }
                     
                     HStack(spacing: 8) {
-                        Text(habit.frequencyType == "weekly" ? "本周".tr(appSettings.resolvedLanguage) : "本月".tr(appSettings.resolvedLanguage))
+                        Text(habit.frequencyType == "weekly" ? L10n.thisWeek1.tr(appSettings.resolvedLanguage) : L10n.thisMonth1.tr(appSettings.resolvedLanguage))
                             .font(.system(size: 10, weight: .semibold))
                             .lineLimit(1)
                             .fixedSize(horizontal: true, vertical: false)
@@ -599,7 +599,7 @@ struct WeeklySlider: View {
                     withAnimation { selectedDate = date }
                 }) {
                     VStack(spacing: 8) {
-                        Text(isToday ? "Today".tr(appSettings.resolvedLanguage) : dayStr.tr(appSettings.resolvedLanguage))
+                        Text(isToday ? L10n.today.tr(appSettings.resolvedLanguage) : dayStr.tr(appSettings.resolvedLanguage))
                             .font(.system(size: isToday ? 14 : 12, weight: isToday ? .bold : .medium))
                             .foregroundColor(isSelected ? .white : (isToday ? DS.primary : DS.onSurfaceVariant))
                             .lineLimit(1)
@@ -671,11 +671,11 @@ struct EmptyHabitsView: View {
             .padding(.bottom, DS.spacingS)
             
             VStack(spacing: DS.spacingXS) {
-                Text("美好的改变，从今天开始".tr(appSettings.resolvedLanguage))
+                Text(L10n.beautifulChangesBeginToday.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(DS.onSurface)
                 
-                Text("开启你的第一个小习惯吧".tr(appSettings.resolvedLanguage))
+                Text(L10n.letSCreateYourFirstHabit.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 14))
                     .foregroundColor(DS.onSurfaceVariant)
             }
@@ -683,7 +683,7 @@ struct EmptyHabitsView: View {
             
             if let onAction = onAction {
                 Button(action: onAction) {
-                    Text("创建第一个习惯".tr(appSettings.resolvedLanguage))
+                    Text(L10n.createFirstHabit.tr(appSettings.resolvedLanguage))
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(DS.primary)
                         .padding(.horizontal, 32)

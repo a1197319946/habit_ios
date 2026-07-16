@@ -41,12 +41,12 @@ struct HabitDetailView: View {
         NavigationView {
             ZStack(alignment: .bottom) {
                 ScrollView(showsIndicators: false) {
-                VStack(spacing: DS.spacingS) {
+                VStack(spacing: 10) {
                     
                     // Card 1: Name
                     glassCard {
                         VStack(alignment: .leading, spacing: DS.spacingS) {
-                            Text("习惯名称".tr(appSettings.resolvedLanguage))
+                            Text(L10n.habitName.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(DS.onSurface)
                             
@@ -55,7 +55,7 @@ struct HabitDetailView: View {
                                     .foregroundColor(DS.outline)
                                     .padding(.leading, DS.spacingS)
                                 
-                                TextField("e.g. Read 10 pages, Drink water...".tr(appSettings.resolvedLanguage), text: $name)
+                                TextField(L10n.eGRead10PagesDrinkWater.tr(appSettings.resolvedLanguage), text: $name)
                                     .font(.system(size: 16, weight: .regular))
                                     .foregroundColor(DS.onSurface)
                                     .padding(.vertical, 14)
@@ -72,7 +72,7 @@ struct HabitDetailView: View {
                             
                             // Color Picker
                             VStack(alignment: .leading, spacing: DS.spacingS) {
-                                Text("Pick a Theme Color".tr(appSettings.resolvedLanguage))
+                                Text(L10n.themeColor.tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(DS.onSurface)
                                 
@@ -113,7 +113,7 @@ struct HabitDetailView: View {
                             
                             // Icon Picker
                             VStack(alignment: .leading, spacing: DS.spacingS) {
-                                Text("选择图标".tr(appSettings.resolvedLanguage))
+                                Text(L10n.chooseAnIcon1.tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(DS.onSurface)
                                 
@@ -157,13 +157,13 @@ struct HabitDetailView: View {
                         VStack(alignment: .leading, spacing: DS.spacingL) {
                             
                             VStack(alignment: .leading, spacing: DS.spacingS) {
-                                Text("Goal Type".tr(appSettings.resolvedLanguage))
+                                Text(L10n.goalType.tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(DS.onSurface)
                                 
                                 HStack(spacing: 0) {
                                     Button(action: { withAnimation { goalType = "frequency" } }) {
-                                        Text("次数目标".tr(appSettings.resolvedLanguage))
+                                        Text(L10n.frequencyGoal.tr(appSettings.resolvedLanguage))
                                             .font(.system(size: 13, weight: .medium))
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 10)
@@ -175,7 +175,7 @@ struct HabitDetailView: View {
                                     }
                                     
                                     Button(action: { withAnimation { goalType = "amount" } }) {
-                                        Text("总量目标".tr(appSettings.resolvedLanguage))
+                                        Text(L10n.amountGoal.tr(appSettings.resolvedLanguage))
                                             .font(.system(size: 13, weight: .medium))
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 10)
@@ -192,7 +192,7 @@ struct HabitDetailView: View {
                                 
                                 HStack(spacing: 0) {
                                     Button(action: { withAnimation { frequencyType = "weekly" } }) {
-                                        Text("Per Week".tr(appSettings.resolvedLanguage))
+                                        Text(L10n.perWeek.tr(appSettings.resolvedLanguage))
                                             .font(.system(size: 13, weight: .medium))
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 10)
@@ -204,7 +204,7 @@ struct HabitDetailView: View {
                                     }
                                     
                                     Button(action: { withAnimation { frequencyType = "monthly" } }) {
-                                        Text("Per Month".tr(appSettings.resolvedLanguage))
+                                        Text(L10n.perMonth.tr(appSettings.resolvedLanguage))
                                             .font(.system(size: 13, weight: .medium))
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 10)
@@ -223,7 +223,7 @@ struct HabitDetailView: View {
                             
                             VStack(alignment: .leading, spacing: DS.spacingS) {
                                 if goalType == "frequency" {
-                                    Text(frequencyType == "weekly" ? "Weekly Target".tr(appSettings.resolvedLanguage) : "Monthly Target".tr(appSettings.resolvedLanguage))
+                                    Text(frequencyType == "weekly" ? L10n.weeklyTarget.tr(appSettings.resolvedLanguage) : L10n.monthlyTarget.tr(appSettings.resolvedLanguage))
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(DS.onSurface)
                                     
@@ -241,7 +241,7 @@ struct HabitDetailView: View {
                                                 Text("\(weeklyTarget)")
                                                     .font(.system(size: 24, weight: .bold))
                                                     .foregroundColor(DS.onSurface)
-                                                Text("Times".tr(appSettings.resolvedLanguage))
+                                                Text(L10n.times.tr(appSettings.resolvedLanguage))
                                                     .font(.system(size: 15, weight: .medium))
                                                     .foregroundColor(DS.onSurfaceVariant)
                                             }
@@ -272,7 +272,7 @@ struct HabitDetailView: View {
                                                 Text("\(monthlyTarget)")
                                                     .font(.system(size: 24, weight: .bold))
                                                     .foregroundColor(DS.onSurface)
-                                                Text("Times".tr(appSettings.resolvedLanguage))
+                                                Text(L10n.times.tr(appSettings.resolvedLanguage))
                                                     .font(.system(size: 15, weight: .medium))
                                                     .foregroundColor(DS.onSurfaceVariant)
                                             }
@@ -291,7 +291,7 @@ struct HabitDetailView: View {
                                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(DS.outlineVariant, lineWidth: 1))
                                     }
                                 } else {
-                                    Text(frequencyType == "weekly" ? "Weekly Target Amount".tr(appSettings.resolvedLanguage) : "Monthly Target Amount".tr(appSettings.resolvedLanguage))
+                                    Text(frequencyType == "weekly" ? L10n.weeklyTargetAmount.tr(appSettings.resolvedLanguage) : L10n.monthlyTargetAmount.tr(appSettings.resolvedLanguage))
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(DS.onSurface)
                                         
@@ -325,7 +325,7 @@ struct HabitDetailView: View {
                                 HStack(spacing: 8) {
                                     Image(systemName: "bell.fill")
                                         .foregroundColor(isReminderEnabled ? Color(hex: colorHex) : DS.onSurfaceVariant)
-                                    Text("打卡提醒".tr(appSettings.resolvedLanguage))
+                                    Text(L10n.reminder.tr(appSettings.resolvedLanguage))
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(DS.onSurface)
                                 }
@@ -341,7 +341,7 @@ struct HabitDetailView: View {
                                 Divider().padding(.vertical, 4)
                                 
                                 HStack {
-                                    Text("提醒时间".tr(appSettings.resolvedLanguage))
+                                    Text(L10n.time1.tr(appSettings.resolvedLanguage))
                                         .font(.system(size: 14, weight: .medium))
                                         .foregroundColor(DS.onSurfaceVariant)
                                     Spacer()
@@ -351,11 +351,11 @@ struct HabitDetailView: View {
                                 }
                                 
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text("自定义文案".tr(appSettings.resolvedLanguage))
+                                    Text(L10n.customMessage.tr(appSettings.resolvedLanguage))
                                         .font(.system(size: 14, weight: .medium))
                                         .foregroundColor(DS.onSurfaceVariant)
                                     
-                                    TextField("该打卡啦！坚持就是胜利～".tr(appSettings.resolvedLanguage), text: $reminderText)
+                                    TextField(L10n.timeToCheckInKeepItUp.tr(appSettings.resolvedLanguage), text: $reminderText)
                                         .font(.system(size: 16, weight: .regular))
                                         .padding(14)
                                         .background(DS.surfaceContainerLow)
@@ -380,7 +380,7 @@ struct HabitDetailView: View {
                 Spacer()
                 VStack(spacing: 0) {
                     Button(action: submit) {
-                        Text(isSubmitting ? "Creating...".tr(appSettings.resolvedLanguage) : (habit == nil ? "Create Habit".tr(appSettings.resolvedLanguage) : "Save Changes".tr(appSettings.resolvedLanguage)))
+                        Text(isSubmitting ? L10n.creating.tr(appSettings.resolvedLanguage) : (habit == nil ? L10n.createHabit.tr(appSettings.resolvedLanguage) : L10n.saveChanges.tr(appSettings.resolvedLanguage)))
                             .labelMd()
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -407,7 +407,7 @@ struct HabitDetailView: View {
                     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 }
         )
-        .navigationTitle(habit == nil ? "New Habit".tr(appSettings.resolvedLanguage) : "Edit Habit".tr(appSettings.resolvedLanguage))
+        .navigationTitle(habit == nil ? L10n.newHabit.tr(appSettings.resolvedLanguage) : L10n.editHabit.tr(appSettings.resolvedLanguage))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -429,13 +429,13 @@ struct HabitDetailView: View {
                             WidgetCenter.shared.reloadAllTimelines()
                             dismiss()
                         }) {
-                            Label("Restore".tr(appSettings.resolvedLanguage), systemImage: "arrow.uturn.backward")
+                            Label(L10n.restore1.tr(appSettings.resolvedLanguage), systemImage: "arrow.uturn.backward")
                         }
                         
                         Button(role: .destructive, action: {
                             showingDeleteAlert = true
                         }) {
-                            Label("Delete".tr(appSettings.resolvedLanguage), systemImage: "trash")
+                            Label(L10n.delete.tr(appSettings.resolvedLanguage), systemImage: "trash")
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
@@ -445,8 +445,8 @@ struct HabitDetailView: View {
             }
         }
         .alert("Warning", isPresented: $showingDeleteAlert) {
-            Button("Cancel".tr(appSettings.resolvedLanguage), role: .cancel) { }
-             Button("Delete".tr(appSettings.resolvedLanguage), role: .destructive) {
+            Button(L10n.cancel.tr(appSettings.resolvedLanguage), role: .cancel) { }
+             Button(L10n.delete.tr(appSettings.resolvedLanguage), role: .destructive) {
                 if let h = habit {
                     NotificationManager.shared.cancelReminder(for: h)
                     viewContext.delete(h)
@@ -456,7 +456,7 @@ struct HabitDetailView: View {
                 }
             }
         } message: {
-            Text("This action will permanently delete this habit and all its check-in records. It cannot be recovered.".tr(appSettings.resolvedLanguage))
+            Text(L10n.thisActionWillPermanentlyDeleteThisHabitAndAllItsCheckInRecordsItCannotBeRecovered.tr(appSettings.resolvedLanguage))
         }
          .onAppear {
             if let h = habit {

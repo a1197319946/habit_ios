@@ -5,54 +5,22 @@ import AppIntents
 
 import Foundation
 
-func getWidgetLanguage() -> String {
-    let mode = UserDefaults(suiteName: "group.com.littlehabit.tracker")?.string(forKey: "appLanguage") ?? "system"
-    if mode == "zh" { return "zh" }
-    if mode == "en" { return "en" }
-    if let firstLang = Locale.preferredLanguages.first {
-        if firstLang.hasPrefix("zh") { return "zh" }
-    }
-    return "en"
-}
 
-extension String {
-    func wTr() -> String {
-        let lang = getWidgetLanguage()
-        let dict: [String: [String: String]] = [
-            "No Habit": ["zh": "暂无习惯", "en": "No Habit"],
-            "Select Habits": ["zh": "请选择习惯", "en": "Select Habits"],
-            "请长按编辑选择习惯": ["zh": "请长按编辑选择习惯", "en": "Please long press to edit & select habit"],
-            "本周": ["zh": "本周", "en": "This week"],
-            "本月": ["zh": "本月", "en": "This month"],
-            "次": ["zh": "次", "en": "times"],
-            "公里": ["zh": "公里", "en": "km"],
-            "米": ["zh": "米", "en": "m"],
-            "分钟": ["zh": "分钟", "en": "mins"],
-            "小时": ["zh": "小时", "en": "hours"],
-            "页": ["zh": "页", "en": "pages"],
-            "天": ["zh": "天", "en": "days"],
-            "周": ["zh": "周", "en": "Week"],
-            "月": ["zh": "月", "en": "Month"],
-            "年": ["zh": "年", "en": "Year"]
-        ]
-        if let trans = dict[self] {
-            return trans[lang] ?? self
-        }
-        return self
-    }
-}
 
 // MARK: - Providers
 @MainActor
 func fetchFreshHabitsAndCheckins(isPreview: Bool = false) -> ([Habit], [Checkin]) {
     let context = PersistenceController.shared.container.viewContext
     if isPreview {
-        let mockHabit1 = Habit(context: context)
+        let mockContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        mockContext.persistentStoreCoordinator = PersistenceController.shared.container.persistentStoreCoordinator
+        
+        let mockHabit1 = Habit(context: mockContext)
         mockHabit1.name = "早起喝水"
         mockHabit1.color = "#4A90E2"
         mockHabit1.icon = "drop.fill"
         
-        let mockHabit2 = Habit(context: context)
+        let mockHabit2 = Habit(context: mockContext)
         mockHabit2.name = "每天阅读"
         mockHabit2.color = "#F5A623"
         mockHabit2.icon = "book.fill"
@@ -60,7 +28,7 @@ func fetchFreshHabitsAndCheckins(isPreview: Bool = false) -> ([Habit], [Checkin]
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         let todayStr = formatter.string(from: Date())
-        let mockCheckin = Checkin(context: context)
+        let mockCheckin = Checkin(context: mockContext)
         mockCheckin.dateString = todayStr
         mockCheckin.amount = 1.0
         mockCheckin.habit = mockHabit1
@@ -277,7 +245,7 @@ func getWidgetStatText(habit: Habit, date: Date, checkins: [Checkin]) -> String 
         let amount = value.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", value) : String(format: "%.1f", value)
         return "\(amount) \((habit.amountUnit ?? "次").wTr())"
     }
-    return "\(Int(value)) \("天".wTr())"
+    return "\(Int(value)) \(L10n.days.wTr())"
 }
 
 func getWidgetMonthProgressText(habit: Habit, date: Date, checkins: [Checkin]) -> String {
@@ -298,7 +266,7 @@ func getWidgetMonthProgressText(habit: Habit, date: Date, checkins: [Checkin]) -
     }
 
     let checkedDays = Set(monthCheckins.map { $0.dateString }).count
-    return "\(checkedDays)/\(habit.monthlyTarget)\("次".wTr())"
+    return "\(checkedDays)/\(habit.monthlyTarget)\(L10n.times1.wTr())"
 }
 
 struct WidgetHabitBadge: View {
@@ -378,7 +346,7 @@ struct UnselectedHabitWidgetView: View {
             Image(systemName: "hand.tap.fill")
                 .font(.system(size: 24))
                 .foregroundColor(DS.primary)
-            Text("请长按编辑选择习惯".wTr())
+            Text(L10n.pleaseLongPressToEditSelectHabit.wTr())
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(DS.onSurfaceVariant)
                 .multilineTextAlignment(.center)
@@ -393,7 +361,7 @@ struct MultiHabitCheckinWidgetView: View {
     var body: some View {
         let selectedIds = entry.configuration.habits?.map { $0.id } ?? []
         let configured = entry.habits.filter { selectedIds.contains($0.id) && !$0.isArchived }
-        let selectedHabits = configured.isEmpty ? Array(entry.habits.filter { !$0.isArchived }.prefix(3)) : Array(configured.prefix(3))
+        let selectedHabits = Array(configured.prefix(3))
         
         VStack(spacing: 0) {
             if selectedHabits.isEmpty {
@@ -453,7 +421,7 @@ struct MultiHabitCheckinWidgetView: View {
 struct NewSingleHabitWidgetView: View {
     var entry: SimpleEntry
     var body: some View {
-        let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id && !$0.isArchived }) } ?? entry.habits.first(where: { !$0.isArchived })
+        let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id && !$0.isArchived }) }
         VStack(spacing: 8) {
             if let habit = habit {
                 let isDone = isCheckedIn(habit: habit, date: entry.date, checkins: entry.checkins)
@@ -483,8 +451,8 @@ struct NewSingleHabitWidgetView: View {
                 
                 Text(habit.name).font(.system(size: 15, weight: .bold)).lineLimit(1).truncationMode(.tail)
                 
-                let label = habit.frequencyType == "weekly" ? "本周".wTr() : "本月".wTr()
-                let suffix = habit.goalType == "amount" ? habit.amountUnit.wTr() : "次".wTr()
+                let label = habit.frequencyType == "weekly" ? L10n.thisWeek1.wTr() : L10n.thisMonth1.wTr()
+                let suffix = habit.goalType == "amount" ? habit.amountUnit.wTr() : L10n.times1.wTr()
                 let count = Int(getCheckinsForPeriod(habit: habit, date: entry.date, checkins: entry.checkins))
                 let target = habit.goalType == "amount" ? Int(habit.amountValue) : (habit.frequencyType == "weekly" ? habit.weeklyTarget : habit.monthlyTarget)
                 
@@ -695,7 +663,7 @@ struct YearlyHeatmapWidgetView: View {
                 let amountFormatted = thisYearAmount.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", thisYearAmount) : String(format: "%.1f", thisYearAmount)
                 return "\(amountFormatted) \(habit.amountUnit.wTr())"
             } else {
-                return "\(thisYearDays) \("次".wTr())"
+                return "\(thisYearDays) \(L10n.times1.wTr())"
             }
         }()
         
@@ -810,7 +778,7 @@ struct YearlyLargeThreeHabitsView: View {
                         let amountFormatted = thisYearAmount.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", thisYearAmount) : String(format: "%.1f", thisYearAmount)
                         return "\(amountFormatted) \(habit.amountUnit.wTr())"
                     } else {
-                        return "\(thisYearDays) \("次".wTr())"
+                        return "\(thisYearDays) \(L10n.times1.wTr())"
                     }
                 }()
                 
@@ -881,9 +849,9 @@ struct SingleYearlyWidgetView: View {
                 if !configured.isEmpty {
                     return Array(configured.prefix(3))
                 } else if let single = entry.configuration.selectedHabit, let h = entry.habits.first(where: { $0.id == single.id && !$0.isArchived }) {
-                    return [h] + Array(entry.habits.filter { !$0.isArchived && $0.id != h.id }.prefix(2))
+                    return [h]
                 } else {
-                    return Array(entry.habits.filter { !$0.isArchived }.prefix(3))
+                    return []
                 }
             }()
             if selectedHabits.isEmpty {
@@ -892,7 +860,7 @@ struct SingleYearlyWidgetView: View {
                 YearlyLargeThreeHabitsView(habits: selectedHabits, checkins: entry.checkins, date: entry.date)
             }
         } else {
-            let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id && !$0.isArchived }) } ?? entry.habits.first(where: { !$0.isArchived })
+            let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id && !$0.isArchived }) }
             if let habit = habit { 
                 YearlyHeatmapWidgetView(habit: habit, checkins: entry.checkins, date: entry.date)
             } else {
@@ -905,7 +873,7 @@ struct SingleYearlyWidgetView: View {
 struct SingleMonthWidgetView: View {
     var entry: MonthEntry
     var body: some View {
-        let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id && !$0.isArchived }) } ?? entry.habits.first(where: { !$0.isArchived })
+        let habit = entry.configuration.selectedHabit.flatMap { h in entry.habits.first(where: { $0.id == h.id && !$0.isArchived }) }
         if let habit = habit {
             MonthCalendarWidgetView(habit: habit, checkins: entry.checkins, date: entry.date)
         } else {
@@ -919,7 +887,7 @@ struct MultiHabitWeekWidgetContainerView: View {
     var body: some View {
         let selectedIds = entry.configuration.habits?.map { $0.id } ?? []
         let configured = entry.habits.filter { selectedIds.contains($0.id) && !$0.isArchived }
-        let selectedHabits = configured.isEmpty ? Array(entry.habits.filter { !$0.isArchived }.prefix(4)) : Array(configured.prefix(4))
+        let selectedHabits = Array(configured.prefix(4))
         if selectedHabits.isEmpty {
             UnselectedHabitWidgetView()
         } else {

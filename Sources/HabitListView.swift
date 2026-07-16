@@ -74,15 +74,15 @@ struct HabitListView: View {
         .background(AmbientBackground())
         .alert(isPresented: $showDeleteAlert) {
             Alert(
-                title: Text("Delete Habit?".tr(appSettings.resolvedLanguage)),
-                message: Text("Data irrecoverable after deletion.".tr(appSettings.resolvedLanguage)),
-                primaryButton: .destructive(Text("Delete".tr(appSettings.resolvedLanguage))) {
+                title: Text(L10n.deleteHabit.tr(appSettings.resolvedLanguage)),
+                message: Text(L10n.dataIrrecoverableAfterDeletion.tr(appSettings.resolvedLanguage)),
+                primaryButton: .destructive(Text(L10n.delete.tr(appSettings.resolvedLanguage))) {
                     if let habit = habitToDelete {
                         deleteHabit(habit)
                     }
                     habitToDelete = nil
                 },
-                secondaryButton: .cancel(Text("Cancel".tr(appSettings.resolvedLanguage))) {
+                secondaryButton: .cancel(Text(L10n.cancel.tr(appSettings.resolvedLanguage))) {
                     habitToDelete = nil
                 }
             )
@@ -111,18 +111,18 @@ struct HabitListView: View {
     private var headerView: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Habit".tr(appSettings.resolvedLanguage))
+                Text(L10n.habit.tr(appSettings.resolvedLanguage))
                     .display()
                     .foregroundColor(DS.primary)
                 HStack(spacing: 0) {
-                    Text("You have ".tr(appSettings.resolvedLanguage))
+                    Text(L10n.youHave.tr(appSettings.resolvedLanguage))
                         .bodyLg()
                         .foregroundColor(DS.onSurfaceVariant)
                     Text("\(habits.count)")
                         .bodyLg()
                         .foregroundColor(DS.primary)
                         .bold()
-                    Text(" habits.".tr(appSettings.resolvedLanguage))
+                    Text(L10n.habits1.tr(appSettings.resolvedLanguage))
                         .bodyLg()
                         .foregroundColor(DS.onSurfaceVariant)
                 }
@@ -165,7 +165,7 @@ struct HabitListView: View {
     @ViewBuilder
     private func habitContextMenu(for habit: Habit) -> some View {
         Button(action: { editingHabit = habit }) {
-            Label("Edit".tr(appSettings.resolvedLanguage), systemImage: "pencil")
+            Label(L10n.edit.tr(appSettings.resolvedLanguage), systemImage: "pencil")
         }
         Button(action: {
             withAnimation {
@@ -178,14 +178,14 @@ struct HabitListView: View {
             }
             WidgetCenter.shared.reloadAllTimelines()
         }) {
-            Label("Archive".tr(appSettings.resolvedLanguage), systemImage: "archivebox")
+            Label(L10n.archive.tr(appSettings.resolvedLanguage), systemImage: "archivebox")
         }
         
         Button(role: .destructive, action: {
             habitToDelete = habit
             showDeleteAlert = true
         }) {
-            Label("Delete".tr(appSettings.resolvedLanguage), systemImage: "trash")
+            Label(L10n.delete.tr(appSettings.resolvedLanguage), systemImage: "trash")
         }
     }
     
@@ -283,7 +283,7 @@ struct HabitListCard: View {
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(DS.onSurface)
                     
-                    Text("\(habit.currentStreak) \("Days Streak".tr(appSettings.resolvedLanguage))")
+                    Text("\(habit.currentStreak) \(L10n.daysStreak.tr(appSettings.resolvedLanguage))")
                         .font(.system(size: 13, weight: .regular))
                         .foregroundColor(DS.onSurfaceVariant)
                 }
@@ -292,11 +292,11 @@ struct HabitListCard: View {
                 
                 // Right Side: Last 30 Days Count
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("\(habit.checkinCountLast30Days) \("次".tr(appSettings.resolvedLanguage))")
+                    Text("\(habit.checkinCountLast30Days) \(L10n.times1.tr(appSettings.resolvedLanguage))")
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(habitColor)
                     
-                    Text("30 Days".tr(appSettings.resolvedLanguage))
+                    Text(L10n._30Days.tr(appSettings.resolvedLanguage))
                         .font(.system(size: 12, weight: .regular))
                         .foregroundColor(DS.onSurfaceVariant)
                 }

@@ -17,11 +17,11 @@ struct MoodRecorderView: View {
     
     var moods: [(String, String, String)] {
         [
-            ("excited", "😆", "激动".tr(appSettings.resolvedLanguage)),
-            ("happy", "🙂", "开心".tr(appSettings.resolvedLanguage)),
-            ("normal", "😐", "一般".tr(appSettings.resolvedLanguage)),
-            ("down", "😞", "失落".tr(appSettings.resolvedLanguage)),
-            ("angry", "😡", "愤怒".tr(appSettings.resolvedLanguage))
+            ("excited", "😆", L10n.excited.tr(appSettings.resolvedLanguage)),
+            ("happy", "🙂", L10n.happy.tr(appSettings.resolvedLanguage)),
+            ("normal", "😐", L10n.normal.tr(appSettings.resolvedLanguage)),
+            ("down", "😞", L10n.down.tr(appSettings.resolvedLanguage)),
+            ("angry", "😡", L10n.angry.tr(appSettings.resolvedLanguage))
         ]
     }
     
@@ -47,7 +47,7 @@ struct MoodRecorderView: View {
                 // Header & Close Button
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("记录心情".tr(appSettings.resolvedLanguage))
+                        Text(L10n.recordMood.tr(appSettings.resolvedLanguage))
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(DS.onSurface)
                         Text(subtitle)
@@ -72,7 +72,7 @@ struct MoodRecorderView: View {
                         // Mood Section
                         VStack(alignment: .leading, spacing: DS.spacingM) {
                             HStack(spacing: 4) {
-                                Text("当前心情".tr(appSettings.resolvedLanguage))
+                                Text(L10n.currentMood.tr(appSettings.resolvedLanguage))
                                     .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(DS.onSurface)
                                 Text("*")
@@ -103,7 +103,7 @@ struct MoodRecorderView: View {
                         
                         // Thoughts Section
                         VStack(alignment: .leading, spacing: DS.spacingM) {
-                            Text("想法 (选填)".tr(appSettings.resolvedLanguage))
+                            Text(L10n.thoughtsOptional.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(DS.onSurface)
                             
@@ -118,7 +118,7 @@ struct MoodRecorderView: View {
                                         VStack {
                                             HStack {
                                                 if noteText.isEmpty {
-                                                    Text("写下这一刻的想法...".tr(appSettings.resolvedLanguage))
+                                                    Text(L10n.writeDownYourThoughts.tr(appSettings.resolvedLanguage))
                                                         .foregroundColor(Color.gray.opacity(0.6))
                                                         .padding(.top, 20)
                                                         .padding(.leading, 16)
@@ -145,7 +145,7 @@ struct MoodRecorderView: View {
                         
                         // Image Section
                         VStack(alignment: .leading, spacing: DS.spacingM) {
-                            Text("图片 (选填)".tr(appSettings.resolvedLanguage))
+                            Text(L10n.imageOptional.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(DS.onSurface)
                             
@@ -173,7 +173,7 @@ struct MoodRecorderView: View {
                                         Image(systemName: "camera")
                                             .font(.system(size: 24))
                                             .foregroundColor(.gray)
-                                        Text("添加图片".tr(appSettings.resolvedLanguage))
+                                        Text(L10n.addImage.tr(appSettings.resolvedLanguage))
                                             .font(.system(size: 12))
                                             .foregroundColor(.gray)
                                     }
@@ -205,7 +205,7 @@ struct MoodRecorderView: View {
             VStack {
                 Spacer()
                 Button(action: saveMood) {
-                    Text("记录".tr(appSettings.resolvedLanguage))
+                    Text(L10n.save.tr(appSettings.resolvedLanguage))
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)

@@ -180,15 +180,15 @@ struct StatisticsView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             let _ = appSettings.firstWeekday // Force dependency
-            VStack(spacing: 8) {
+            VStack(spacing: 10) {
                     
                     // Title
                     HStack(alignment: .bottom) {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Stats".tr(appSettings.resolvedLanguage))
+                            Text(L10n.stats.tr(appSettings.resolvedLanguage))
                                 .display()
                                 .foregroundColor(DS.primary)
-                            Text("A detailed look at your journey.".tr(appSettings.resolvedLanguage))
+                            Text(L10n.aDetailedLookAtYourJourney.tr(appSettings.resolvedLanguage))
                                 .bodyLg()
                                 .foregroundColor(DS.onSurfaceVariant)
                         }
@@ -196,7 +196,7 @@ struct StatisticsView: View {
                         Spacer()
                         
                         Button(action: { showArchived.toggle() }) {
-                            Text(showArchived ? "Hide Archived".tr(appSettings.resolvedLanguage) : "Show Archived".tr(appSettings.resolvedLanguage))
+                            Text(showArchived ? L10n.hideArchived.tr(appSettings.resolvedLanguage) : L10n.showArchived.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 12, weight: .bold))
                                 .foregroundColor(showArchived ? DS.onPrimary : DS.primary)
                                 .padding(.horizontal, 12)
@@ -296,7 +296,7 @@ struct StatisticsView: View {
                         // Weekly Grid Card
                         VStack(alignment: .leading, spacing: 10) {
                             Label {
-                                Text("Weekly View".tr(appSettings.resolvedLanguage))
+                                Text(L10n.weeklyView.tr(appSettings.resolvedLanguage))
                                     .foregroundColor(DS.onSurface)
                             } icon: {
                                 Image(systemName: "square.grid.2x2.fill")
@@ -307,7 +307,7 @@ struct StatisticsView: View {
                             Spacer()
                             
                             if habits.isEmpty {
-                                Text("No habits found.".tr(appSettings.resolvedLanguage))
+                                Text(L10n.noHabitsFound.tr(appSettings.resolvedLanguage))
                                     .foregroundColor(DS.onSurfaceVariant)
                                     .frame(maxWidth: .infinity, alignment: .center)
                                     .padding(.vertical, DS.spacingL)
@@ -674,7 +674,7 @@ struct MonthGridCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label {
-                Text("Monthly View".tr(appSettings.resolvedLanguage))
+                Text(L10n.monthlyView.tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurface)
             } icon: {
                 Image(systemName: "square.grid.2x2.fill")
@@ -745,7 +745,7 @@ struct MonthGridCard: View {
                     
                     let completed = habitsOn(day: day)
                     if completed.isEmpty {
-                        Text("No check-ins on this day".tr(appSettings.resolvedLanguage))
+                        Text(L10n.noCheckInsOnThisDay.tr(appSettings.resolvedLanguage))
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(DS.onSurfaceVariant)
                             .padding(.vertical, 8)
@@ -814,7 +814,7 @@ struct YearChartCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DS.spacingL) {
             Label {
-                Text("Yearly View".tr(appSettings.resolvedLanguage))
+                Text(L10n.yearlyView.tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurface)
             } icon: {
                 Image(systemName: "square.grid.2x2.fill")
@@ -825,7 +825,7 @@ struct YearChartCard: View {
             Spacer()
             
             if chartData.isEmpty {
-                Text("No data".tr(appSettings.resolvedLanguage))
+                Text(L10n.noData.tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurfaceVariant)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 40)
@@ -901,7 +901,7 @@ struct AllChartCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DS.spacingL) {
             Label {
-                Text("All View".tr(appSettings.resolvedLanguage))
+                Text(L10n.allView.tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurface)
             } icon: {
                 Image(systemName: "square.grid.2x2.fill")
@@ -912,7 +912,7 @@ struct AllChartCard: View {
             Spacer()
             
             if chartData.isEmpty {
-                Text("No data".tr(appSettings.resolvedLanguage))
+                Text(L10n.noData.tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurfaceVariant)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 40)
@@ -962,7 +962,7 @@ struct HabitCountItem: Identifiable {
             let formatted = value.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", value) : String(format: "%.1f", value)
             return "\(formatted)\(habit.amountUnit.tr(lang))"
         } else {
-            return "\(Int(value))\("次".tr(lang))"
+            return "\(Int(value))\(L10n.times1.tr(lang))"
         }
     }
 }
@@ -993,7 +993,7 @@ struct DonutChartCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
                             Label {
-                                Text("Statistics Overview".tr(appSettings.resolvedLanguage))
+                                Text(L10n.statisticsOverview.tr(appSettings.resolvedLanguage))
                                     .foregroundColor(DS.onSurface)
                             } icon: {
                                 Image(systemName: "chart.pie.fill")
@@ -1004,7 +1004,7 @@ struct DonutChartCard: View {
                             Spacer()
             
             if chartData.isEmpty {
-                Text("No data".tr(appSettings.resolvedLanguage))
+                Text(L10n.noData.tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurfaceVariant)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, DS.spacingL)
@@ -1033,7 +1033,7 @@ struct DonutChartCard: View {
                             Text("\(totalEvents)")
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(DS.onSurface)
-                            Text(" Times".tr(appSettings.resolvedLanguage))
+                            Text(L10n.times2.tr(appSettings.resolvedLanguage))
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundColor(DS.onSurfaceVariant)
                         }

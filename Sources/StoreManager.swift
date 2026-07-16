@@ -146,7 +146,7 @@ class StoreManager: ObservableObject {
     func expirationDateFormatted(in language: AppLanguage) -> String {
         let lifetime = isLifetimeMember || UserDefaults.standard.bool(forKey: "isLifetimeMember")
         if lifetime {
-            return "到期时间：永久有效 (终身会员)".tr(language)
+            return L10n.validUntilLifetimeAccess.tr(language)
         }
         
         var targetDate = membershipExpirationDate
@@ -167,10 +167,10 @@ class StoreManager: ObservableObject {
                 formatter.locale = Locale(identifier: "en_US")
             }
             let dateStr = formatter.string(from: date)
-            return "到期时间：".tr(language) + dateStr
+            return L10n.validUntil.tr(language) + dateStr
         }
         
-        return "状态：已激活尊享会员".tr(language)
+        return L10n.statusActivePremium.tr(language)
     }
     
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {

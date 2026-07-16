@@ -74,15 +74,15 @@ struct HabitStatsDetailView: View {
                     .foregroundColor(DS.onSurface)
                 
                 if habit.goalType == "amount" {
-                    let periodStr = habit.frequencyType == "weekly" ? "周".tr(appSettings.resolvedLanguage) : "月".tr(appSettings.resolvedLanguage)
+                    let periodStr = habit.frequencyType == "weekly" ? L10n.week2.tr(appSettings.resolvedLanguage) : L10n.month3.tr(appSettings.resolvedLanguage)
                     let amtStr = String(format: "%.1f", habit.amountValue).replacingOccurrences(of: ".0", with: "")
-                    Text("\("Target: ".tr(appSettings.resolvedLanguage)) \(amtStr) \((habit.amountUnit ?? "次").tr(appSettings.resolvedLanguage)) / \(periodStr)")
+                    Text("\(L10n.target.tr(appSettings.resolvedLanguage)) \(amtStr) \((habit.amountUnit ?? "次").tr(appSettings.resolvedLanguage)) / \(periodStr)")
                         .font(.system(size: 13))
                         .foregroundColor(DS.onSurfaceVariant)
                 } else {
                     let target = habit.frequencyType == "weekly" ? habit.weeklyTarget : habit.monthlyTarget
-                    let periodStr = habit.frequencyType == "weekly" ? "周".tr(appSettings.resolvedLanguage) : "月".tr(appSettings.resolvedLanguage)
-                    Text("\("Target: ".tr(appSettings.resolvedLanguage)) \(target) \("次".tr(appSettings.resolvedLanguage)) / \(periodStr)")
+                    let periodStr = habit.frequencyType == "weekly" ? L10n.week2.tr(appSettings.resolvedLanguage) : L10n.month3.tr(appSettings.resolvedLanguage)
+                    Text("\(L10n.target.tr(appSettings.resolvedLanguage)) \(target) \(L10n.times1.tr(appSettings.resolvedLanguage)) / \(periodStr)")
                         .font(.system(size: 13))
                         .foregroundColor(DS.onSurfaceVariant)
                 }
@@ -101,7 +101,7 @@ struct HabitStatsDetailView: View {
     private var statsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label {
-                Text("Statistics".tr(appSettings.resolvedLanguage))
+                Text(L10n.statistics.tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurface)
             } icon: {
                 Image(systemName: "chart.bar.fill")
@@ -117,12 +117,12 @@ struct HabitStatsDetailView: View {
             
             if habit.goalType == "amount" {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    statBox(icon: "checkmark.circle.fill", iconColor: Color(hex: habit.color), value: "\(completedDays)", unit: "天".tr(appSettings.resolvedLanguage), label: "打卡天数".tr(appSettings.resolvedLanguage))
-                    statBox(icon: "number.circle.fill", iconColor: Color.yellow, value: "\(Int(totalAmount))", unit: (habit.amountUnit ?? "").tr(appSettings.resolvedLanguage), label: "总数值".tr(appSettings.resolvedLanguage))
+                    statBox(icon: "checkmark.circle.fill", iconColor: Color(hex: habit.color), value: "\(completedDays)", unit: L10n.days.tr(appSettings.resolvedLanguage), label: L10n.checkInDays.tr(appSettings.resolvedLanguage))
+                    statBox(icon: "number.circle.fill", iconColor: Color.yellow, value: "\(Int(totalAmount))", unit: (habit.amountUnit ?? "").tr(appSettings.resolvedLanguage), label: L10n.totalAmount1.tr(appSettings.resolvedLanguage))
                 }
             } else {
                 LazyVGrid(columns: [GridItem(.flexible())], spacing: 10) {
-                    statBox(icon: "checkmark.circle.fill", iconColor: Color(hex: habit.color), value: "\(completedDays)", unit: "天".tr(appSettings.resolvedLanguage), label: "打卡天数".tr(appSettings.resolvedLanguage))
+                    statBox(icon: "checkmark.circle.fill", iconColor: Color(hex: habit.color), value: "\(completedDays)", unit: L10n.days.tr(appSettings.resolvedLanguage), label: L10n.checkInDays.tr(appSettings.resolvedLanguage))
                 }
             }
         }
@@ -170,7 +170,7 @@ struct HabitStatsDetailView: View {
             }
         }
         .background(AmbientBackground())
-        .navigationTitle("Habit Details".tr(appSettings.resolvedLanguage))
+        .navigationTitle(L10n.habitDetails.tr(appSettings.resolvedLanguage))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
@@ -178,7 +178,7 @@ struct HabitStatsDetailView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button(action: { showingEditSheet = true }) {
-                        Label("Edit".tr(appSettings.resolvedLanguage), systemImage: "pencil")
+                        Label(L10n.edit.tr(appSettings.resolvedLanguage), systemImage: "pencil")
                     }
                     Button(action: {
                         let isArchiving = !habit.isArchived
@@ -205,12 +205,12 @@ struct HabitStatsDetailView: View {
                             }
                         }
                     }) {
-                        Label(habit.isArchived ? "Restore".tr(appSettings.resolvedLanguage) : "Archive".tr(appSettings.resolvedLanguage), systemImage: habit.isArchived ? "tray.and.arrow.up" : "archivebox")
+                        Label(habit.isArchived ? L10n.restore1.tr(appSettings.resolvedLanguage) : L10n.archive.tr(appSettings.resolvedLanguage), systemImage: habit.isArchived ? "tray.and.arrow.up" : "archivebox")
                     }
                     Button(role: .destructive, action: {
                         showDeleteAlert = true
                     }) {
-                        Label("Delete".tr(appSettings.resolvedLanguage), systemImage: "trash")
+                        Label(L10n.delete.tr(appSettings.resolvedLanguage), systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -226,9 +226,9 @@ struct HabitStatsDetailView: View {
         .sheet(isPresented: $showingEditSheet) {
             HabitDetailView(habit: habit)
         }
-        .alert("Delete Habit?".tr(appSettings.resolvedLanguage), isPresented: $showDeleteAlert) {
-            Button("Cancel".tr(appSettings.resolvedLanguage), role: .cancel) { }
-            Button("Delete".tr(appSettings.resolvedLanguage), role: .destructive) {
+        .alert(L10n.deleteHabit.tr(appSettings.resolvedLanguage), isPresented: $showDeleteAlert) {
+            Button(L10n.cancel.tr(appSettings.resolvedLanguage), role: .cancel) { }
+            Button(L10n.delete.tr(appSettings.resolvedLanguage), role: .destructive) {
                 NotificationManager.shared.cancelReminder(for: habit)
                 if let checkins = habit.checkins as? Set<Checkin> {
                     for c in checkins { viewContext.delete(c) }
@@ -242,7 +242,7 @@ struct HabitStatsDetailView: View {
                 dismiss()
             }
         } message: {
-            Text("Data irrecoverable after deletion.".tr(appSettings.resolvedLanguage))
+            Text(L10n.dataIrrecoverableAfterDeletion.tr(appSettings.resolvedLanguage))
         }
     }
     
@@ -289,7 +289,7 @@ struct HabitStatsDetailView: View {
     private var yearlyCalendarSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label {
-                Text("Yearly Calendar".tr(appSettings.resolvedLanguage))
+                Text(L10n.yearlyCalendar.tr(appSettings.resolvedLanguage))
                     .foregroundColor(DS.onSurface)
             } icon: {
                 Image(systemName: "calendar")
@@ -307,7 +307,7 @@ struct HabitStatsDetailView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .foregroundColor(DS.onSurface)
                 
-                Text("\(String(currentYear))\(" Year".tr(appSettings.resolvedLanguage))")
+                Text("\(String(currentYear))\(L10n.year.tr(appSettings.resolvedLanguage))")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(DS.onSurface)
                     .padding(.horizontal, 8)
@@ -325,7 +325,7 @@ struct HabitStatsDetailView: View {
             
             // Sub-header 1: Monthly Trend (`月度趋势`)
             HStack {
-                Text("Monthly Trend".tr(appSettings.resolvedLanguage))
+                Text(L10n.monthlyTrend.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(DS.onSurfaceVariant)
                     .padding(.horizontal, 8)
@@ -393,7 +393,7 @@ struct HabitStatsDetailView: View {
             
             // Sub-header 2: Monthly Details (`月度详情`)
             HStack {
-                Text("Monthly Details".tr(appSettings.resolvedLanguage))
+                Text(L10n.monthlyDetails.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(DS.onSurfaceVariant)
                     .padding(.horizontal, 8)
