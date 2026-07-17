@@ -74,7 +74,7 @@ struct PaywallView: View {
                 title: productTitle(for: monthlyProduct, defaultTitle: "Monthly Card"),
                 price: monthlyProduct?.displayPrice ?? "",
                 originalPrice: "",
-                subtitle: productSubtitle(for: monthlyProduct, defaultSubtitle: "按月扣费"),
+                subtitle: productSubtitle(for: monthlyProduct, defaultSubtitle: L10n.monthlyDeduction.tr(appSettings.resolvedLanguage)),
                 tag: nil
             )
             .onTapGesture { withAnimation { selectedTier = 0 } }
@@ -84,7 +84,7 @@ struct PaywallView: View {
                 title: productTitle(for: yearlyProduct, defaultTitle: "Yearly Card"),
                 price: yearlyProduct?.displayPrice ?? "",
                 originalPrice: "",
-                subtitle: productSubtitle(for: yearlyProduct, defaultSubtitle: "按年扣费"),
+                subtitle: productSubtitle(for: yearlyProduct, defaultSubtitle: L10n.annualDeduction.tr(appSettings.resolvedLanguage)),
                 tag: L10n.popular.tr(appSettings.resolvedLanguage)
             )
             .onTapGesture { withAnimation { selectedTier = 1 } }
@@ -94,7 +94,7 @@ struct PaywallView: View {
                 title: productTitle(for: lifetimeProduct, defaultTitle: "Lifetime Card"),
                 price: lifetimeProduct?.displayPrice ?? "",
                 originalPrice: "",
-                subtitle: productSubtitle(for: lifetimeProduct, defaultSubtitle: "一次性付费"),
+                subtitle: productSubtitle(for: lifetimeProduct, defaultSubtitle: L10n.oneTimePayment2.tr(appSettings.resolvedLanguage)),
                 tag: L10n.bestValue.tr(appSettings.resolvedLanguage)
             )
             .onTapGesture { withAnimation { selectedTier = 2 } }

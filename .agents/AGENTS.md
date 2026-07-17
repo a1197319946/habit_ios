@@ -14,3 +14,7 @@ When the user says '提交 git' (submit git), ALWAYS run 'git push' to push the 
 <RULE>
 每次进行多语言翻译、增加多语言翻译映射（修改 Constants.swift）时，必须先检查该中文字段或对应的英文 Key 是否已经存在，避免造成重复定义。
 </RULE>
+
+<RULE>
+除非用户明确下达“提交 git”或“commit”的指令，否则严禁在未经允许的情况下私自执行 git commit 操作。
+</RULE>
