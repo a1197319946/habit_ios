@@ -627,6 +627,12 @@ struct WeeklySlider: View {
     }
     
     private func shortDayString(for date: Date) -> String {
+        let lang = appSettings.resolvedLanguage
+        if lang == .chinese || lang == .traditionalChinese {
+            let wd = calendar.component(.weekday, from: date)
+            let zhWeekdays = ["日", "一", "二", "三", "四", "五", "六"]
+            return zhWeekdays[wd - 1]
+        }
         let df = DateFormatter()
         df.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
         df.dateFormat = "EEE"

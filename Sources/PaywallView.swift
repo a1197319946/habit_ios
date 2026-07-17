@@ -403,7 +403,7 @@ struct PaywallView: View {
             }
         } else {
             isProcessing = false
-            storeErrorMessage = "无法从 App Store 获取产品价格与配置，无法发起购买。请检查：1.网络连接 2.苹果后台产品状态(不能是需要开发者操作) 3.确保已签署《付费应用程序协议》。".tr(appSettings.resolvedLanguage)
+            storeErrorMessage = L10n.unableToFetchProductPricingAndConfig.tr(appSettings.resolvedLanguage)
             showStoreErrorAlert = true
         }
     }

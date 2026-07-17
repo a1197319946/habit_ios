@@ -388,7 +388,7 @@ struct HabitStatsDetailView: View {
                     .frame(height: 160)
                 }
             } else {
-                Text("No Data".tr(appSettings.resolvedLanguage))
+                Text(L10n.noData.tr(appSettings.resolvedLanguage))
                     .font(.system(size: 13))
                     .foregroundColor(DS.onSurfaceVariant)
                     .frame(maxWidth: .infinity, alignment: .center)

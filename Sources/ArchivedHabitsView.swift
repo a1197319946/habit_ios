@@ -53,10 +53,10 @@ struct ArchivedHabitCard: View {
         if habit.goalType == "amount" {
             let formattedVal = habit.amountValue.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", habit.amountValue) : String(format: "%.1f", habit.amountValue)
             let unitStr = habit.amountUnit.tr(lang)
-            return "\("目标: ".tr(lang))\(formattedVal) \(unitStr) / \(freqStr)"
+            return "\(L10n.target.tr(lang))\(formattedVal) \(unitStr) / \(freqStr)"
         } else {
             let targetVal = habit.frequencyType == "weekly" ? habit.weeklyTarget : habit.monthlyTarget
-            return "\("目标: ".tr(lang))\(targetVal) \(L10n.times1.tr(lang)) / \(freqStr)"
+            return "\(L10n.target.tr(lang))\(targetVal) \(L10n.times1.tr(lang)) / \(freqStr)"
         }
     }
     

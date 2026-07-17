@@ -212,6 +212,8 @@ struct StatisticsView: View {
                                 VStack(spacing: 6) {
                                     Text(tab.tr(appSettings.resolvedLanguage))
                                         .font(.system(size: 18, weight: selectedTab == tab ? .bold : .medium))
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.5)
                                         .foregroundColor(selectedTab == tab ? DS.onSurface : DS.onSurfaceVariant)
                                     
                                     if selectedTab == tab {
@@ -226,7 +228,6 @@ struct StatisticsView: View {
                                     }
                                 }
                                 .padding(.vertical, 8)
-                                .fixedSize(horizontal: true, vertical: false)
                             }
                         }
                         Spacer()
@@ -517,7 +518,7 @@ struct MonthGridCard: View {
     }
     
     private var weekdaysShort: [String] {
-        let isChinese = appSettings.resolvedLanguage == .chinese
+        let isChinese = appSettings.resolvedLanguage == .chinese || appSettings.resolvedLanguage == .traditionalChinese
         let sunFirst = appSettings.firstWeekday == 1
         if isChinese {
             return sunFirst ? ["日", "一", "二", "三", "四", "五", "六"] : ["一", "二", "三", "四", "五", "六", "日"]
@@ -576,7 +577,7 @@ struct MonthGridCard: View {
                 tf.dateFormat = "HH:mm"
                 return tf.string(from: c.timestamp)
             } else {
-                return "已打卡".tr(appSettings.resolvedLanguage)
+                return L10n.checkedIn.tr(appSettings.resolvedLanguage)
             }
         }()
         

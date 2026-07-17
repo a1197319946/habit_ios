@@ -11,3 +11,6 @@ When the user says '提交 git' (submit git), ALWAYS run 'git push' to push the 
 <RULE>
 后续所有的实现方案（Implementation Plan）都必须使用中文输出。
 </RULE>
+<RULE>
+每次进行多语言翻译、增加多语言翻译映射（修改 Constants.swift）时，必须先检查该中文字段或对应的英文 Key 是否已经存在，避免造成重复定义。
+</RULE>

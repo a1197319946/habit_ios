@@ -312,7 +312,7 @@ struct MainTabView_iOS18: View {
     
     var body: some View {
         TabView(selection: proxySelection) {
-            TabSection("Main".tr(appSettings.resolvedLanguage)) {
+            TabSection(L10n.mainTab.tr(appSettings.resolvedLanguage)) {
                 Tab(AppTab.home.title.tr(appSettings.resolvedLanguage), systemImage: AppTab.home.iconName, value: AppTab.home) {
                     TabNavStack { HomeView(selectedTab: proxySelection) }
                 }

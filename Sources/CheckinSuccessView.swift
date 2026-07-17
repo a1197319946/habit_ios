@@ -15,8 +15,8 @@ struct CheckinSuccessView: View {
     
     private var isAmount: Bool { habit.goalType == "amount" }
     private var unit: String { isAmount ? (habit.amountUnit ?? "次").tr(appSettings.resolvedLanguage) : L10n.times1.tr(appSettings.resolvedLanguage) }
-    private var label: String { (habit.frequencyType == "weekly" ? "本周" : "本月").tr(appSettings.resolvedLanguage) }
-    private var targetLabel: String { (habit.frequencyType == "weekly" ? "周目标" : "月目标").tr(appSettings.resolvedLanguage) }
+    private var label: String { (habit.frequencyType == "weekly" ? L10n.thisWeek : L10n.thisMonth).tr(appSettings.resolvedLanguage) }
+    private var targetLabel: String { (habit.frequencyType == "weekly" ? L10n.weeklyGoals : L10n.monthlyTarget2).tr(appSettings.resolvedLanguage) }
     
     private var target: Double {
         if isAmount { return habit.amountValue }
