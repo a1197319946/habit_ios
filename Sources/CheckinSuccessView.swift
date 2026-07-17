@@ -448,8 +448,8 @@ struct PosterView: View {
     
     private func monthName() -> String {
         let f = DateFormatter()
-        f.locale = appSettings.locale ?? Locale.current
-        f.dateFormat = appSettings.resolvedLanguage == .chinese ? "yyyy年M月" : "MMM yyyy"
+        f.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
+        f.setLocalizedDateFormatFromTemplate("yyyyMMM")
         return f.string(from: date).uppercased()
     }
     

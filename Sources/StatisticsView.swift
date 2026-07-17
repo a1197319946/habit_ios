@@ -48,27 +48,17 @@ struct StatisticsView: View {
     
     private var dateRangeString: String {
         let df = DateFormatter()
-        if appSettings.resolvedLanguage == .chinese {
-            df.locale = Locale(identifier: "zh_CN")
-            df.dateFormat = "M月d日"
-        } else {
-            df.locale = Locale(identifier: "en_US")
-            df.dateFormat = "MMM d"
-        }
-        let start = df.string(from: weekInterval.start)
-        let end = df.string(from: weekInterval.end.addingTimeInterval(-1))
+        df.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
+        df.setLocalizedDateFormatFromTemplate("MMMd")
+        let start = df.string(from: weekDays.first ?? Date())
+        let end = df.string(from: weekDays.last ?? Date())
         return "\(start) - \(end)"
     }
     
     private var monthYearString: String {
         let df = DateFormatter()
-        if appSettings.resolvedLanguage == .chinese {
-            df.locale = Locale(identifier: "zh_CN")
-            df.dateFormat = "yyyy年M月"
-        } else {
-            df.locale = Locale(identifier: "en_US")
-            df.dateFormat = "MMMM yyyy"
-        }
+        df.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
+        df.setLocalizedDateFormatFromTemplate("yMMMM")
         return df.string(from: currentMonthDate)
     }
     
@@ -168,11 +158,7 @@ struct StatisticsView: View {
     
     private func getNarrowDayString(for date: Date) -> String {
         let df = DateFormatter()
-        if appSettings.resolvedLanguage == .chinese {
-            df.locale = Locale(identifier: "zh_CN")
-        } else {
-            df.locale = Locale(identifier: "en_US")
-        }
+        df.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
         df.dateFormat = "EEEEE"
         return df.string(from: date)
     }
@@ -509,13 +495,8 @@ struct MonthGridCard: View {
     
     private var monthYearString: String {
         let df = DateFormatter()
-        if appSettings.resolvedLanguage == .chinese {
-            df.locale = Locale(identifier: "zh_CN")
-            df.dateFormat = "yyyy年M月"
-        } else {
-            df.locale = Locale(identifier: "en_US")
-            df.dateFormat = "MMMM yyyy"
-        }
+        df.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
+        df.setLocalizedDateFormatFromTemplate("yMMMM")
         return df.string(from: currentMonthDate)
     }
     
@@ -727,16 +708,15 @@ struct MonthGridCard: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Divider()
                     let selectedDateText: String = {
-                        if appSettings.resolvedLanguage == .chinese {
-                            return "\(monthYearString)\(day)日"
-                        } else {
+                        var comps = appSettings.customCalendar.dateComponents([.year, .month], from: currentMonthDate)
+                        comps.day = day
+                        if let d = appSettings.customCalendar.date(from: comps) {
                             let df = DateFormatter()
-                            df.locale = Locale(identifier: "en_US")
-                            df.dateFormat = "MMMM"
-                            let mName = df.string(from: currentMonthDate)
-                            let yComp = calendar.component(.year, from: currentMonthDate)
-                            return "\(mName) \(day), \(yComp)"
+                            df.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
+                            df.setLocalizedDateFormatFromTemplate("yyyyMMMMd")
+                            return df.string(from: d)
                         }
+                        return ""
                     }()
                     
                     Text(selectedDateText)

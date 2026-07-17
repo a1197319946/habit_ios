@@ -24,13 +24,8 @@ struct HabitMonthDetailView: View {
     private var calendar: Calendar { appSettings.customCalendar }
     private var monthYearString: String {
         let df = DateFormatter()
-        if appSettings.resolvedLanguage == .chinese {
-            df.locale = Locale(identifier: "zh_CN")
-            df.dateFormat = appSettings.resolvedLanguage == .chinese ? "yyyy年M月" : "MMM yyyy"
-        } else {
-            df.locale = Locale(identifier: "en_US")
-            df.dateFormat = "MMMM yyyy"
-        }
+        df.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
+        df.setLocalizedDateFormatFromTemplate("yyyyMMMM")
         return df.string(from: currentMonthDate)
     }
     
@@ -328,13 +323,8 @@ struct HabitMonthDetailView: View {
     
     private func formattedDisplayDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        if appSettings.resolvedLanguage == .chinese {
-            formatter.locale = Locale(identifier: "zh_CN")
-            formatter.dateFormat = "MM月dd日 HH:mm"
-        } else {
-            formatter.locale = Locale(identifier: "en_US")
-            formatter.dateFormat = "MMM dd, HH:mm"
-        }
+        formatter.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
+        formatter.setLocalizedDateFormatFromTemplate("MMddHHmm")
         return formatter.string(from: date)
     }
 }

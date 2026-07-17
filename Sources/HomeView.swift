@@ -35,18 +35,10 @@ struct HomeView: View {
     
     private var greetingString: String {
         let hour = appSettings.customCalendar.component(.hour, from: Date())
-        if appSettings.resolvedLanguage == .chinese {
-            switch hour {
-            case 5..<12: return "早上好"
-            case 12..<18: return "下午好"
-            default: return "晚上好"
-            }
-        } else {
-            switch hour {
-            case 5..<12: return "Good Morning"
-            case 12..<18: return "Good Afternoon"
-            default: return "Good Evening"
-            }
+        switch hour {
+        case 5..<12: return L10n.goodMorning.tr(appSettings.resolvedLanguage)
+        case 12..<18: return L10n.goodAfternoon.tr(appSettings.resolvedLanguage)
+        default: return L10n.goodEvening.tr(appSettings.resolvedLanguage)
         }
     }
     
@@ -302,13 +294,8 @@ struct HomeView: View {
     
     private func monthString(for date: Date) -> String {
         let formatter = DateFormatter()
-        if appSettings.resolvedLanguage == .chinese {
-            formatter.locale = Locale(identifier: "zh_CN")
-            formatter.dateFormat = "yyyy年 M月"
-        } else {
-            formatter.locale = Locale(identifier: "en_US")
-            formatter.dateFormat = "MMMM yyyy"
-        }
+        formatter.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
+        formatter.setLocalizedDateFormatFromTemplate("yyyyMMMM")
         return formatter.string(from: date)
     }
     
@@ -641,6 +628,7 @@ struct WeeklySlider: View {
     
     private func shortDayString(for date: Date) -> String {
         let df = DateFormatter()
+        df.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
         df.dateFormat = "EEE"
         return String(df.string(from: date).prefix(3))
     }

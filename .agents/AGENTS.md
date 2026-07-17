@@ -7,3 +7,7 @@ When the user says '提交 git' (submit git), ALWAYS run 'git push' to push the 
 2. 需要在 `String.translations` 字典中添加对应的中英文翻译映射。
 3. 在代码中调用时，统一使用 `L10n.常量名.tr(语言)` 或 `L10n.常量名.wTr()`（仅限小组件）来进行多语言解析，严禁在代码中写死中文原生字符串调用翻译方法。
 </RULE>
+
+<RULE>
+后续所有的实现方案（Implementation Plan）都必须使用中文输出。
+</RULE>

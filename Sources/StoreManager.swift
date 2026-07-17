@@ -159,13 +159,8 @@ class StoreManager: ObservableObject {
         
         if let date = targetDate {
             let formatter = DateFormatter()
-            if language == .chinese {
-                formatter.dateFormat = "yyyy年MM月dd日"
-            } else {
-                formatter.dateStyle = .medium
-                formatter.timeStyle = .none
-                formatter.locale = Locale(identifier: "en_US")
-            }
+            formatter.locale = Locale(identifier: language.localeIdentifier)
+            formatter.setLocalizedDateFormatFromTemplate("yyyyMMdd")
             let dateStr = formatter.string(from: date)
             return L10n.validUntil.tr(language) + dateStr
         }

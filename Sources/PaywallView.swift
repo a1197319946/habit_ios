@@ -43,34 +43,27 @@ struct PaywallView: View {
         }
         let value = period.value
         
-        if appSettings.resolvedLanguage == .chinese {
-            let unit: String
-            switch period.unit {
-            case .day: unit = "天"
-            case .week: unit = "周"
-            case .month: unit = value == 1 ? "月" : "个月"
-            case .year: unit = "年"
-            @unknown default: unit = ""
-            }
-            if value == 1 {
-                return "/\(unit)"
-            } else {
-                return "/\(value)\(unit)"
-            }
+        let dcf = DateComponentsFormatter()
+        dcf.unitsStyle = .full
+        var cal = Calendar.current
+        cal.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
+        dcf.calendar = cal
+        
+        var dc = DateComponents()
+        switch period.unit {
+        case .day: dc.day = value
+        case .week: dc.weekOfMonth = value
+        case .month: dc.month = value
+        case .year: dc.year = value
+        @unknown default: return ""
+        }
+        
+        guard let formatted = dcf.string(from: dc) else { return "" }
+        if value == 1 {
+            let str = formatted.replacingOccurrences(of: "1 ", with: "").replacingOccurrences(of: "1", with: "")
+            return "/\(str)"
         } else {
-            let unit: String
-            switch period.unit {
-            case .day: unit = "day"
-            case .week: unit = "week"
-            case .month: unit = "month"
-            case .year: unit = "year"
-            @unknown default: unit = ""
-            }
-            if value == 1 {
-                return "/\(unit)"
-            } else {
-                return "/\(value) \(unit)s"
-            }
+            return "/\(formatted)"
         }
     }
     

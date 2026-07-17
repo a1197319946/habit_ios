@@ -347,7 +347,7 @@ struct HabitDetailView: View {
                                     Spacer()
                                     DatePicker("", selection: $reminderTime, displayedComponents: .hourAndMinute)
                                         .labelsHidden()
-                                        .environment(\.locale, Locale(identifier: appSettings.resolvedLanguage == .chinese ? "zh_CN" : "en_GB"))
+                                        .environment(\.locale, Locale(identifier: appSettings.resolvedLanguage.localeIdentifier))
                                 }
                                 
                                 VStack(alignment: .leading, spacing: 6) {

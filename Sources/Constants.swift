@@ -58,18 +58,60 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     case system = "system"
     case english = "en"
     case chinese = "zh"
+    case traditionalChinese = "zh-Hant"
+    case japanese = "ja"
+    case korean = "ko"
+    case spanish = "es"
+    case german = "de"
+    case russian = "ru"
+    case italian = "it"
+    
     var id: String { self.rawValue }
     
     var displayName: String {
         switch self {
-        case .system: return L10n.system.tr(.system) // Assuming system uses English fallback or similar. It's tricky to pass language here, wait!
+        case .system: return L10n.system.tr(.system)
         case .english: return "English"
-        case .chinese: return "中文"
+        case .chinese: return "简体中文"
+        case .traditionalChinese: return "繁體中文"
+        case .japanese: return "日本語"
+        case .korean: return "한국어"
+        case .spanish: return "Español"
+        case .german: return "Deutsch"
+        case .russian: return "Русский"
+        case .italian: return "Italiano"
+        }
+    }
+    
+    var localeIdentifier: String {
+        switch self {
+        case .system:
+            return Locale.current.identifier
+        case .english:
+            return "en_US"
+        case .chinese:
+            return "zh_CN"
+        case .traditionalChinese:
+            return "zh_Hant"
+        case .japanese:
+            return "ja_JP"
+        case .korean:
+            return "ko_KR"
+        case .spanish:
+            return "es_ES"
+        case .german:
+            return "de_DE"
+        case .russian:
+            return "ru_RU"
+        case .italian:
+            return "it_IT"
         }
     }
 }
 
 enum L10n {
+    static let csvHeaders = "csvHeaders"
+    static let noRecords = "noRecords"
     static let smallStepsBigChanges = "\"Small steps, big changes.\""
     static let home = "Home"
     static let habits = "Habits"
@@ -79,6 +121,8 @@ enum L10n {
     static let youHave = "You have "
     static let habits1 = " habits."
     static let goodMorning = "Good Morning."
+    static let goodAfternoon = "Good Afternoon."
+    static let goodEvening = "Good Evening."
     static let hereIsYourFocusForToday = "Here is your focus for today."
     static let daily = "Daily"
     static let progress = "Progress"
@@ -406,454 +450,487 @@ enum L10n {
 }
 
 extension String {
-    static let translations: [String: [AppLanguage: String]] = [
-        L10n.smallStepsBigChanges: [.chinese: "\"不积跬步，无以至千里。\"", .english: "\"Small steps, big changes.\""],
-        L10n.home: [.chinese: "首页", .english: "Home"],
-        L10n.habits: [.chinese: "习惯", .english: "Habits"],
-        L10n.stats: [.chinese: "统计", .english: "Stats"],
-        L10n.profile: [.chinese: "我的", .english: "Profile"],
-        L10n.manageHabits: [.chinese: "管理习惯", .english: "Manage Habits"],
-        L10n.youHave: [.chinese: "你当前有 ", .english: "You have "],
-        L10n.habits1: [.chinese: " 个习惯。", .english: " habits."],
-        L10n.goodMorning: [.chinese: "早上好。", .english: "Good Morning."],
-        L10n.hereIsYourFocusForToday: [.chinese: "这是你今天的目标。", .english: "Here is your focus for today."],
-        L10n.daily: [.chinese: "每天", .english: "Daily"],
-        L10n.progress: [.chinese: "进度", .english: "Progress"],
-        L10n.goal: [.chinese: "目标", .english: "Goal"],
-        L10n.whatDoYouWantToBuild: [.chinese: "你想养成什么习惯？", .english: "What do you want to build?"],
-        L10n.eGRead10PagesDrinkWater: [.chinese: "例如：阅读10页、喝水...", .english: "e.g. Read 10 pages, Drink water..."],
-        L10n.themeColor: [.chinese: "主题颜色", .english: "Theme Color"],
-        "Pick a Theme Color": [.chinese: "主题颜色", .english: "Theme Color"],
-        L10n.chooseAnIcon: [.chinese: "选择一个图标", .english: "Choose an Icon"],
-        L10n.goalType: [.chinese: "目标类型", .english: "Goal Type"],
-        L10n.frequency: [.chinese: "频率", .english: "Frequency"],
-        L10n.totalAmount: [.chinese: "总计数量", .english: "Total Amount"],
-        L10n.targetPerWeek: [.chinese: "目标 (每周)", .english: "Target (per week)"],
-        L10n.targetAmountPerWeek: [.chinese: "目标数量 (每周)", .english: "Target Amount (per week)"],
-        L10n.times: [.chinese: "次", .english: "Times"],
-        L10n.createHabit: [.chinese: "创建习惯", .english: "Create Habit"],
-        L10n.saveChanges: [.chinese: "保存修改", .english: "Save Changes"],
-        L10n.creating: [.chinese: "保存中...", .english: "Creating..."],
-        L10n.perWeek: [.chinese: "按周", .english: "Per Week"],
-        L10n.perMonth: [.chinese: "按月", .english: "Per Month"],
-        L10n.weeklyTarget: [.chinese: "每周目标次数", .english: "Weekly Target"],
-        L10n.monthlyTarget: [.chinese: "每月目标次数", .english: "Monthly Target"],
-        L10n.weeklyTargetAmount: [.chinese: "每周目标总量", .english: "Weekly Target Amount"],
-        L10n.monthlyTargetAmount: [.chinese: "每月目标总量", .english: "Monthly Target Amount"],
-        L10n.language: [.chinese: "多语言 / Language", .english: "Language / 多语言"],
-        "Language": [.chinese: "多语言 / Language", .english: "Language / 多语言"],
-        L10n.shareWithFriends: [.chinese: "分享给朋友", .english: "Share with Friends"],
-        L10n.moodHistory: [.chinese: "心情日记", .english: "Mood History"],
-        L10n.feedback: [.chinese: "意见反馈", .english: "Feedback"],
-        L10n.about: [.chinese: "关于", .english: "About"],
-        L10n.contactSupport: [.chinese: "联系客服", .english: "Contact Support"],
-        L10n.tapToSetName: [.chinese: "点击设置昵称", .english: "Tap to set name"],
-        L10n.exploringMindfulnessAndBuildingBetterHabitsOneDayAtATime: [.chinese: "每天进步一点点。", .english: "Exploring mindfulness and building better habits, one day at a time."],
-        L10n.noHabitsYet: [.chinese: "没有习惯", .english: "No habits yet"],
-        L10n.clickTheButtonToAddYourFirstHabit: [.chinese: "点击进入习惯管理页添加你的第一个习惯吧", .english: "Click the + button to add your first habit"],
-        L10n.pending: [.chinese: "未完成", .english: "Pending"],
-        L10n.completed: [.chinese: "已完成", .english: "Completed"],
-        L10n.noMomentsRecordedYet: [.chinese: "暂无心情记录。", .english: "No moments recorded yet."],
-        L10n.yourJourney: [.chinese: "你的旅程", .english: "Your Journey"],
-        L10n.aReflectiveLookBackAtYourMoodsAndMoments: [.chinese: "回顾你的心情与点滴时刻。", .english: "A reflective look back at your moods and moments."],
-        L10n.checkIn: [.chinese: "记录", .english: "Check in"],
-        L10n.edit: [.chinese: "修改", .english: "Edit"],
-        L10n.checkIn1: [.chinese: "完成打卡", .english: "Check In"],
-        L10n.targetAchieved: [.chinese: "目标已达成！", .english: "Target Achieved!"],
-        L10n.newHabit: [.chinese: "新增习惯", .english: "New Habit"],
-        L10n.editHabit: [.chinese: "编辑习惯", .english: "Edit Habit"],
-        L10n.recordMood: [.chinese: "记录心情", .english: "Record Mood"],
-        "记录心情": [.chinese: "记录心情", .english: "Record Mood"],
-        L10n.currentMood: [.chinese: "当前心情", .english: "Current Mood"],
-        "当前心情": [.chinese: "当前心情", .english: "Current Mood"],
-        L10n.thoughtsOptional: [.chinese: "想法 (选填)", .english: "Thoughts (Optional)"],
-        "想法 (选填)": [.chinese: "想法 (选填)", .english: "Thoughts (Optional)"],
-        L10n.writeDownYourThoughts: [.chinese: "写下这一刻的想法...", .english: "Write down your thoughts..."],
-        "写下这一刻的想法...": [.chinese: "写下这一刻的想法...", .english: "Write down your thoughts..."],
-        L10n.imageOptional: [.chinese: "图片 (选填)", .english: "Image (Optional)"],
-        "图片 (选填)": [.chinese: "图片 (选填)", .english: "Image (Optional)"],
-        L10n.addImage: [.chinese: "添加图片", .english: "Add Image"],
-        "添加图片": [.chinese: "添加图片", .english: "Add Image"],
-        L10n.save: [.chinese: "记录", .english: "Save"],
-        "记录": [.chinese: "记录", .english: "Save"],
-        L10n.excited: [.chinese: "激动", .english: "Excited"],
-        "激动": [.chinese: "激动", .english: "Excited"],
-        "excited": [.chinese: "激动", .english: "Excited"],
-        L10n.happy: [.chinese: "开心", .english: "Happy"],
-        "开心": [.chinese: "开心", .english: "Happy"],
-        "happy": [.chinese: "开心", .english: "Happy"],
-        L10n.normal: [.chinese: "一般", .english: "Normal"],
-        "一般": [.chinese: "一般", .english: "Normal"],
-        L10n.down: [.chinese: "失落", .english: "Down"],
-        "失落": [.chinese: "失落", .english: "Down"],
-        L10n.angry: [.chinese: "愤怒", .english: "Angry"],
-        "愤怒": [.chinese: "愤怒", .english: "Angry"],
-        L10n.redeemOfferCode: [.chinese: "使用兑换码兑换会员", .english: "Redeem Offer Code"],
-        "兑换码 / Redeem Code": [.chinese: "使用兑换码兑换会员", .english: "Redeem Offer Code"],
-        L10n.trackYourDailyProgress: [.chinese: "记录你的每日进步", .english: "Track your daily progress"],
-        L10n.generateSharingImage: [.chinese: "生成分享图", .english: "Generate Sharing Image"],
-        L10n.km: [.chinese: "公里", .english: "km"],
-        "公里": [.chinese: "公里", .english: "km"],
-        L10n.m: [.chinese: "米", .english: "m"],
-        "米": [.chinese: "米", .english: "m"],
-        L10n.mins: [.chinese: "分钟", .english: "mins"],
-        "分钟": [.chinese: "分钟", .english: "mins"],
-        L10n.hours: [.chinese: "小时", .english: "hours"],
-        "小时": [.chinese: "小时", .english: "hours"],
-        L10n.times1: [.chinese: "次", .english: "times"],
-        "次": [.chinese: "次", .english: "times"],
-        L10n.pages: [.chinese: "页", .english: "pages"],
-        "页": [.chinese: "页", .english: "pages"],
-        L10n.days: [.chinese: "天", .english: "days"],
-        "天": [.chinese: "天", .english: "days"],
-        L10n.week: [.chinese: "周", .english: "week"],
-        L10n.thisWeek: [.chinese: "本周", .english: "This Week"],
-        L10n.thisMonth: [.chinese: "本月", .english: "This Month"],
-        "周目标": [.chinese: "周目标", .english: "Weekly Target"],
-        "月目标": [.chinese: "月目标", .english: "Monthly Target"],
-        L10n.month: [.chinese: "月", .english: "month"],
-        L10n.appLocked: [.chinese: "应用已锁定", .english: "App Locked"],
-        L10n.unlock: [.chinese: "解锁", .english: "Unlock"],
-        L10n.unlockTickday: [.chinese: "解锁 TickDay", .english: "Unlock TickDay"],
-        "Unlock Little Habit": [.chinese: "解锁 TickDay", .english: "Unlock TickDay"],
-        L10n.restore: [.chinese: "恢复购买", .english: "Restore"],
-        "Restore Purchase": [.chinese: "恢复购买", .english: "Restore"],
-        L10n.monthlyCard: [.chinese: "月度卡", .english: "Monthly Card"],
-        L10n.yearlyCard: [.chinese: "年度卡", .english: "Yearly Card"],
-        L10n.lifetimeCard: [.chinese: "终身卡", .english: "Lifetime Card"],
-        L10n.startFreeTrial: [.chinese: "开始免费试用", .english: "Start Free Trial"],
-        L10n.purchaseNow: [.chinese: "立即购买", .english: "Purchase Now"],
-        L10n.waitASpecialOffer: [.chinese: "等一下，送您一份专属优惠！", .english: "Wait, a special offer!"],
-        L10n.claimYearlyDiscount: [.chinese: "领取年度卡折扣", .english: "Claim Yearly Discount"],
-        L10n.noThanks: [.chinese: "残忍拒绝", .english: "No, thanks"],
-        L10n.cancelAnytimeDuringTrial: [.chinese: "试用期间随时取消", .english: "Cancel anytime during trial"],
-        L10n.adFreeExperience: [.chinese: "纯净无广告", .english: "Ad-Free Experience"],
-        L10n.reduceTheResistanceToYourDailyHabits: [.chinese: "降低坚持的阻力", .english: "Reduce the resistance to your daily habits."],
-        L10n.enterData: [.chinese: "录入打卡数据", .english: "Enter Data"],
-        L10n.editData: [.chinese: "修改打卡数据", .english: "Edit Data"],
-        L10n.periodTarget: [.chinese: "本周期目标: ", .english: "Period Target: "],
-        L10n.periodTotal: [.chinese: "本周期已累计: ", .english: "Period Total: "],
-        L10n.amountCompleted: [.chinese: "本次完成量", .english: "Amount Completed"],
-        L10n.undoCheckIn: [.chinese: "撤销打卡", .english: "Undo Check-in"],
-        L10n.editAmount: [.chinese: "修改数值", .english: "Edit Amount"],
-        L10n.total: [.chinese: "累计", .english: " Total"],
-        L10n.achieved: [.chinese: "已达成！", .english: " Achieved!"],
-        L10n.options: [.chinese: "操作", .english: "Options"],
-        "Cancel Check-in?": [.chinese: "操作", .english: "Options"],
-        L10n.checkInSuccessful: [.chinese: "打卡成功", .english: "Check-in Successful"],
-        L10n.hideArchived: [.chinese: "隐藏归档", .english: "Hide Archived"],
-        L10n.statisticsOverview: [.chinese: "统计概览", .english: "Statistics Overview"],
-        "统计概览": [.chinese: "统计概览", .english: "Statistics Overview"],
-        L10n.firstMonthFree: [.chinese: "首月免费", .english: "First Month Free"],
-        "首月免费": [.chinese: "首月免费", .english: "First Month Free"],
-        L10n.habitName: [.chinese: "习惯名称", .english: "Habit Name"],
-        "习惯名称": [.chinese: "习惯名称", .english: "Habit Name"],
-        L10n.colorAndIcon: [.chinese: "颜色和图标", .english: "Color and Icon"],
-        "颜色和图标": [.chinese: "颜色和图标", .english: "Color and Icon"],
-        L10n.color: [.chinese: "颜色", .english: "Color"],
-        "颜色": [.chinese: "颜色", .english: "Color"],
-        L10n.icon: [.chinese: "图标", .english: "Icon"],
-        "图标": [.chinese: "图标", .english: "Icon"],
-        "选择图标": [.chinese: "选择图标", .english: "Choose an Icon"],
-        L10n.goalRules: [.chinese: "目标规则", .english: "Goal Rules"],
-        "目标规则": [.chinese: "目标规则", .english: "Goal Rules"],
-        L10n.times2: [.chinese: "次", .english: " Times"],
-        L10n.month1: [.chinese: "月", .english: " Month"],
-        L10n.year: [.chinese: " 年", .english: " Year"],
-        L10n.target: [.chinese: "目标: ", .english: "Target: "],
-        L10n.timesWeek: [.chinese: "次/周", .english: " Times/Week"],
-        L10n.statistics: [.chinese: "统计数据", .english: "Statistics"],
-        L10n.yearlyCalendar: [.chinese: "年度日历", .english: "Yearly Calendar"],
-        L10n.dataIrrecoverableAfterDeletion: [.chinese: "删除后所有相关打卡数据将无法恢复。", .english: "Data irrecoverable after deletion."],
-        L10n.checkInDays: [.chinese: "打卡天数", .english: "Check-in Days"],
-        "打卡天数": [.chinese: "打卡天数", .english: "Check-in Days"],
-        L10n.checkInAmount: [.chinese: "打卡数量", .english: "Check-in Amount"],
-        L10n.checkInRecords: [.chinese: "打卡记录", .english: "Check-in Records"],
-        L10n.noCheckInRecords: [.chinese: "暂无打卡记录", .english: "No check-in records"],
-        L10n.noCheckInsOnThisDay: [.chinese: "当日无打卡记录", .english: "No check-ins on this day"],
-        L10n.noData: [.chinese: "暂无数据", .english: "No data"],
-        L10n.noDataForThisWeek: [.chinese: "本周暂无数据", .english: "No data for this week."],
-        L10n.beautifulChangesBeginToday: [.chinese: "美好的改变，从今天开始", .english: "Beautiful changes begin today"],
-        "美好的改变，从今天开始": [.chinese: "美好的改变，从今天开始", .english: "Beautiful changes begin today"],
-        L10n.letSCreateYourFirstHabit: [.chinese: "开启你的第一个小习惯吧", .english: "Let's create your first habit"],
-        "开启你的第一个小习惯吧": [.chinese: "开启你的第一个小习惯吧", .english: "Let's create your first habit"],
-        L10n.createFirstHabit: [.chinese: "创建第一个习惯", .english: "Create First Habit"],
-        "创建第一个习惯": [.chinese: "创建第一个习惯", .english: "Create First Habit"],
-        L10n.helpSupport: [.chinese: "帮助与反馈", .english: "Help & Support"],
-        L10n.habitDetails: [.chinese: "习惯详情", .english: "Habit Details"],
-        L10n.notificationPermissionRequired: [.chinese: "需要通知权限", .english: "Notification Permission Required"],
-        "需要通知权限": [.chinese: "需要通知权限", .english: "Notification Permission Required"],
-        L10n.youHaveDeniedNotificationPermissionsToReceiveCheckInRemindersPleaseEnableThemInSettings: [.chinese: "您已拒绝通知权限。如需打卡提醒，请前往设置中开启。", .english: "You have denied notification permissions. To receive check-in reminders, please enable them in Settings."],
-        "您已拒绝通知权限。如需打卡提醒，请前往设置中开启。": [.chinese: "您已拒绝通知权限。如需打卡提醒，请前往设置中开启。", .english: "You have denied notification permissions. To receive check-in reminders, please enable them in Settings."],
-        L10n.goToSettings: [.chinese: "去设置", .english: "Go to Settings"],
-        "去设置": [.chinese: "去设置", .english: "Go to Settings"],
-        L10n.features: [.chinese: "功能", .english: "Features"],
-        L10n.widgets: [.chinese: "小组件", .english: "Widgets"],
-        L10n.addToHomeScreen: [.chinese: "添加到主屏幕", .english: "Add to Home Screen"],
-        L10n.howToAddWidgets: [.chinese: "如何添加小组件", .english: "How to add Widgets"],
-        L10n.goToYourHomeScreen: [.chinese: "回到手机主屏幕", .english: "Go to your Home Screen."],
-        L10n.longPressAnyEmptySpaceUntilAppsJiggle: [.chinese: "长按主屏幕空白处，直到应用图标开始抖动", .english: "Long press any empty space until apps jiggle."],
-        L10n.tapTheButtonInTheTopLeftCorner: [.chinese: "点击左上角的“+”按钮", .english: "Tap the '+' button in the top left corner."],
-        L10n.searchForTickdayAndAddYourFavoriteWidget: [.chinese: "搜索“TickDay”，选择并添加你喜欢的小组件", .english: "Search for 'TickDay' and add your favorite widget."],
-        L10n.gotIt: [.chinese: "我知道了", .english: "Got it"],
-        L10n.frequencyGoal: [.chinese: "次数目标", .english: "Frequency Goal"],
-        "次数目标": [.chinese: "次数目标", .english: "Frequency Goal"],
-        L10n.amountGoal: [.chinese: "总量目标", .english: "Amount Goal"],
-        "总量目标": [.chinese: "总量目标", .english: "Amount Goal"],
-        "总数值": [.chinese: "总数值", .english: "Total Amount"],
-        L10n.monthlyTrend: [.chinese: "月度趋势", .english: "Monthly Trend"],
-        L10n.monthlyDetails: [.chinese: "月度详情", .english: "Monthly Details"],
-        L10n.checkInDaysTrend: [.chinese: "打卡次数趋势", .english: "Check-in Days Trend"],
-        L10n.totalAmountTrend: [.chinese: "打卡总量趋势", .english: "Total Amount Trend"],
-        L10n.totalDays: [.chinese: "累计打卡", .english: "Total Days"],
-        L10n.system: [.chinese: "系统", .english: "System"],
-        L10n.light: [.chinese: "浅色", .english: "Light"],
-        L10n.dark: [.chinese: "深色", .english: "Dark"],
-        L10n.appearance: [.chinese: "外观", .english: "Appearance"],
-        L10n.startOfWeek: [.chinese: "一周开始", .english: "Start of Week"],
-        L10n.monday: [.chinese: "周一", .english: "Monday"],
-        L10n.sunday: [.chinese: "周日", .english: "Sunday"],
-        L10n.cancel: [.chinese: "取消", .english: "Cancel"],
-        L10n.close: [.chinese: "关闭", .english: "Close"],
-        L10n.showCompleted: [.chinese: "显示已打卡", .english: "Show Completed"],
-        L10n.hideCompleted: [.chinese: "隐藏已打卡", .english: "Hide Completed"],
-        L10n.week1: [.chinese: "本周", .english: "Week"],
-        L10n.times3: [.chinese: "次", .english: " times"],
-        L10n.time: [.chinese: "次", .english: " time"],
-        L10n.generating: [.chinese: "生成中...", .english: "Generating..."],
-        L10n.today: [.chinese: "今日", .english: "Today"],
-        L10n.total1: [.chinese: "累计", .english: "Total"],
-        L10n.tickday: [.chinese: "TickDay", .english: "TickDay"],
-        "Little Habit Tracker": [.chinese: "TickDay", .english: "TickDay"],
-        L10n.today1: [.chinese: "今天，", .english: "Today,"],
-        L10n.yesterday: [.chinese: "昨天，", .english: "Yesterday,"],
-        "normal": [.chinese: "平静", .english: "Normal"],
-        "down": [.chinese: "低落", .english: "Down"],
-        "angry": [.chinese: "生气", .english: "Angry"],
-        L10n.reports: [.chinese: "报告", .english: "Reports"],
-        L10n.met: [.chinese: "达成率", .english: "Met"],
-        L10n.bestDay: [.chinese: "最佳单日", .english: "Best Day"],
-        L10n.longestStreak: [.chinese: "最长连续", .english: "Longest Streak"],
-        L10n.done: [.chinese: "打卡", .english: "Done"],
-        L10n.streak: [.chinese: "连续", .english: "Streak"],
-        L10n.weeklyGrid: [.chinese: "本周网格", .english: "Weekly Grid"],
-        L10n.yourProgress: [.chinese: "你的进度", .english: "Your Progress"],
-        L10n.aDetailedLookAtYourJourney: [.chinese: "详细回顾你的成长之旅。", .english: "A detailed look at your journey."],
-        L10n.month2: [.chinese: "本月", .english: "Month"],
-        L10n.year1: [.chinese: "本年", .english: "Year"],
-        L10n.weekly: [.chinese: "周", .english: "Weekly"],
-        L10n.monthly: [.chinese: "月", .english: "Monthly"],
-        L10n.yearly: [.chinese: "年", .english: "Yearly"],
-        L10n.all: [.chinese: "全部", .english: "All"],
-        L10n.weeklyView: [.chinese: "周视图", .english: "Weekly View"],
-        L10n.monthlyView: [.chinese: "月视图", .english: "Monthly View"],
-        L10n.yearlyView: [.chinese: "年视图", .english: "Yearly View"],
-        L10n.allView: [.chinese: "全部视图", .english: "All View"],
-        L10n.deleteHabit: [.chinese: "确认删除?", .english: "Delete Habit?"],
-        L10n.savedToAlbum: [.chinese: "已保存到相册", .english: "Saved to Album"],
-        L10n.ok: [.chinese: "好的", .english: "OK"],
-        L10n.tapInTopLeftSearchTickdayAndTapAddWidget: [.chinese: "点击左上角的“+”按钮，搜索“TickDay”，点击“添加小组件”按钮", .english: "Tap '+' in top left, search 'TickDay', and tap 'Add Widget'."],
-        L10n.chooseYourFavoriteWidgetSizeAndPlaceItOnYourHomeScreen: [.chinese: "选择合适的小组件样式并放置到主屏幕上", .english: "Choose your favorite widget size and place it on your Home Screen."],
-        L10n.basicInfo: [.chinese: "基本信息", .english: "Basic Info"],
-        L10n.habit: [.chinese: "习惯", .english: "Habit"],
-        L10n.noHabitsFound: [.chinese: "暂无习惯", .english: "No habits found."],
-        L10n.cumulativeStreak: [.chinese: "累计连续打卡", .english: "Cumulative Streak"],
-        L10n.top5: [.chinese: "前 5%", .english: "Top 5%"],
-        L10n.daysOfContinuousGrowth: [.chinese: "天连续成长", .english: "Days of continuous growth"],
-        L10n.consistencyMap: [.chinese: "连续性热力图", .english: "Consistency Map"],
-        L10n.less: [.chinese: "少", .english: "Less"],
-        L10n.more: [.chinese: "多", .english: "More"],
-        L10n.habitDistribution: [.chinese: "习惯分布", .english: "Habit Distribution"],
-        L10n.mind: [.chinese: "心灵", .english: "Mind"],
-        L10n.body: [.chinese: "身体", .english: "Body"],
-        L10n.soul: [.chinese: "灵魂", .english: "Soul"],
-        L10n.mon: [.chinese: "一", .english: "Mon"],
-        L10n.tue: [.chinese: "二", .english: "Tue"],
-        L10n.wed: [.chinese: "三", .english: "Wed"],
-        L10n.thu: [.chinese: "四", .english: "Thu"],
-        L10n.fri: [.chinese: "五", .english: "Fri"],
-        L10n.sat: [.chinese: "六", .english: "Sat"],
-        L10n.sun: [.chinese: "日", .english: "Sun"],
-        L10n.daysStreak: [.chinese: "天连续", .english: "Days Streak"],
-        L10n._30Days: [.chinese: "近30天", .english: "30 Days"],
-        L10n.delete: [.chinese: "删除", .english: "Delete"],
-        L10n.archive: [.chinese: "归档", .english: "Archive"],
-        L10n.settings: [.chinese: "设置", .english: "Settings"],
-        L10n.developerTestOnly: [.chinese: "开发者 (仅供测试)", .english: "Developer (Test Only)"],
-        L10n.mockPremiumStatus: [.chinese: "模拟高级版状态", .english: "Mock Premium Status"],
-        L10n.tickdayPremium: [.chinese: "TickDay 高级版", .english: "TickDay Premium"],
-        "Little Habit Premium": [.chinese: "TickDay 高级版", .english: "TickDay Premium"],
-        L10n.unlockYourFullPotential: [.chinese: "解锁所有特权与功能", .english: "Unlock your full potential"],
-        L10n.themeColors: [.chinese: "自定义主题", .english: "Theme Colors"],
-        L10n.personalizeYourAppWithCustomColors: [.chinese: "丰富的主题色彩个性化你的应用", .english: "Personalize your app with custom colors"],
-        L10n.darkMode: [.chinese: "深色模式", .english: "Dark Mode"],
-        L10n.reduceEyeStrainWithASleekDarkTheme: [.chinese: "时尚的深色主题，缓解眼睛疲劳", .english: "Reduce eye strain with a sleek dark theme"],
-        L10n.protectYourHabitsWithFaceIdTouchId: [.chinese: "使用 Face ID 或 Touch ID 保护你的隐私", .english: "Protect your habits with Face ID / Touch ID"],
-        L10n.unlimitedHabits: [.chinese: "无限习惯", .english: "Unlimited Habits"],
-        L10n.createAsManyHabitsAsYouWantFreeVersionMax5: [.chinese: "突破限制，创建任意数量的习惯（免费版最多5个）", .english: "Create as many habits as you want (Free version max 5)"],
-        "Create as many habits as you want": [.chinese: "突破限制，创建任意数量的习惯（免费版最多5个）", .english: "Create as many habits as you want (Free version max 5)"],
-        L10n.importExportData: [.chinese: "导入 / 导出数据", .english: "Import / Export Data"],
-        L10n.backupToExcelImportFromOtherApps: [.chinese: "备份到 Excel 文件，并支持导入其他 app 打卡记录", .english: "Backup to Excel & import from other apps"],
-        "Backup to Excel & Import": [.chinese: "备份到 Excel 文件，并支持导入其他 app 打卡记录", .english: "Backup to Excel & import from other apps"],
-        L10n.keepYourHabitsSyncedAcrossAllDevices: [.chinese: "让你的习惯在所有设备上保持同步", .english: "Keep your habits synced across all devices"],
-        L10n.billedMonthly: [.chinese: "按月扣款", .english: "Billed monthly"],
-        L10n.billedYearly: [.chinese: "按年扣款", .english: "Billed yearly"],
-        L10n.cancelAnytimeDuringTrialNoCharge: [.chinese: "试用期间可以随时取消，不扣费", .english: "Cancel anytime during trial, no charge"],
-        "试用期间可以随时取消，不扣费": [.chinese: "试用期间可以随时取消，不扣费", .english: "Cancel anytime during trial, no charge"],
-        L10n.popular: [.chinese: "最受欢迎", .english: "POPULAR"],
-        L10n.lifetime: [.chinese: "终身买断", .english: "Lifetime"],
-        L10n.limitedTimeOffer: [.chinese: "限时特惠", .english: "Limited Time Offer"],
-        L10n.oneTimePayment: [.chinese: "一次性买断", .english: "One-time payment"],
-        L10n.bestValue: [.chinese: "最超值", .english: "BEST VALUE"],
-        L10n.`continue`: [.chinese: "继续", .english: "Continue"],
-        L10n.byContinuingYouAgreeToOur: [.chinese: "继续即表示您同意我们的", .english: "By continuing, you agree to our"],
-        L10n.and: [.chinese: "和", .english: "and"],
-        L10n.appLock: [.chinese: "应用锁", .english: "App Lock"],
-        L10n.data: [.chinese: "数据", .english: "Data"],
-        L10n.icloudSync: [.chinese: "iCloud 同步", .english: "iCloud Sync"],
-        L10n.importData: [.chinese: "导入数据", .english: "Import Data"],
-        L10n.exportData: [.chinese: "导出数据", .english: "Export Data"],
-        "Export Excel Data": [.chinese: "导出数据", .english: "Export Data"],
-        L10n.exportSuccessful: [.chinese: "导出成功！", .english: "Export Successful!"],
-        "导出成功！": [.chinese: "导出成功！", .english: "Export Successful!"],
-        L10n.termsOfService: [.chinese: "使用条款", .english: "Terms of Service"],
-        L10n.privacyPolicy: [.chinese: "隐私政策", .english: "Privacy Policy"],
-        L10n.on: [.chinese: "开启", .english: "On"],
-        L10n.off: [.chinese: "关闭", .english: "Off"],
-        L10n.upgradeToPremium: [.chinese: "升级至高级版", .english: "Upgrade to Premium"],
-        L10n.unlockAllFeatures: [.chinese: "解锁全部特权与功能", .english: "Unlock all features"],
-        L10n.premiumMember: [.chinese: "高级版会员", .english: "Premium Member"],
-        L10n.allFeaturesUnlocked: [.chinese: "已解锁全部特权与功能", .english: "All features unlocked"],
-        L10n.archivedHabits: [.chinese: "已归档习惯", .english: "Archived Habits"],
-        L10n.showArchived: [.chinese: "显示归档", .english: "Show Archived"],
-        L10n.noArchivedHabits: [.chinese: "暂无已归档的习惯。", .english: "No archived habits."],
-        L10n.thisActionWillPermanentlyDeleteThisHabitAndAllItsCheckInRecordsItCannotBeRecovered: [.chinese: "此操作将永久删除该习惯及其所有打卡记录，且不可恢复。", .english: "This action will permanently delete this habit and all its check-in records. It cannot be recovered."],
-        L10n.thisSession: [.chinese: "本次", .english: "This Session"],
-        L10n.undoCheckIn1: [.chinese: "撤销打卡？", .english: "Undo Check-in?"],
-        L10n.undo: [.chinese: "撤销打卡", .english: "Undo"],
-        L10n.share: [.chinese: "分享", .english: "Share"],
-        L10n.savedToPhotos: [.chinese: "已保存到相册", .english: "Saved to Photos"],
-        L10n.checkInSuccess: [.chinese: "打卡成功", .english: "Check-in Success"],
-        L10n.w: [.chinese: "周：", .english: "W:"],
-        L10n.m1: [.chinese: "月：", .english: "M:"],
-        L10n.reminder: [.chinese: "打卡提醒", .english: "Reminder"],
-        "打卡提醒": [.chinese: "打卡提醒", .english: "Reminder"],
-        L10n.time1: [.chinese: "提醒时间", .english: "Time"],
-        "提醒时间": [.chinese: "提醒时间", .english: "Time"],
-        L10n.customMessage: [.chinese: "自定义文案", .english: "Custom Message"],
-        "自定义文案": [.chinese: "自定义文案", .english: "Custom Message"],
-        L10n.timeToCheckInKeepItUp: [.chinese: "该打卡啦！坚持就是胜利～", .english: "Time to check in! Keep it up~"],
-        "该打卡啦！坚持就是胜利～": [.chinese: "该打卡啦！坚持就是胜利～", .english: "Time to check in! Keep it up~"],
-        L10n.reminderDisabled: [.chinese: "未开启提醒", .english: "Reminder Disabled"],
-        "未开启提醒": [.chinese: "未开启提醒", .english: "Reminder Disabled"],
-        L10n.restoreSuccessful: [.chinese: "恢复购买成功", .english: "Restore Successful"],
-        "恢复购买成功": [.chinese: "恢复购买成功", .english: "Restore Successful"],
-        L10n.noPurchasesToRestore: [.chinese: "没有可恢复的购买项", .english: "No Purchases to Restore"],
-        "没有可恢复的购买项": [.chinese: "没有可恢复的购买项", .english: "No Purchases to Restore"],
-        L10n.failedToFetchProducts: [.chinese: "获取产品列表失败：", .english: "Failed to fetch products: "],
-        "获取产品列表失败：": [.chinese: "获取产品列表失败：", .english: "Failed to fetch products: "],
-        L10n.purchasing: [.chinese: "正在购买...", .english: "Purchasing..."],
-        "正在购买...": [.chinese: "正在购买...", .english: "Purchasing..."],
-        L10n.restoring: [.chinese: "恢复中...", .english: "Restoring..."],
-        "恢复中...": [.chinese: "恢复中...", .english: "Restoring..."],
-        L10n.purchaseSuccessful: [.chinese: "购买成功！", .english: "Purchase Successful!"],
-        "购买成功！": [.chinese: "购买成功！", .english: "Purchase Successful!"],
-        L10n.purchaseCancelled: [.chinese: "购买被取消", .english: "Purchase Cancelled"],
-        "购买被取消": [.chinese: "购买被取消", .english: "Purchase Cancelled"],
-        L10n.purchaseFailed: [.chinese: "购买失败", .english: "Purchase Failed"],
-        "购买失败": [.chinese: "购买失败", .english: "Purchase Failed"],
-        L10n.restorePurchases: [.chinese: "恢复购买", .english: "Restore Purchases"],
-        "恢复购买": [.chinese: "恢复购买", .english: "Restore Purchases"],
-        L10n.tickdayPremiumMember: [.chinese: "TickDay 尊享会员", .english: "TickDay Premium Member"],
-        "TickDay 尊享会员": [.chinese: "TickDay 尊享会员", .english: "TickDay Premium Member"],
-        L10n.youAreAPremiumMember: [.chinese: "您已是尊享会员", .english: "You are a Premium Member"],
-        "您已是尊享会员": [.chinese: "您已是尊享会员", .english: "You are a Premium Member"],
-        L10n.validUntilLifetimeAccess: [.chinese: "到期时间：永久有效 (终身会员)", .english: "Valid until: Lifetime Access"],
-        "到期时间：永久有效 (终身会员)": [.chinese: "到期时间：永久有效 (终身会员)", .english: "Valid until: Lifetime Access"],
-        L10n.statusActivePremium: [.chinese: "状态：已激活尊享会员", .english: "Status: Active Premium"],
-        "状态：已激活尊享会员": [.chinese: "状态：已激活尊享会员", .english: "Status: Active Premium"],
-        L10n.validUntil: [.chinese: "到期时间：", .english: "Valid until: "],
-        "到期时间：": [.chinese: "到期时间：", .english: "Valid until: "],
-        L10n.unableToFetchProductPricingFromAppStorePleaseCheckNetworkOrAppStoreConnectStatus: [.chinese: "无法从 App Store 获取产品价格与配置，请检查网络连接或确认苹果后台产品已生效。", .english: "Unable to fetch product pricing from App Store. Please check network or App Store Connect status."],
-        "无法从 App Store 获取产品价格与配置，请检查网络连接或确认苹果后台产品已生效。": [.chinese: "无法从 App Store 获取产品价格与配置，请检查网络连接或确认苹果后台产品已生效。", .english: "Unable to fetch product pricing from App Store. Please check network or App Store Connect status."],
-        "按月扣费": [.chinese: "按月扣费", .english: "Billed monthly"],
-        "按年扣费": [.chinese: "按年扣费", .english: "Billed yearly"],
-        "一次性付费": [.chinese: "一次性付费", .english: "One-time payment"],
-        L10n.autoRenewablePriceCancelAnytime: [.chinese: "自动续期，{price}，可随时取消", .english: "Auto-renewable, {price}, cancel anytime"],
-        "自动续期，{price}，可随时取消": [.chinese: "自动续期，{price}，可随时取消", .english: "Auto-renewable, {price}, cancel anytime"],
-        L10n.firstMonthFreeThenPrice: [.chinese: "首月免费，结束后按 {price}收费", .english: "First month free, then {price}"],
-        "首月免费，结束后按 {price}收费": [.chinese: "首月免费，结束后按 {price}收费", .english: "First month free, then {price}"],
-        L10n.oneTimePaymentLifetimeAccessToAllFeatures: [.chinese: "一次性付费，永久解锁全部尊享权益", .english: "One-time payment, lifetime access to all features"],
-        "一次性付费，永久解锁全部尊享权益": [.chinese: "一次性付费，永久解锁全部尊享权益", .english: "One-time payment, lifetime access to all features"],
-        L10n.paymentWillBeChargedToYourItunesAccountAtConfirmationOfPurchaseSubscriptionAutomaticallyRenewsUnlessAutoRenewIsTurnedOffAtLeast24HoursBeforeTheEndOfTheCurrentPeriodAccountWillBeChargedForRenewalWithin24HoursPriorToTheEndOfTheCurrentPeriodYouCanManageAndCancelYourSubscriptionsInYourAppStoreAccountSettings: [.chinese: "确认购买后，款项将从您的 iTunes 账户扣除。订阅将自动续期，除非在当前订阅期结束前至少24小时关闭自动续订。您的账户将在当前订阅期结束前24小时内扣取续订费用。您可以在购买后前往 App Store 账户设置中管理或取消您的订阅。", .english: "Payment will be charged to your iTunes account at confirmation of purchase. Subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period. Account will be charged for renewal within 24-hours prior to the end of the current period. You can manage and cancel your subscriptions in your App Store account settings."],
-        "确认购买后，款项将从您的 iTunes 账户扣除。订阅将自动续期，除非在当前订阅期结束前至少24小时关闭自动续订。您的账户将在当前订阅期结束前24小时内扣取续订费用。您可以在购买后前往 App Store 账户设置中管理或取消您的订阅。": [.chinese: "确认购买后，款项将从您的 iTunes 账户扣除。订阅将自动续期，除非在当前订阅期结束前至少24小时关闭自动续订。您的账户将在当前订阅期结束前24小时内扣取续订费用。您可以在购买后前往 App Store 账户设置中管理或取消您的订阅。", .english: "Payment will be charged to your iTunes account at confirmation of purchase. Subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period. Account will be charged for renewal within 24-hours prior to the end of the current period. You can manage and cancel your subscriptions in your App Store account settings."],
-        L10n.notice: [.chinese: "提示", .english: "Notice"],
-        "提示": [.chinese: "提示", .english: "Notice"],
-        "确定": [.chinese: "确定", .english: "OK"],
-        L10n.unableToFetchSubscriptionPricingFromAppStoreConnectShowingDefaultReferencePricesPleaseCheck1InAppPurchaseStatusIsNotMissingMetadata2PaidApplicationsAgreementIsActive3ProductIdsMatchExactly: [.chinese: "无法从苹果后台获取订阅价格，当前显示默认参考价。请检查：1) 苹果后台内购项目状态不为“缺少元数据”；2) App Store Connect 付费协议已生效；3) 产品 ID 匹配。", .english: "Unable to fetch subscription pricing from App Store Connect. Showing default reference prices. Please check: 1) In-App Purchase status is not 'Missing Metadata'; 2) Paid Applications Agreement is Active; 3) Product IDs match exactly."],
-        "无法从苹果后台获取订阅价格，当前显示默认参考价。请检查：1) 苹果后台内购项目状态不为“缺少元数据”；2) App Store Connect 付费协议已生效；3) 产品 ID 匹配。": [.chinese: "无法从苹果后台获取订阅价格，当前显示默认参考价。请检查：1) 苹果后台内购项目状态不为“缺少元数据”；2) App Store Connect 付费协议已生效；3) 产品 ID 匹配。", .english: "Unable to fetch subscription pricing from App Store Connect. Showing default reference prices. Please check: 1) In-App Purchase status is not 'Missing Metadata'; 2) Paid Applications Agreement is Active; 3) Product IDs match exactly."],
-        L10n.generateMockDataForThisYear: [.chinese: "一键生成今年模拟打卡数据", .english: "Generate Mock Data for This Year"],
-        "一键生成今年模拟打卡数据": [.chinese: "一键生成今年模拟打卡数据", .english: "Generate Mock Data for This Year"],
-        L10n.populateRealistic2026CheckInsAndMoodRecords: [.chinese: "为现有习惯随机填充今年打卡与情绪记录", .english: "Populate realistic 2026 check-ins and mood records"],
-        "为现有习惯随机填充今年打卡与情绪记录": [.chinese: "为现有习惯随机填充今年打卡与情绪记录", .english: "Populate realistic 2026 check-ins and mood records"],
-        L10n.successfullyGeneratedMockCheckInsMoodRecordsForThisYear: [.chinese: "已为所有习惯成功生成今年全套模拟打卡与情绪数据！", .english: "Successfully generated mock check-ins & mood records for this year!"],
-        "已为所有习惯成功生成今年全套模拟打卡与情绪数据！": [.chinese: "已为所有习惯成功生成今年全套模拟打卡与情绪数据！", .english: "Successfully generated mock check-ins & mood records for this year!"],
-        L10n.icloudConnected: [.chinese: "iCloud 账号正常连接", .english: "iCloud Connected"],
-        "iCloud 账号正常连接": [.chinese: "iCloud 账号正常连接", .english: "iCloud Connected"],
-        L10n.notLoggedInPleaseSignInToIcloudInSettings: [.chinese: "未登录，请在系统设置中登录您的 Apple ID", .english: "Not logged in. Please sign in to iCloud in Settings."],
-        "未登录，请在系统设置中登录您的 Apple ID": [.chinese: "未登录，请在系统设置中登录您的 Apple ID", .english: "Not logged in. Please sign in to iCloud in Settings."],
-        L10n.icloudAccessRestricted: [.chinese: "iCloud 访问受限", .english: "iCloud Access Restricted"],
-        "iCloud 访问受限": [.chinese: "iCloud 访问受限", .english: "iCloud Access Restricted"],
-        L10n.couldNotDetermineIcloudStatus: [.chinese: "无法确定 iCloud 状态", .english: "Could Not Determine iCloud Status"],
-        "无法确定 iCloud 状态": [.chinese: "无法确定 iCloud 状态", .english: "Could Not Determine iCloud Status"],
-        L10n.icloudTemporarilyUnavailable: [.chinese: "iCloud 服务暂不可用", .english: "iCloud Temporarily Unavailable"],
-        "iCloud 服务暂不可用": [.chinese: "iCloud 服务暂不可用", .english: "iCloud Temporarily Unavailable"],
-        L10n.unknownStatus: [.chinese: "未知状态", .english: "Unknown Status"],
-        "未知状态": [.chinese: "未知状态", .english: "Unknown Status"],
-        L10n.icloudStatus: [.chinese: "iCloud 状态", .english: "iCloud Status"],
-        "iCloud 状态": [.chinese: "iCloud 状态", .english: "iCloud Status"],
-        L10n.checkSyncNow: [.chinese: "立即检查同步", .english: "Check Sync Now"],
-        "立即检查同步": [.chinese: "立即检查同步", .english: "Check Sync Now"],
-        L10n.checkingStatus: [.chinese: "状态检查中...", .english: "Checking Status..."],
-        "状态检查中...": [.chinese: "状态检查中...", .english: "Checking Status..."],
-        L10n.dataIsFullyStoredLocallyForInstantOfflineAccessEnablingIcloudBacksUpInBackgroundDisablingPreservesAllLocalRecordsReconnectingMergesOfflineUpdatesAutomatically: [.chinese: "数据已完全保存在本地数据库，支持极速离线读取与打卡。开启 iCloud 仅在后台同步备份，关闭不会丢失任何本地已有记录，重新连接后自动增量双向合并。", .english: "Data is fully stored locally for instant offline access. Enabling iCloud backs up in background; disabling preserves all local records. Reconnecting merges offline updates automatically."],
-        "数据已完全保存在本地数据库，支持极速离线读取与打卡。开启 iCloud 仅在后台同步备份，关闭不会丢失任何本地已有记录，重新连接后自动增量双向合并。": [.chinese: "数据已完全保存在本地数据库，支持极速离线读取与打卡。开启 iCloud 仅在后台同步备份，关闭不会丢失任何本地已有记录，重新连接后自动增量双向合并。", .english: "Data is fully stored locally for instant offline access. Enabling iCloud backs up in background; disabling preserves all local records. Reconnecting merges offline updates automatically."],
-        L10n.noHabit: [.chinese: "暂无习惯", .english: "No Habit"],
-        L10n.selectHabits: [.chinese: "请选择习惯", .english: "Select Habits"],
-        L10n.pleaseLongPressToEditSelectHabit: [.chinese: "请长按编辑选择习惯", .english: "Please long press to edit & select habit"],
-        "请长按编辑选择习惯": [.chinese: "请长按编辑选择习惯", .english: "Please long press to edit & select habit"],
-        L10n.thisWeek1: [.chinese: "本周", .english: "This week"],
-        "本周": [.chinese: "本周", .english: "This week"],
-        L10n.thisMonth1: [.chinese: "本月", .english: "This month"],
-        "本月": [.chinese: "本月", .english: "This month"],
-        "周": [.chinese: "周", .english: "Week"],
-        "月": [.chinese: "月", .english: "Month"],
-        "年": [.chinese: "年", .english: "Year"],
-    ]
+    static let translations: [String: [AppLanguage: String]] = {
+        var dict = [String: [AppLanguage: String]]()
+        dict[L10n.smallStepsBigChanges] = [.chinese: "\"不积跬步，无以至千里。\"", .english: "\"Small steps, big changes.\""]
+        dict[L10n.home] = [.chinese: "首页", .english: "Home"]
+        dict[L10n.habits] = [.chinese: "习惯", .english: "Habits"]
+        dict[L10n.stats] = [.chinese: "统计", .english: "Stats"]
+        dict[L10n.profile] = [.chinese: "我的", .english: "Profile"]
+        dict[L10n.manageHabits] = [.chinese: "管理习惯", .english: "Manage Habits"]
+        dict[L10n.youHave] = [.chinese: "你当前有 ", .english: "You have "]
+        dict[L10n.habits1] = [.chinese: " 个习惯。", .english: " habits."]
+        dict[L10n.goodMorning] = [.chinese: "早上好。", .english: "Good Morning."]
+        dict[L10n.hereIsYourFocusForToday] = [.chinese: "这是你今天的目标。", .english: "Here is your focus for today."]
+        dict[L10n.daily] = [.chinese: "每天", .english: "Daily"]
+        dict[L10n.progress] = [.chinese: "进度", .english: "Progress"]
+        dict[L10n.goal] = [.chinese: "目标", .english: "Goal"]
+        dict[L10n.whatDoYouWantToBuild] = [.chinese: "你想养成什么习惯？", .english: "What do you want to build?"]
+        dict[L10n.eGRead10PagesDrinkWater] = [.chinese: "例如：阅读10页、喝水...", .english: "e.g. Read 10 pages, Drink water..."]
+        dict[L10n.themeColor] = [.chinese: "主题颜色", .english: "Theme Color"]
+        dict["Pick a Theme Color"] = [.chinese: "主题颜色", .english: "Theme Color"]
+        dict[L10n.chooseAnIcon] = [.chinese: "选择一个图标", .english: "Choose an Icon"]
+        dict[L10n.goalType] = [.chinese: "目标类型", .english: "Goal Type"]
+        dict[L10n.frequency] = [.chinese: "频率", .english: "Frequency"]
+        dict[L10n.totalAmount] = [.chinese: "总计数量", .english: "Total Amount"]
+        dict[L10n.targetPerWeek] = [.chinese: "目标 (每周)", .english: "Target (per week)"]
+        dict[L10n.targetAmountPerWeek] = [.chinese: "目标数量 (每周)", .english: "Target Amount (per week)"]
+        dict[L10n.times] = [.chinese: "次", .english: "Times"]
+        dict[L10n.createHabit] = [.chinese: "创建习惯", .english: "Create Habit"]
+        dict[L10n.saveChanges] = [.chinese: "保存修改", .english: "Save Changes"]
+        dict[L10n.creating] = [.chinese: "保存中...", .english: "Creating..."]
+        dict[L10n.perWeek] = [.chinese: "按周", .english: "Per Week"]
+        dict[L10n.perMonth] = [.chinese: "按月", .english: "Per Month"]
+        dict[L10n.weeklyTarget] = [.chinese: "每周目标次数", .english: "Weekly Target"]
+        dict[L10n.monthlyTarget] = [.chinese: "每月目标次数", .english: "Monthly Target"]
+        dict[L10n.weeklyTargetAmount] = [.chinese: "每周目标总量", .english: "Weekly Target Amount"]
+        dict[L10n.monthlyTargetAmount] = [.chinese: "每月目标总量", .english: "Monthly Target Amount"]
+        dict[L10n.language] = [.chinese: "多语言 / Language", .english: "Language / 多语言"]
+        dict["Language"] = [.chinese: "多语言 / Language", .english: "Language / 多语言"]
+        dict[L10n.shareWithFriends] = [.chinese: "分享给朋友", .english: "Share with Friends"]
+        dict[L10n.moodHistory] = [.chinese: "心情日记", .english: "Mood History"]
+        dict[L10n.feedback] = [.chinese: "意见反馈", .english: "Feedback"]
+        dict[L10n.about] = [.chinese: "关于", .english: "About"]
+        dict[L10n.contactSupport] = [.chinese: "联系客服", .english: "Contact Support"]
+        dict[L10n.tapToSetName] = [.chinese: "点击设置昵称", .english: "Tap to set name"]
+        dict[L10n.exploringMindfulnessAndBuildingBetterHabitsOneDayAtATime] = [.chinese: "每天进步一点点。", .english: "Exploring mindfulness and building better habits, one day at a time."]
+        dict[L10n.noHabitsYet] = [.chinese: "没有习惯", .english: "No habits yet"]
+        dict[L10n.clickTheButtonToAddYourFirstHabit] = [.chinese: "点击进入习惯管理页添加你的第一个习惯吧", .english: "Click the + button to add your first habit"]
+        dict[L10n.pending] = [.chinese: "未完成", .english: "Pending"]
+        dict[L10n.completed] = [.chinese: "已完成", .english: "Completed"]
+        dict[L10n.noMomentsRecordedYet] = [.chinese: "暂无心情记录。", .english: "No moments recorded yet."]
+        dict[L10n.yourJourney] = [.chinese: "你的旅程", .english: "Your Journey"]
+        dict[L10n.aReflectiveLookBackAtYourMoodsAndMoments] = [.chinese: "回顾你的心情与点滴时刻。", .english: "A reflective look back at your moods and moments."]
+        dict[L10n.checkIn] = [.chinese: "记录", .english: "Check in"]
+        dict[L10n.edit] = [.chinese: "修改", .english: "Edit"]
+        dict[L10n.checkIn1] = [.chinese: "完成打卡", .english: "Check In"]
+        dict[L10n.targetAchieved] = [.chinese: "目标已达成！", .english: "Target Achieved!"]
+        dict[L10n.newHabit] = [.chinese: "新增习惯", .english: "New Habit"]
+        dict[L10n.editHabit] = [.chinese: "编辑习惯", .english: "Edit Habit"]
+        dict[L10n.recordMood] = [.chinese: "记录心情", .english: "Record Mood"]
+        dict["记录心情"] = [.chinese: "记录心情", .english: "Record Mood"]
+        dict[L10n.currentMood] = [.chinese: "当前心情", .english: "Current Mood"]
+        dict["当前心情"] = [.chinese: "当前心情", .english: "Current Mood"]
+        dict[L10n.thoughtsOptional] = [.chinese: "想法 (选填)", .english: "Thoughts (Optional)"]
+        dict["想法 (选填)"] = [.chinese: "想法 (选填)", .english: "Thoughts (Optional)"]
+        dict[L10n.writeDownYourThoughts] = [.chinese: "写下这一刻的想法...", .english: "Write down your thoughts..."]
+        dict["写下这一刻的想法..."] = [.chinese: "写下这一刻的想法...", .english: "Write down your thoughts..."]
+        dict[L10n.imageOptional] = [.chinese: "图片 (选填)", .english: "Image (Optional)"]
+        dict["图片 (选填)"] = [.chinese: "图片 (选填)", .english: "Image (Optional)"]
+        dict[L10n.addImage] = [.chinese: "添加图片", .english: "Add Image"]
+        dict["添加图片"] = [.chinese: "添加图片", .english: "Add Image"]
+        dict[L10n.save] = [.chinese: "记录", .english: "Save"]
+        dict["记录"] = [.chinese: "记录", .english: "Save"]
+        dict[L10n.excited] = [.chinese: "激动", .english: "Excited"]
+        dict["激动"] = [.chinese: "激动", .english: "Excited"]
+        dict["excited"] = [.chinese: "激动", .english: "Excited"]
+        dict[L10n.happy] = [.chinese: "开心", .english: "Happy"]
+        dict["开心"] = [.chinese: "开心", .english: "Happy"]
+        dict["happy"] = [.chinese: "开心", .english: "Happy"]
+        dict[L10n.normal] = [.chinese: "一般", .english: "Normal"]
+        dict["一般"] = [.chinese: "一般", .english: "Normal"]
+        dict[L10n.down] = [.chinese: "失落", .english: "Down"]
+        dict["失落"] = [.chinese: "失落", .english: "Down"]
+        dict[L10n.angry] = [.chinese: "愤怒", .english: "Angry"]
+        dict["愤怒"] = [.chinese: "愤怒", .english: "Angry"]
+        dict[L10n.redeemOfferCode] = [.chinese: "使用兑换码兑换会员", .english: "Redeem Offer Code"]
+        dict["兑换码 / Redeem Code"] = [.chinese: "使用兑换码兑换会员", .english: "Redeem Offer Code"]
+        dict[L10n.trackYourDailyProgress] = [.chinese: "记录你的每日进步", .english: "Track your daily progress"]
+        dict[L10n.generateSharingImage] = [.chinese: "生成分享图", .english: "Generate Sharing Image"]
+        dict[L10n.km] = [.chinese: "公里", .english: "km"]
+        dict["公里"] = [.chinese: "公里", .english: "km"]
+        dict[L10n.m] = [.chinese: "米", .english: "m"]
+        dict["米"] = [.chinese: "米", .english: "m"]
+        dict[L10n.mins] = [.chinese: "分钟", .english: "mins"]
+        dict["分钟"] = [.chinese: "分钟", .english: "mins"]
+        dict[L10n.hours] = [.chinese: "小时", .english: "hours"]
+        dict["小时"] = [.chinese: "小时", .english: "hours"]
+        dict[L10n.times1] = [.chinese: "次", .english: "times"]
+        dict["次"] = [.chinese: "次", .english: "times"]
+        dict[L10n.pages] = [.chinese: "页", .english: "pages"]
+        dict["页"] = [.chinese: "页", .english: "pages"]
+        dict[L10n.days] = [.chinese: "天", .english: "days"]
+        dict["天"] = [.chinese: "天", .english: "days"]
+        dict[L10n.week] = [.chinese: "周", .english: "week"]
+        dict[L10n.thisWeek] = [.chinese: "本周", .english: "This Week"]
+        dict[L10n.thisMonth] = [.chinese: "本月", .english: "This Month"]
+        dict["周目标"] = [.chinese: "周目标", .english: "Weekly Target"]
+        dict["月目标"] = [.chinese: "月目标", .english: "Monthly Target"]
+        dict[L10n.month] = [.chinese: "月", .english: "month"]
+        dict[L10n.appLocked] = [.chinese: "应用已锁定", .english: "App Locked"]
+        dict[L10n.unlock] = [.chinese: "解锁", .english: "Unlock"]
+        dict[L10n.unlockTickday] = [.chinese: "解锁 TickDay", .english: "Unlock TickDay"]
+        dict["Unlock Little Habit"] = [.chinese: "解锁 TickDay", .english: "Unlock TickDay"]
+        dict[L10n.restore] = [.chinese: "恢复购买", .english: "Restore"]
+        dict["Restore Purchase"] = [.chinese: "恢复购买", .english: "Restore"]
+        dict[L10n.monthlyCard] = [.chinese: "月度卡", .english: "Monthly Card"]
+        dict[L10n.yearlyCard] = [.chinese: "年度卡", .english: "Yearly Card"]
+        dict[L10n.lifetimeCard] = [.chinese: "终身卡", .english: "Lifetime Card"]
+        dict[L10n.startFreeTrial] = [.chinese: "开始免费试用", .english: "Start Free Trial"]
+        dict[L10n.purchaseNow] = [.chinese: "立即购买", .english: "Purchase Now"]
+        dict[L10n.waitASpecialOffer] = [.chinese: "等一下，送您一份专属优惠！", .english: "Wait, a special offer!"]
+        dict[L10n.claimYearlyDiscount] = [.chinese: "领取年度卡折扣", .english: "Claim Yearly Discount"]
+        dict[L10n.noThanks] = [.chinese: "残忍拒绝", .english: "No, thanks"]
+        dict[L10n.cancelAnytimeDuringTrial] = [.chinese: "试用期间随时取消", .english: "Cancel anytime during trial"]
+        dict[L10n.adFreeExperience] = [.chinese: "纯净无广告", .english: "Ad-Free Experience"]
+        dict[L10n.reduceTheResistanceToYourDailyHabits] = [.chinese: "降低坚持的阻力", .english: "Reduce the resistance to your daily habits."]
+        dict[L10n.enterData] = [.chinese: "录入打卡数据", .english: "Enter Data"]
+        dict[L10n.editData] = [.chinese: "修改打卡数据", .english: "Edit Data"]
+        dict[L10n.periodTarget] = [.chinese: "本周期目标: ", .english: "Period Target: "]
+        dict[L10n.periodTotal] = [.chinese: "本周期已累计: ", .english: "Period Total: "]
+        dict[L10n.amountCompleted] = [.chinese: "本次完成量", .english: "Amount Completed"]
+        dict[L10n.undoCheckIn] = [.chinese: "撤销打卡", .english: "Undo Check-in"]
+        dict[L10n.editAmount] = [.chinese: "修改数值", .english: "Edit Amount"]
+        dict[L10n.total] = [.chinese: "累计", .english: " Total"]
+        dict[L10n.achieved] = [.chinese: "已达成！", .english: " Achieved!"]
+        dict[L10n.options] = [.chinese: "操作", .english: "Options"]
+        dict["Cancel Check-in?"] = [.chinese: "操作", .english: "Options"]
+        dict[L10n.checkInSuccessful] = [.chinese: "打卡成功", .english: "Check-in Successful"]
+        dict[L10n.hideArchived] = [.chinese: "隐藏归档", .english: "Hide Archived"]
+        dict[L10n.statisticsOverview] = [.chinese: "统计概览", .english: "Statistics Overview"]
+        dict["统计概览"] = [.chinese: "统计概览", .english: "Statistics Overview"]
+        dict[L10n.firstMonthFree] = [.chinese: "首月免费", .english: "First Month Free"]
+        dict["首月免费"] = [.chinese: "首月免费", .english: "First Month Free"]
+        dict[L10n.habitName] = [.chinese: "习惯名称", .english: "Habit Name"]
+        dict["习惯名称"] = [.chinese: "习惯名称", .english: "Habit Name"]
+        dict[L10n.colorAndIcon] = [.chinese: "颜色和图标", .english: "Color and Icon"]
+        dict["颜色和图标"] = [.chinese: "颜色和图标", .english: "Color and Icon"]
+        dict[L10n.color] = [.chinese: "颜色", .english: "Color"]
+        dict["颜色"] = [.chinese: "颜色", .english: "Color"]
+        dict[L10n.icon] = [.chinese: "图标", .english: "Icon"]
+        dict["图标"] = [.chinese: "图标", .english: "Icon"]
+        dict["选择图标"] = [.chinese: "选择图标", .english: "Choose an Icon"]
+        dict[L10n.goalRules] = [.chinese: "目标规则", .english: "Goal Rules"]
+        dict["目标规则"] = [.chinese: "目标规则", .english: "Goal Rules"]
+        dict[L10n.times2] = [.chinese: "次", .english: " Times"]
+        dict[L10n.month1] = [.chinese: "月", .english: " Month"]
+        dict[L10n.year] = [.chinese: " 年", .english: " Year"]
+        dict[L10n.target] = [.chinese: "目标: ", .english: "Target: "]
+        dict[L10n.timesWeek] = [.chinese: "次/周", .english: " Times/Week"]
+        dict[L10n.statistics] = [.chinese: "统计数据", .english: "Statistics"]
+        dict[L10n.yearlyCalendar] = [.chinese: "年度日历", .english: "Yearly Calendar"]
+        dict[L10n.dataIrrecoverableAfterDeletion] = [.chinese: "删除后所有相关打卡数据将无法恢复。", .english: "Data irrecoverable after deletion."]
+        dict[L10n.checkInDays] = [.chinese: "打卡天数", .english: "Check-in Days"]
+        dict["打卡天数"] = [.chinese: "打卡天数", .english: "Check-in Days"]
+        dict[L10n.checkInAmount] = [.chinese: "打卡数量", .english: "Check-in Amount"]
+        dict[L10n.checkInRecords] = [.chinese: "打卡记录", .english: "Check-in Records"]
+        dict[L10n.noCheckInRecords] = [.chinese: "暂无打卡记录", .english: "No check-in records"]
+        dict[L10n.noCheckInsOnThisDay] = [.chinese: "当日无打卡记录", .english: "No check-ins on this day"]
+        dict[L10n.noData] = [.chinese: "暂无数据", .english: "No data"]
+        dict[L10n.noDataForThisWeek] = [.chinese: "本周暂无数据", .english: "No data for this week."]
+        dict[L10n.beautifulChangesBeginToday] = [.chinese: "美好的改变，从今天开始", .english: "Beautiful changes begin today"]
+        dict["美好的改变，从今天开始"] = [.chinese: "美好的改变，从今天开始", .english: "Beautiful changes begin today"]
+        dict[L10n.letSCreateYourFirstHabit] = [.chinese: "开启你的第一个小习惯吧", .english: "Let's create your first habit"]
+        dict["开启你的第一个小习惯吧"] = [.chinese: "开启你的第一个小习惯吧", .english: "Let's create your first habit"]
+        dict[L10n.createFirstHabit] = [.chinese: "创建第一个习惯", .english: "Create First Habit"]
+        dict["创建第一个习惯"] = [.chinese: "创建第一个习惯", .english: "Create First Habit"]
+        dict[L10n.helpSupport] = [.chinese: "帮助与反馈", .english: "Help & Support"]
+        dict[L10n.habitDetails] = [.chinese: "习惯详情", .english: "Habit Details"]
+        dict[L10n.notificationPermissionRequired] = [.chinese: "需要通知权限", .english: "Notification Permission Required"]
+        dict["需要通知权限"] = [.chinese: "需要通知权限", .english: "Notification Permission Required"]
+        dict[L10n.youHaveDeniedNotificationPermissionsToReceiveCheckInRemindersPleaseEnableThemInSettings] = [.chinese: "您已拒绝通知权限。如需打卡提醒，请前往设置中开启。", .english: "You have denied notification permissions. To receive check-in reminders, please enable them in Settings."]
+        dict["您已拒绝通知权限。如需打卡提醒，请前往设置中开启。"] = [.chinese: "您已拒绝通知权限。如需打卡提醒，请前往设置中开启。", .english: "You have denied notification permissions. To receive check-in reminders, please enable them in Settings."]
+        dict[L10n.goToSettings] = [.chinese: "去设置", .english: "Go to Settings"]
+        dict["去设置"] = [.chinese: "去设置", .english: "Go to Settings"]
+        dict[L10n.features] = [.chinese: "功能", .english: "Features"]
+        dict[L10n.widgets] = [.chinese: "小组件", .english: "Widgets"]
+        dict[L10n.addToHomeScreen] = [.chinese: "添加到主屏幕", .english: "Add to Home Screen"]
+        dict[L10n.howToAddWidgets] = [.chinese: "如何添加小组件", .english: "How to add Widgets"]
+        dict[L10n.goToYourHomeScreen] = [.chinese: "回到手机主屏幕", .english: "Go to your Home Screen."]
+        dict[L10n.longPressAnyEmptySpaceUntilAppsJiggle] = [.chinese: "长按主屏幕空白处，直到应用图标开始抖动", .english: "Long press any empty space until apps jiggle."]
+        dict[L10n.tapTheButtonInTheTopLeftCorner] = [.chinese: "点击左上角的“+”按钮", .english: "Tap the '+' button in the top left corner."]
+        dict[L10n.searchForTickdayAndAddYourFavoriteWidget] = [.chinese: "搜索“TickDay”，选择并添加你喜欢的小组件", .english: "Search for 'TickDay' and add your favorite widget."]
+        dict[L10n.gotIt] = [.chinese: "我知道了", .english: "Got it"]
+        dict[L10n.frequencyGoal] = [.chinese: "次数目标", .english: "Frequency Goal"]
+        dict["次数目标"] = [.chinese: "次数目标", .english: "Frequency Goal"]
+        dict[L10n.amountGoal] = [.chinese: "总量目标", .english: "Amount Goal"]
+        dict["总量目标"] = [.chinese: "总量目标", .english: "Amount Goal"]
+        dict["总数值"] = [.chinese: "总数值", .english: "Total Amount"]
+        dict[L10n.monthlyTrend] = [.chinese: "月度趋势", .english: "Monthly Trend"]
+        dict[L10n.monthlyDetails] = [.chinese: "月度详情", .english: "Monthly Details"]
+        dict[L10n.checkInDaysTrend] = [.chinese: "打卡次数趋势", .english: "Check-in Days Trend"]
+        dict[L10n.totalAmountTrend] = [.chinese: "打卡总量趋势", .english: "Total Amount Trend"]
+        dict[L10n.totalDays] = [.chinese: "累计打卡", .english: "Total Days"]
+        dict[L10n.system] = [.chinese: "系统", .english: "System"]
+        dict[L10n.light] = [.chinese: "浅色", .english: "Light"]
+        dict[L10n.dark] = [.chinese: "深色", .english: "Dark"]
+        dict[L10n.appearance] = [.chinese: "外观", .english: "Appearance"]
+        dict[L10n.startOfWeek] = [.chinese: "一周开始", .english: "Start of Week"]
+        dict[L10n.monday] = [.chinese: "周一", .english: "Monday"]
+        dict[L10n.sunday] = [.chinese: "周日", .english: "Sunday"]
+        dict[L10n.cancel] = [.chinese: "取消", .english: "Cancel"]
+        dict[L10n.close] = [.chinese: "关闭", .english: "Close"]
+        dict[L10n.showCompleted] = [.chinese: "显示已打卡", .english: "Show Completed"]
+        dict[L10n.hideCompleted] = [.chinese: "隐藏已打卡", .english: "Hide Completed"]
+        dict[L10n.week1] = [.chinese: "本周", .english: "Week"]
+        dict[L10n.times3] = [.chinese: "次", .english: " times"]
+        dict[L10n.time] = [.chinese: "次", .english: " time"]
+        dict[L10n.generating] = [.chinese: "生成中...", .english: "Generating..."]
+        dict[L10n.today] = [.chinese: "今日", .english: "Today"]
+        dict[L10n.total1] = [.chinese: "累计", .english: "Total"]
+        dict[L10n.tickday] = [.chinese: "TickDay", .english: "TickDay"]
+        dict["Little Habit Tracker"] = [.chinese: "TickDay", .english: "TickDay"]
+        dict[L10n.today1] = [.chinese: "今天，", .english: "Today,"]
+        dict[L10n.yesterday] = [.chinese: "昨天，", .english: "Yesterday,"]
+        dict["normal"] = [.chinese: "平静", .english: "Normal"]
+        dict["down"] = [.chinese: "低落", .english: "Down"]
+        dict["angry"] = [.chinese: "生气", .english: "Angry"]
+        dict[L10n.reports] = [.chinese: "报告", .english: "Reports"]
+        dict[L10n.met] = [.chinese: "达成率", .english: "Met"]
+        dict[L10n.bestDay] = [.chinese: "最佳单日", .english: "Best Day"]
+        dict[L10n.longestStreak] = [.chinese: "最长连续", .english: "Longest Streak"]
+        dict[L10n.done] = [.chinese: "打卡", .english: "Done"]
+        dict[L10n.streak] = [.chinese: "连续", .english: "Streak"]
+        dict[L10n.weeklyGrid] = [.chinese: "本周网格", .english: "Weekly Grid"]
+        dict[L10n.yourProgress] = [.chinese: "你的进度", .english: "Your Progress"]
+        dict[L10n.aDetailedLookAtYourJourney] = [.chinese: "详细回顾你的成长之旅。", .english: "A detailed look at your journey."]
+        dict[L10n.month2] = [.chinese: "本月", .english: "Month"]
+        dict[L10n.year1] = [.chinese: "本年", .english: "Year"]
+        dict[L10n.weekly] = [.chinese: "周", .english: "Weekly"]
+        dict[L10n.monthly] = [.chinese: "月", .english: "Monthly"]
+        dict[L10n.yearly] = [.chinese: "年", .english: "Yearly"]
+        dict[L10n.all] = [.chinese: "全部", .english: "All"]
+        dict[L10n.weeklyView] = [.chinese: "周视图", .english: "Weekly View"]
+        dict[L10n.monthlyView] = [.chinese: "月视图", .english: "Monthly View"]
+        dict[L10n.yearlyView] = [.chinese: "年视图", .english: "Yearly View"]
+        dict[L10n.allView] = [.chinese: "全部视图", .english: "All View"]
+        dict[L10n.deleteHabit] = [.chinese: "确认删除?", .english: "Delete Habit?"]
+        dict[L10n.savedToAlbum] = [.chinese: "已保存到相册", .english: "Saved to Album"]
+        dict[L10n.ok] = [.chinese: "好的", .english: "OK"]
+        dict[L10n.tapInTopLeftSearchTickdayAndTapAddWidget] = [.chinese: "点击左上角的“+”按钮，搜索“TickDay”，点击“添加小组件”按钮", .english: "Tap '+' in top left, search 'TickDay', and tap 'Add Widget'."]
+        dict[L10n.chooseYourFavoriteWidgetSizeAndPlaceItOnYourHomeScreen] = [.chinese: "选择合适的小组件样式并放置到主屏幕上", .english: "Choose your favorite widget size and place it on your Home Screen."]
+        dict[L10n.basicInfo] = [.chinese: "基本信息", .english: "Basic Info"]
+        dict[L10n.habit] = [.chinese: "习惯", .english: "Habit"]
+        dict[L10n.noHabitsFound] = [.chinese: "暂无习惯", .english: "No habits found."]
+        dict[L10n.cumulativeStreak] = [.chinese: "累计连续打卡", .english: "Cumulative Streak"]
+        dict[L10n.top5] = [.chinese: "前 5%", .english: "Top 5%"]
+        dict[L10n.daysOfContinuousGrowth] = [.chinese: "天连续成长", .english: "Days of continuous growth"]
+        dict[L10n.consistencyMap] = [.chinese: "连续性热力图", .english: "Consistency Map"]
+        dict[L10n.less] = [.chinese: "少", .english: "Less"]
+        dict[L10n.more] = [.chinese: "多", .english: "More"]
+        dict[L10n.habitDistribution] = [.chinese: "习惯分布", .english: "Habit Distribution"]
+        dict[L10n.mind] = [.chinese: "心灵", .english: "Mind"]
+        dict[L10n.body] = [.chinese: "身体", .english: "Body"]
+        dict[L10n.soul] = [.chinese: "灵魂", .english: "Soul"]
+        dict[L10n.mon] = [.chinese: "一", .english: "Mon"]
+        dict[L10n.tue] = [.chinese: "二", .english: "Tue"]
+        dict[L10n.wed] = [.chinese: "三", .english: "Wed"]
+        dict[L10n.thu] = [.chinese: "四", .english: "Thu"]
+        dict[L10n.fri] = [.chinese: "五", .english: "Fri"]
+        dict[L10n.sat] = [.chinese: "六", .english: "Sat"]
+        dict[L10n.sun] = [.chinese: "日", .english: "Sun"]
+        dict[L10n.daysStreak] = [.chinese: "天连续", .english: "Days Streak"]
+        dict[L10n._30Days] = [.chinese: "近30天", .english: "30 Days"]
+        dict[L10n.delete] = [.chinese: "删除", .english: "Delete"]
+        dict[L10n.archive] = [.chinese: "归档", .english: "Archive"]
+        dict[L10n.settings] = [.chinese: "设置", .english: "Settings"]
+        dict[L10n.developerTestOnly] = [.chinese: "开发者 (仅供测试)", .english: "Developer (Test Only)"]
+        dict[L10n.mockPremiumStatus] = [.chinese: "模拟高级版状态", .english: "Mock Premium Status"]
+        dict[L10n.tickdayPremium] = [.chinese: "TickDay 高级版", .english: "TickDay Premium"]
+        dict["Little Habit Premium"] = [.chinese: "TickDay 高级版", .english: "TickDay Premium"]
+        dict[L10n.unlockYourFullPotential] = [.chinese: "解锁所有特权与功能", .english: "Unlock your full potential"]
+        dict[L10n.themeColors] = [.chinese: "自定义主题", .english: "Theme Colors"]
+        dict[L10n.personalizeYourAppWithCustomColors] = [.chinese: "丰富的主题色彩个性化你的应用", .english: "Personalize your app with custom colors"]
+        dict[L10n.darkMode] = [.chinese: "深色模式", .english: "Dark Mode"]
+        dict[L10n.reduceEyeStrainWithASleekDarkTheme] = [.chinese: "时尚的深色主题，缓解眼睛疲劳", .english: "Reduce eye strain with a sleek dark theme"]
+        dict[L10n.protectYourHabitsWithFaceIdTouchId] = [.chinese: "使用 Face ID 或 Touch ID 保护你的隐私", .english: "Protect your habits with Face ID / Touch ID"]
+        dict[L10n.unlimitedHabits] = [.chinese: "无限习惯", .english: "Unlimited Habits"]
+        dict[L10n.createAsManyHabitsAsYouWantFreeVersionMax5] = [.chinese: "突破限制，创建任意数量的习惯（免费版最多5个）", .english: "Create as many habits as you want (Free version max 5)"]
+        dict["Create as many habits as you want"] = [.chinese: "突破限制，创建任意数量的习惯（免费版最多5个）", .english: "Create as many habits as you want (Free version max 5)"]
+        dict[L10n.importExportData] = [.chinese: "导入 / 导出数据", .english: "Import / Export Data"]
+        dict[L10n.backupToExcelImportFromOtherApps] = [.chinese: "备份到 Excel 文件，并支持导入其他 app 打卡记录", .english: "Backup to Excel & import from other apps"]
+        dict["Backup to Excel & Import"] = [.chinese: "备份到 Excel 文件，并支持导入其他 app 打卡记录", .english: "Backup to Excel & import from other apps"]
+        dict[L10n.keepYourHabitsSyncedAcrossAllDevices] = [.chinese: "让你的习惯在所有设备上保持同步", .english: "Keep your habits synced across all devices"]
+        dict[L10n.billedMonthly] = [.chinese: "按月扣款", .english: "Billed monthly"]
+        dict[L10n.billedYearly] = [.chinese: "按年扣款", .english: "Billed yearly"]
+        dict[L10n.cancelAnytimeDuringTrialNoCharge] = [.chinese: "试用期间可以随时取消，不扣费", .english: "Cancel anytime during trial, no charge"]
+        dict["试用期间可以随时取消，不扣费"] = [.chinese: "试用期间可以随时取消，不扣费", .english: "Cancel anytime during trial, no charge"]
+        dict[L10n.popular] = [.chinese: "最受欢迎", .english: "POPULAR"]
+        dict[L10n.lifetime] = [.chinese: "终身买断", .english: "Lifetime"]
+        dict[L10n.limitedTimeOffer] = [.chinese: "限时特惠", .english: "Limited Time Offer"]
+        dict[L10n.oneTimePayment] = [.chinese: "一次性买断", .english: "One-time payment"]
+        dict[L10n.bestValue] = [.chinese: "最超值", .english: "BEST VALUE"]
+        dict[L10n.`continue`] = [.chinese: "继续", .english: "Continue"]
+        dict[L10n.byContinuingYouAgreeToOur] = [.chinese: "继续即表示您同意我们的", .english: "By continuing, you agree to our"]
+        dict[L10n.and] = [.chinese: "和", .english: "and"]
+        dict[L10n.appLock] = [.chinese: "应用锁", .english: "App Lock"]
+        dict[L10n.data] = [.chinese: "数据", .english: "Data"]
+        dict[L10n.icloudSync] = [.chinese: "iCloud 同步", .english: "iCloud Sync"]
+        dict[L10n.importData] = [.chinese: "导入数据", .english: "Import Data"]
+        dict[L10n.exportData] = [.chinese: "导出数据", .english: "Export Data"]
+        dict["Export Excel Data"] = [.chinese: "导出数据", .english: "Export Data"]
+        dict[L10n.exportSuccessful] = [.chinese: "导出成功！", .english: "Export Successful!"]
+        dict["导出成功！"] = [.chinese: "导出成功！", .english: "Export Successful!"]
+        dict[L10n.termsOfService] = [.chinese: "使用条款", .english: "Terms of Service"]
+        dict[L10n.privacyPolicy] = [.chinese: "隐私政策", .english: "Privacy Policy"]
+        dict[L10n.on] = [.chinese: "开启", .english: "On"]
+        dict[L10n.off] = [.chinese: "关闭", .english: "Off"]
+        dict[L10n.upgradeToPremium] = [.chinese: "升级至高级版", .english: "Upgrade to Premium"]
+        dict[L10n.unlockAllFeatures] = [.chinese: "解锁全部特权与功能", .english: "Unlock all features"]
+        dict[L10n.premiumMember] = [.chinese: "高级版会员", .english: "Premium Member"]
+        dict[L10n.allFeaturesUnlocked] = [.chinese: "已解锁全部特权与功能", .english: "All features unlocked"]
+        dict[L10n.archivedHabits] = [.chinese: "已归档习惯", .english: "Archived Habits"]
+        dict[L10n.showArchived] = [.chinese: "显示归档", .english: "Show Archived"]
+        dict[L10n.noArchivedHabits] = [.chinese: "暂无已归档的习惯。", .english: "No archived habits."]
+        dict[L10n.thisActionWillPermanentlyDeleteThisHabitAndAllItsCheckInRecordsItCannotBeRecovered] = [.chinese: "此操作将永久删除该习惯及其所有打卡记录，且不可恢复。", .english: "This action will permanently delete this habit and all its check-in records. It cannot be recovered."]
+        dict[L10n.thisSession] = [.chinese: "本次", .english: "This Session"]
+        dict[L10n.undoCheckIn1] = [.chinese: "撤销打卡？", .english: "Undo Check-in?"]
+        dict[L10n.undo] = [.chinese: "撤销打卡", .english: "Undo"]
+        dict[L10n.share] = [.chinese: "分享", .english: "Share"]
+        dict[L10n.savedToPhotos] = [.chinese: "已保存到相册", .english: "Saved to Photos"]
+        dict[L10n.checkInSuccess] = [.chinese: "打卡成功", .english: "Check-in Success"]
+        dict[L10n.w] = [.chinese: "周：", .english: "W:"]
+        dict[L10n.m1] = [.chinese: "月：", .english: "M:"]
+        dict[L10n.reminder] = [.chinese: "打卡提醒", .english: "Reminder"]
+        dict["打卡提醒"] = [.chinese: "打卡提醒", .english: "Reminder"]
+        dict[L10n.time1] = [.chinese: "提醒时间", .english: "Time"]
+        dict["提醒时间"] = [.chinese: "提醒时间", .english: "Time"]
+        dict[L10n.customMessage] = [.chinese: "自定义文案", .english: "Custom Message"]
+        dict["自定义文案"] = [.chinese: "自定义文案", .english: "Custom Message"]
+        dict[L10n.timeToCheckInKeepItUp] = [.chinese: "该打卡啦！坚持就是胜利～", .english: "Time to check in! Keep it up~"]
+        dict["该打卡啦！坚持就是胜利～"] = [.chinese: "该打卡啦！坚持就是胜利～", .english: "Time to check in! Keep it up~"]
+        dict[L10n.reminderDisabled] = [.chinese: "未开启提醒", .english: "Reminder Disabled"]
+        dict["未开启提醒"] = [.chinese: "未开启提醒", .english: "Reminder Disabled"]
+        dict[L10n.restoreSuccessful] = [.chinese: "恢复购买成功", .english: "Restore Successful"]
+        dict["恢复购买成功"] = [.chinese: "恢复购买成功", .english: "Restore Successful"]
+        dict[L10n.noPurchasesToRestore] = [.chinese: "没有可恢复的购买项", .english: "No Purchases to Restore"]
+        dict["没有可恢复的购买项"] = [.chinese: "没有可恢复的购买项", .english: "No Purchases to Restore"]
+        dict[L10n.failedToFetchProducts] = [.chinese: "获取产品列表失败：", .english: "Failed to fetch products: "]
+        dict["获取产品列表失败："] = [.chinese: "获取产品列表失败：", .english: "Failed to fetch products: "]
+        dict[L10n.purchasing] = [.chinese: "正在购买...", .english: "Purchasing..."]
+        dict["正在购买..."] = [.chinese: "正在购买...", .english: "Purchasing..."]
+        dict[L10n.restoring] = [.chinese: "恢复中...", .english: "Restoring..."]
+        dict["恢复中..."] = [.chinese: "恢复中...", .english: "Restoring..."]
+        dict[L10n.purchaseSuccessful] = [.chinese: "购买成功！", .english: "Purchase Successful!"]
+        dict["购买成功！"] = [.chinese: "购买成功！", .english: "Purchase Successful!"]
+        dict[L10n.purchaseCancelled] = [.chinese: "购买被取消", .english: "Purchase Cancelled"]
+        dict["购买被取消"] = [.chinese: "购买被取消", .english: "Purchase Cancelled"]
+        dict[L10n.purchaseFailed] = [.chinese: "购买失败", .english: "Purchase Failed"]
+        dict["购买失败"] = [.chinese: "购买失败", .english: "Purchase Failed"]
+        dict[L10n.restorePurchases] = [.chinese: "恢复购买", .english: "Restore Purchases"]
+        dict["恢复购买"] = [.chinese: "恢复购买", .english: "Restore Purchases"]
+        dict[L10n.tickdayPremiumMember] = [.chinese: "TickDay 尊享会员", .english: "TickDay Premium Member"]
+        dict["TickDay 尊享会员"] = [.chinese: "TickDay 尊享会员", .english: "TickDay Premium Member"]
+        dict[L10n.youAreAPremiumMember] = [.chinese: "您已是尊享会员", .english: "You are a Premium Member"]
+        dict["您已是尊享会员"] = [.chinese: "您已是尊享会员", .english: "You are a Premium Member"]
+        dict[L10n.validUntilLifetimeAccess] = [.chinese: "到期时间：永久有效 (终身会员)", .english: "Valid until: Lifetime Access"]
+        dict["到期时间：永久有效 (终身会员)"] = [.chinese: "到期时间：永久有效 (终身会员)", .english: "Valid until: Lifetime Access"]
+        dict[L10n.statusActivePremium] = [.chinese: "状态：已激活尊享会员", .english: "Status: Active Premium"]
+        dict["状态：已激活尊享会员"] = [.chinese: "状态：已激活尊享会员", .english: "Status: Active Premium"]
+        dict[L10n.validUntil] = [.chinese: "到期时间：", .english: "Valid until: "]
+        dict["到期时间："] = [.chinese: "到期时间：", .english: "Valid until: "]
+        dict[L10n.unableToFetchProductPricingFromAppStorePleaseCheckNetworkOrAppStoreConnectStatus] = [.chinese: "无法从 App Store 获取产品价格与配置，请检查网络连接或确认苹果后台产品已生效。", .english: "Unable to fetch product pricing from App Store. Please check network or App Store Connect status."]
+        dict["无法从 App Store 获取产品价格与配置，请检查网络连接或确认苹果后台产品已生效。"] = [.chinese: "无法从 App Store 获取产品价格与配置，请检查网络连接或确认苹果后台产品已生效。", .english: "Unable to fetch product pricing from App Store. Please check network or App Store Connect status."]
+        dict["按月扣费"] = [.chinese: "按月扣费", .english: "Billed monthly"]
+        dict["按年扣费"] = [.chinese: "按年扣费", .english: "Billed yearly"]
+        dict["一次性付费"] = [.chinese: "一次性付费", .english: "One-time payment"]
+        dict[L10n.autoRenewablePriceCancelAnytime] = [.chinese: "自动续期，{price}，可随时取消", .english: "Auto-renewable, {price}, cancel anytime"]
+        dict["自动续期，{price}，可随时取消"] = [.chinese: "自动续期，{price}，可随时取消", .english: "Auto-renewable, {price}, cancel anytime"]
+        dict[L10n.firstMonthFreeThenPrice] = [.chinese: "首月免费，结束后按 {price}收费", .english: "First month free, then {price}"]
+        dict["首月免费，结束后按 {price}收费"] = [.chinese: "首月免费，结束后按 {price}收费", .english: "First month free, then {price}"]
+        dict[L10n.oneTimePaymentLifetimeAccessToAllFeatures] = [.chinese: "一次性付费，永久解锁全部尊享权益", .english: "One-time payment, lifetime access to all features"]
+        dict["一次性付费，永久解锁全部尊享权益"] = [.chinese: "一次性付费，永久解锁全部尊享权益", .english: "One-time payment, lifetime access to all features"]
+        dict[L10n.paymentWillBeChargedToYourItunesAccountAtConfirmationOfPurchaseSubscriptionAutomaticallyRenewsUnlessAutoRenewIsTurnedOffAtLeast24HoursBeforeTheEndOfTheCurrentPeriodAccountWillBeChargedForRenewalWithin24HoursPriorToTheEndOfTheCurrentPeriodYouCanManageAndCancelYourSubscriptionsInYourAppStoreAccountSettings] = [.chinese: "确认购买后，款项将从您的 iTunes 账户扣除。订阅将自动续期，除非在当前订阅期结束前至少24小时关闭自动续订。您的账户将在当前订阅期结束前24小时内扣取续订费用。您可以在购买后前往 App Store 账户设置中管理或取消您的订阅。", .english: "Payment will be charged to your iTunes account at confirmation of purchase. Subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period. Account will be charged for renewal within 24-hours prior to the end of the current period. You can manage and cancel your subscriptions in your App Store account settings."]
+        dict["确认购买后，款项将从您的 iTunes 账户扣除。订阅将自动续期，除非在当前订阅期结束前至少24小时关闭自动续订。您的账户将在当前订阅期结束前24小时内扣取续订费用。您可以在购买后前往 App Store 账户设置中管理或取消您的订阅。"] = [.chinese: "确认购买后，款项将从您的 iTunes 账户扣除。订阅将自动续期，除非在当前订阅期结束前至少24小时关闭自动续订。您的账户将在当前订阅期结束前24小时内扣取续订费用。您可以在购买后前往 App Store 账户设置中管理或取消您的订阅。", .english: "Payment will be charged to your iTunes account at confirmation of purchase. Subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period. Account will be charged for renewal within 24-hours prior to the end of the current period. You can manage and cancel your subscriptions in your App Store account settings."]
+        dict[L10n.notice] = [.chinese: "提示", .english: "Notice"]
+        dict["提示"] = [.chinese: "提示", .english: "Notice"]
+        dict["确定"] = [.chinese: "确定", .english: "OK"]
+        dict[L10n.unableToFetchSubscriptionPricingFromAppStoreConnectShowingDefaultReferencePricesPleaseCheck1InAppPurchaseStatusIsNotMissingMetadata2PaidApplicationsAgreementIsActive3ProductIdsMatchExactly] = [.chinese: "无法从苹果后台获取订阅价格，当前显示默认参考价。请检查：1) 苹果后台内购项目状态不为“缺少元数据”；2) App Store Connect 付费协议已生效；3) 产品 ID 匹配。", .english: "Unable to fetch subscription pricing from App Store Connect. Showing default reference prices. Please check: 1) In-App Purchase status is not 'Missing Metadata'; 2) Paid Applications Agreement is Active; 3) Product IDs match exactly."]
+        dict["无法从苹果后台获取订阅价格，当前显示默认参考价。请检查：1) 苹果后台内购项目状态不为“缺少元数据”；2) App Store Connect 付费协议已生效；3) 产品 ID 匹配。"] = [.chinese: "无法从苹果后台获取订阅价格，当前显示默认参考价。请检查：1) 苹果后台内购项目状态不为“缺少元数据”；2) App Store Connect 付费协议已生效；3) 产品 ID 匹配。", .english: "Unable to fetch subscription pricing from App Store Connect. Showing default reference prices. Please check: 1) In-App Purchase status is not 'Missing Metadata'; 2) Paid Applications Agreement is Active; 3) Product IDs match exactly."]
+        dict[L10n.generateMockDataForThisYear] = [.chinese: "一键生成今年模拟打卡数据", .english: "Generate Mock Data for This Year"]
+        dict["一键生成今年模拟打卡数据"] = [.chinese: "一键生成今年模拟打卡数据", .english: "Generate Mock Data for This Year"]
+        dict[L10n.populateRealistic2026CheckInsAndMoodRecords] = [.chinese: "为现有习惯随机填充今年打卡与情绪记录", .english: "Populate realistic 2026 check-ins and mood records"]
+        dict["为现有习惯随机填充今年打卡与情绪记录"] = [.chinese: "为现有习惯随机填充今年打卡与情绪记录", .english: "Populate realistic 2026 check-ins and mood records"]
+        dict[L10n.successfullyGeneratedMockCheckInsMoodRecordsForThisYear] = [.chinese: "已为所有习惯成功生成今年全套模拟打卡与情绪数据！", .english: "Successfully generated mock check-ins & mood records for this year!"]
+        dict["已为所有习惯成功生成今年全套模拟打卡与情绪数据！"] = [.chinese: "已为所有习惯成功生成今年全套模拟打卡与情绪数据！", .english: "Successfully generated mock check-ins & mood records for this year!"]
+        dict[L10n.icloudConnected] = [.chinese: "iCloud 账号正常连接", .english: "iCloud Connected"]
+        dict["iCloud 账号正常连接"] = [.chinese: "iCloud 账号正常连接", .english: "iCloud Connected"]
+        dict[L10n.notLoggedInPleaseSignInToIcloudInSettings] = [.chinese: "未登录，请在系统设置中登录您的 Apple ID", .english: "Not logged in. Please sign in to iCloud in Settings."]
+        dict["未登录，请在系统设置中登录您的 Apple ID"] = [.chinese: "未登录，请在系统设置中登录您的 Apple ID", .english: "Not logged in. Please sign in to iCloud in Settings."]
+        dict[L10n.icloudAccessRestricted] = [.chinese: "iCloud 访问受限", .english: "iCloud Access Restricted"]
+        dict["iCloud 访问受限"] = [.chinese: "iCloud 访问受限", .english: "iCloud Access Restricted"]
+        dict[L10n.couldNotDetermineIcloudStatus] = [.chinese: "无法确定 iCloud 状态", .english: "Could Not Determine iCloud Status"]
+        dict["无法确定 iCloud 状态"] = [.chinese: "无法确定 iCloud 状态", .english: "Could Not Determine iCloud Status"]
+        dict[L10n.icloudTemporarilyUnavailable] = [.chinese: "iCloud 服务暂不可用", .english: "iCloud Temporarily Unavailable"]
+        dict["iCloud 服务暂不可用"] = [.chinese: "iCloud 服务暂不可用", .english: "iCloud Temporarily Unavailable"]
+        dict[L10n.unknownStatus] = [.chinese: "未知状态", .english: "Unknown Status"]
+        dict["未知状态"] = [.chinese: "未知状态", .english: "Unknown Status"]
+        dict[L10n.icloudStatus] = [.chinese: "iCloud 状态", .english: "iCloud Status"]
+        dict["iCloud 状态"] = [.chinese: "iCloud 状态", .english: "iCloud Status"]
+        dict[L10n.checkSyncNow] = [.chinese: "立即检查同步", .english: "Check Sync Now"]
+        dict["立即检查同步"] = [.chinese: "立即检查同步", .english: "Check Sync Now"]
+        dict[L10n.checkingStatus] = [.chinese: "状态检查中...", .english: "Checking Status..."]
+        dict["状态检查中..."] = [.chinese: "状态检查中...", .english: "Checking Status..."]
+        dict[L10n.dataIsFullyStoredLocallyForInstantOfflineAccessEnablingIcloudBacksUpInBackgroundDisablingPreservesAllLocalRecordsReconnectingMergesOfflineUpdatesAutomatically] = [.chinese: "数据已完全保存在本地数据库，支持极速离线读取与打卡。开启 iCloud 仅在后台同步备份，关闭不会丢失任何本地已有记录，重新连接后自动增量双向合并。", .english: "Data is fully stored locally for instant offline access. Enabling iCloud backs up in background; disabling preserves all local records. Reconnecting merges offline updates automatically."]
+        dict["数据已完全保存在本地数据库，支持极速离线读取与打卡。开启 iCloud 仅在后台同步备份，关闭不会丢失任何本地已有记录，重新连接后自动增量双向合并。"] = [.chinese: "数据已完全保存在本地数据库，支持极速离线读取与打卡。开启 iCloud 仅在后台同步备份，关闭不会丢失任何本地已有记录，重新连接后自动增量双向合并。", .english: "Data is fully stored locally for instant offline access. Enabling iCloud backs up in background; disabling preserves all local records. Reconnecting merges offline updates automatically."]
+        dict[L10n.noHabit] = [.chinese: "暂无习惯", .english: "No Habit"]
+        dict[L10n.selectHabits] = [.chinese: "请选择习惯", .english: "Select Habits"]
+        dict[L10n.pleaseLongPressToEditSelectHabit] = [.chinese: "请长按编辑选择习惯", .english: "Please long press to edit & select habit"]
+        dict["请长按编辑选择习惯"] = [.chinese: "请长按编辑选择习惯", .english: "Please long press to edit & select habit"]
+        dict[L10n.thisWeek1] = [.chinese: "本周", .english: "This week"]
+        dict["本周"] = [.chinese: "本周", .english: "This week"]
+        dict[L10n.thisMonth1] = [.chinese: "本月", .english: "This month"]
+        dict["本月"] = [.chinese: "本月", .english: "This month"]
+        dict["周"] = [.chinese: "周", .english: "Week"]
+        dict["月"] = [.chinese: "月", .english: "Month"]
+        dict["年"] = [.chinese: "年", .english: "Year"]
+
+        dict[L10n.csvHeaders] = [.chinese: "习惯名称,颜色编号,图标编号,频率类型,目标类型,打卡日期,打卡数值", .traditionalChinese: "習慣名稱,顏色編號,圖標編號,頻率類型,目標類型,打卡日期,打卡數值", .english: "Habit Name,Color Hex,Icon Name,Frequency Type,Goal Type,Check-in Date,Amount", .japanese: "習慣名,カラー16進数,アイコン名,頻度タイプ,目標タイプ,チェックイン日,量", .korean: "습관 이름,색상 16진수,아이콘 이름,빈도 유형,목표 유형,체크인 날짜,양", .spanish: "Nombre del hábito,Color Hex,Nombre del icono,Tipo de frecuencia,Tipo de objetivo,Fecha de registro,Cantidad", .german: "Gewohnheitsname,Farb-Hex,Symbolname,Häufigkeitstyp,Zieltyp,Check-in-Datum,Menge", .russian: "Название привычки,Шестнадцатеричный цвет,Название значка,Тип частоты,Тип цели,Дата отметки,Количество", .italian: "Nome abitudine,Esadecimale colore,Nome icona,Tipo di frequenza,Tipo di obiettivo,Data di registrazione,Quantità"]
+        dict[L10n.noRecords] = [.chinese: "暂无记录", .traditionalChinese: "暫無記錄", .english: "No records", .japanese: "記録なし", .korean: "기록 없음", .spanish: "Sin registros", .german: "Keine Aufzeichnungen", .russian: "Нет записей", .italian: "Nessun record"]
+        return dict
+
+    }()
 
     func tr(_ lang: AppLanguage) -> String {
-        return String.translations[self]?[lang] ?? self
+        var actualLang = lang
+        if lang == .system {
+            let sysLang = Locale.preferredLanguages.first ?? "en"
+            if sysLang.hasPrefix("zh-Hant") || sysLang.hasPrefix("zh-TW") || sysLang.hasPrefix("zh-HK") { actualLang = .traditionalChinese }
+            else if sysLang.hasPrefix("zh") { actualLang = .chinese }
+            else if sysLang.hasPrefix("ja") { actualLang = .japanese }
+            else if sysLang.hasPrefix("ko") { actualLang = .korean }
+            else if sysLang.hasPrefix("es") { actualLang = .spanish }
+            else if sysLang.hasPrefix("de") { actualLang = .german }
+            else if sysLang.hasPrefix("ru") { actualLang = .russian }
+            else if sysLang.hasPrefix("it") { actualLang = .italian }
+            else { actualLang = .english }
+        }
+        return String.translations[self]?[actualLang] ?? self
     }
 
     func wTr() -> String {
         let mode = UserDefaults(suiteName: "group.com.littlehabit.tracker")?.string(forKey: "appLanguage") ?? "system"
-        var langStr = "en"
-        if mode == "zh" { langStr = "zh" }
-        else if mode == "en" { langStr = "en" }
-        else if let firstLang = Locale.preferredLanguages.first {
-            if firstLang.hasPrefix("zh") { langStr = "zh" }
+        var actualLang: AppLanguage = .english
+        
+        if mode != "system", let lang = AppLanguage(rawValue: mode) {
+            actualLang = lang
+        } else {
+            let sysLang = Locale.preferredLanguages.first ?? "en"
+            if sysLang.hasPrefix("zh-Hant") || sysLang.hasPrefix("zh-TW") || sysLang.hasPrefix("zh-HK") { actualLang = .traditionalChinese }
+            else if sysLang.hasPrefix("zh") { actualLang = .chinese }
+            else if sysLang.hasPrefix("ja") { actualLang = .japanese }
+            else if sysLang.hasPrefix("ko") { actualLang = .korean }
+            else if sysLang.hasPrefix("es") { actualLang = .spanish }
+            else if sysLang.hasPrefix("de") { actualLang = .german }
+            else if sysLang.hasPrefix("ru") { actualLang = .russian }
+            else if sysLang.hasPrefix("it") { actualLang = .italian }
         }
-        let lang: AppLanguage = langStr == "zh" ? .chinese : .english
-        return String.translations[self]?[lang] ?? self
+        return String.translations[self]?[actualLang] ?? self
     }
 }
 
 func getWidgetLanguage() -> String {
     let mode = UserDefaults(suiteName: "group.com.littlehabit.tracker")?.string(forKey: "appLanguage") ?? "system"
-    if mode == "zh" { return "zh" }
-    if mode == "en" { return "en" }
+    if mode != "system" { return mode }
     if let firstLang = Locale.preferredLanguages.first {
+        if firstLang.hasPrefix("zh-Hant") || firstLang.hasPrefix("zh-TW") || firstLang.hasPrefix("zh-HK") { return "zh-Hant" }
         if firstLang.hasPrefix("zh") { return "zh" }
+        if firstLang.hasPrefix("ja") { return "ja" }
+        if firstLang.hasPrefix("ko") { return "ko" }
+        if firstLang.hasPrefix("es") { return "es" }
+        if firstLang.hasPrefix("de") { return "de" }
+        if firstLang.hasPrefix("ru") { return "ru" }
+        if firstLang.hasPrefix("it") { return "it" }
     }
     return "en"
 }

@@ -79,20 +79,14 @@ class DataBackupManager {
             let habits = try modelContext.fetch(Habit.fetchRequest()) as! [Habit]
             let checkins = try modelContext.fetch(Checkin.fetchRequest()) as! [Checkin]
             
-            let isCN = (language == .chinese)
-            
             var csvString = "\u{FEFF}"
-            if isCN {
-                csvString += "习惯名称,颜色编号,图标编号,频率类型,目标类型,打卡日期,打卡数值\n"
-            } else {
-                csvString += "Habit Name,Color Hex,Icon Name,Frequency Type,Goal Type,Check-in Date,Amount\n"
-            }
+            csvString += L10n.csvHeaders.tr(language) + "\n"
             
             for habit in habits {
                 let habitCheckins = checkins.filter { $0.habit?.id == habit.id }
                 if habitCheckins.isEmpty {
                     let name = csvEscape(habit.name)
-                    let status = isCN ? "暂无记录" : "No records"
+                    let status = L10n.noRecords.tr(language)
                     csvString += "\(name),\(habit.color),\(habit.icon),\(habit.frequencyType),\(habit.goalType),\(status),0\n"
                 } else {
                     for checkin in habitCheckins.sorted(by: { $0.dateString > $1.dateString }) {

@@ -49,7 +49,11 @@ struct HabitStatsDetailView: View {
             let mChecks = yearCheckins.filter { $0.dateString.hasPrefix(prefix) }
             let days = Set(mChecks.map { $0.dateString }).count
             let amount = mChecks.reduce(0.0) { $0 + $1.amount }
-            let label = appSettings.resolvedLanguage == .chinese ? "\(m)月" : "\(m)"
+            let dateForLabel = Calendar.current.date(from: DateComponents(year: currentYear, month: m)) ?? Date()
+            let df = DateFormatter()
+            df.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
+            df.setLocalizedDateFormatFromTemplate("MMM")
+            let label = df.string(from: dateForLabel)
             points.append(MonthlyTrendDataPoint(monthLabel: label, daysCount: days, totalAmount: amount))
         }
         return points
@@ -440,13 +444,8 @@ struct MonthMiniGrid: View {
     
     private var monthName: String {
         let df = DateFormatter()
-        if appSettings.resolvedLanguage == .chinese {
-            df.locale = Locale(identifier: "zh_CN")
-            df.dateFormat = "M月"
-        } else {
-            df.locale = Locale(identifier: "en_US")
-            df.dateFormat = "MMM"
-        }
+        df.locale = Locale(identifier: appSettings.resolvedLanguage.localeIdentifier)
+        df.setLocalizedDateFormatFromTemplate("MMM")
         return df.string(from: dateForFirstDayOfMonth())
     }
     
